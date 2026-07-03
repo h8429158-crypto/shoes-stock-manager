@@ -1,0 +1,1 @@
+shoes stock manager
