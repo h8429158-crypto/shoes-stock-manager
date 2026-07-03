@@ -20,6 +20,10 @@
       "package": "com.shoestock.manager",
       "permissions": ["CAMERA"]
     },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
     "plugins": [
       [
         "expo-image-picker",
