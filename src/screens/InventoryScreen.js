@@ -16,6 +16,7 @@ import { auth, db } from '../firebase';
 import { COLORS, formatMoney, LOW_STOCK_CARTONS } from '../theme';
 import { totalPairs, stockCost, summarize, matchesSearch } from '../shoeUtils';
 import { exportShoesToCsv } from '../exportCsv';
+import { addSampleShoes } from '../sampleData';
 
 function StatTile({ label, value, highlight }) {
   return (
@@ -87,6 +88,18 @@ export default function InventoryScreen({ navigation }) {
   const [shoes, setShoes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [addingSamples, setAddingSamples] = useState(false);
+
+  const loadSamples = async () => {
+    setAddingSamples(true);
+    try {
+      await addSampleShoes();
+    } catch (e) {
+      Alert.alert('Could not add examples', 'Please check your internet connection and try again.');
+    } finally {
+      setAddingSamples(false);
+    }
+  };
 
   useEffect(() => {
     const q = query(collection(db, 'shoes'), orderBy('updatedAt', 'desc'));
@@ -197,6 +210,19 @@ export default function InventoryScreen({ navigation }) {
               <Text style={styles.emptyText}>
                 Tap the orange button below to add your first shoes.
               </Text>
+              <TouchableOpacity
+                style={styles.sampleButton}
+                onPress={loadSamples}
+                disabled={addingSamples}
+              >
+                {addingSamples ? (
+                  <ActivityIndicator color={COLORS.primary} />
+                ) : (
+                  <Text style={styles.sampleButtonText}>
+                    Or add 3 example shoes to try it
+                  </Text>
+                )}
+              </TouchableOpacity>
             </View>
           ) : null
         }
@@ -324,6 +350,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 6,
   },
+  sampleButton: {
+    marginTop: 18,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    borderRadius: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+  },
+  sampleButtonText: { color: COLORS.primary, fontSize: 15, fontWeight: '700' },
   fab: {
     position: 'absolute',
     bottom: 24,
