@@ -25,8 +25,10 @@ everyone else's phone within a second or two.
 - 🔍 **Search** — find shoes by name, article number, brand, colour or place.
 - ⚠️ **Low stock warning** — articles with 2 cartons or fewer are marked
   **LOW** in red so you know what to reorder.
-- ➖➕ **Quick sell/restock** — on a shoe's page, tap − when a carton is sold
-  and ＋ when new stock arrives.
+- ➖➕ **Quick sell/restock** — on a shoe's page, tap − to sell a carton
+  (it's saved in the sales log) and ＋ when new stock arrives.
+- 🧾 **Sales log** — the **Sales** button on the home screen shows what sold,
+  grouped by day, with totals for **today**, **all sales**, and **total profit**.
 - 🧾 **Who changed what** — every article shows who last updated it.
 - 📤 **Export to Excel/CSV** — tap **Export** on the home screen to share the
   whole stock list as a spreadsheet file (WhatsApp, email, print, backup).

@@ -13,6 +13,7 @@ import { doc, onSnapshot, updateDoc, deleteDoc, serverTimestamp } from 'firebase
 import { auth, db } from '../firebase';
 import { COLORS, formatMoney, LOW_STOCK_CARTONS } from '../theme';
 import { totalPairs, stockCost, stockSaleValue } from '../shoeUtils';
+import { sellOneCarton } from '../sales';
 
 function InfoRow({ label, value }) {
   if (value === null || value === undefined || value === '') return null;
@@ -54,18 +55,43 @@ export default function ShoeDetailScreen({ navigation, route }) {
   const pairs = totalPairs(shoe);
   const lowStock = Number(shoe.cartons) <= LOW_STOCK_CARTONS;
 
-  const adjustCartons = async (delta) => {
-    const next = Number(shoe.cartons) + delta;
-    if (next < 0) return;
+  const restock = async () => {
     try {
       await updateDoc(doc(db, 'shoes', shoe.id), {
-        cartons: next,
+        cartons: Number(shoe.cartons) + 1,
         updatedAt: serverTimestamp(),
         updatedBy: auth.currentUser?.email || '',
       });
     } catch (e) {
       Alert.alert('Could not update', 'Please check your internet connection and try again.');
     }
+  };
+
+  const sell = () => {
+    if (Number(shoe.cartons) <= 0) {
+      Alert.alert('Out of stock', 'There are no cartons left to sell.');
+      return;
+    }
+    const amount = totalPairs({ ...shoe, cartons: 1 }) * Number(shoe.sellingPrice || 0);
+    Alert.alert(
+      'Sell one carton?',
+      `Sell 1 carton (${shoe.pairsPerCarton} pairs)` +
+        (amount ? ` for ${formatMoney(amount)}` : '') +
+        '?\nThis is recorded in Sales.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sell',
+          onPress: async () => {
+            try {
+              await sellOneCarton(shoe);
+            } catch (e) {
+              Alert.alert('Could not record sale', 'Please check your internet connection and try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const remove = () => {
@@ -124,17 +150,17 @@ export default function ShoeDetailScreen({ navigation, route }) {
       <View style={styles.adjustCard}>
         <Text style={styles.adjustLabel}>Cartons in stock</Text>
         <View style={styles.adjustRow}>
-          <TouchableOpacity style={styles.adjustBtn} onPress={() => adjustCartons(-1)}>
+          <TouchableOpacity style={[styles.adjustBtn, styles.sellBtn]} onPress={sell}>
             <Text style={styles.adjustBtnText}>−</Text>
           </TouchableOpacity>
           <Text style={styles.adjustValue}>{shoe.cartons}</Text>
-          <TouchableOpacity style={styles.adjustBtn} onPress={() => adjustCartons(1)}>
+          <TouchableOpacity style={styles.adjustBtn} onPress={restock}>
             <Text style={styles.adjustBtnText}>＋</Text>
           </TouchableOpacity>
         </View>
         <Text style={styles.adjustHint}>
-          Tap − when a carton is sold, ＋ when new stock arrives. Everyone sees
-          it instantly.
+          Tap − to sell 1 carton (saved in Sales), ＋ when new stock arrives.
+          Everyone sees it instantly.
         </Text>
       </View>
 
@@ -260,6 +286,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  sellBtn: { backgroundColor: COLORS.accent },
   adjustBtnText: { color: '#fff', fontSize: 26, fontWeight: '700', lineHeight: 30 },
   adjustValue: {
     fontSize: 30,

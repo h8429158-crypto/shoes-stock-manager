@@ -11,6 +11,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import InventoryScreen from './src/screens/InventoryScreen';
 import AddEditShoeScreen from './src/screens/AddEditShoeScreen';
 import ShoeDetailScreen from './src/screens/ShoeDetailScreen';
+import SalesScreen from './src/screens/SalesScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -89,6 +90,11 @@ export default function App() {
               name="ShoeDetail"
               component={ShoeDetailScreen}
               options={{ title: 'Shoe Details' }}
+            />
+            <Stack.Screen
+              name="Sales"
+              component={SalesScreen}
+              options={{ title: 'Sales' }}
             />
           </>
         ) : (

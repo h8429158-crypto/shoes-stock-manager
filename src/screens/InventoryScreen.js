@@ -111,8 +111,8 @@ export default function InventoryScreen({ navigation }) {
     navigation.setOptions({
       headerRight: () => (
         <View style={styles.headerButtons}>
-          <TouchableOpacity onPress={() => exportShoesToCsv(shoes)}>
-            <Text style={styles.headerAction}>Export</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Sales')}>
+            <Text style={styles.headerAction}>Sales</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() =>
@@ -127,7 +127,7 @@ export default function InventoryScreen({ navigation }) {
         </View>
       ),
     });
-  }, [navigation, shoes]);
+  }, [navigation]);
 
   const filtered = useMemo(
     () => shoes.filter((s) => matchesSearch(s, search)),
@@ -160,13 +160,21 @@ export default function InventoryScreen({ navigation }) {
               />
             </View>
 
-            <TextInput
-              style={styles.search}
-              value={search}
-              onChangeText={setSearch}
-              placeholder="🔍  Search name, article no., place, colour…"
-              placeholderTextColor={COLORS.textLight}
-            />
+            <View style={styles.searchRow}>
+              <TextInput
+                style={styles.search}
+                value={search}
+                onChangeText={setSearch}
+                placeholder="🔍  Search name, article no., place…"
+                placeholderTextColor={COLORS.textLight}
+              />
+              <TouchableOpacity
+                style={styles.exportButton}
+                onPress={() => exportShoesToCsv(shoes)}
+              >
+                <Text style={styles.exportText}>📤 Export</Text>
+              </TouchableOpacity>
+            </View>
 
             {!loading && shoes.length > 0 && filtered.length === 0 ? (
               <Text style={styles.emptyText}>
@@ -236,19 +244,34 @@ const styles = StyleSheet.create({
   },
   statValue: { fontSize: 17, fontWeight: '800', color: COLORS.text },
   statLabel: { fontSize: 12, color: COLORS.textLight, marginTop: 2 },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 12,
+    marginTop: 12,
+    marginBottom: 8,
+    gap: 8,
+  },
   search: {
+    flex: 1,
     backgroundColor: COLORS.card,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginHorizontal: 12,
-    marginTop: 12,
-    marginBottom: 8,
     paddingHorizontal: 14,
     paddingVertical: 11,
     fontSize: 15,
     color: COLORS.text,
   },
+  exportButton: {
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+  },
+  exportText: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
   card: {
     flexDirection: 'row',
     backgroundColor: COLORS.card,
