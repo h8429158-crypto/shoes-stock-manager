@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Shoe Stock Manager",
+    "slug": "shoes-stock-manager",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#f4f6fa",
+    "splash": {
+      "backgroundColor": "#1f4e8c"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Take photos of shoes for the stock list.",
+        "NSPhotoLibraryUsageDescription": "Choose shoe photos from your gallery for the stock list."
+      }
+    },
+    "android": {
+      "package": "com.shoestock.manager",
+      "permissions": ["CAMERA"]
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Choose shoe photos from your gallery for the stock list.",
+          "cameraPermission": "Take photos of shoes for the stock list."
+        }
+      ]
+    ]
+  }
+}
