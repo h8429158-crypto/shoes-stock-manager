@@ -15,6 +15,7 @@ import { signOut } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { COLORS, formatMoney, LOW_STOCK_CARTONS } from '../theme';
 import { totalPairs, stockCost, summarize, matchesSearch } from '../shoeUtils';
+import { exportShoesToCsv } from '../exportCsv';
 
 function StatTile({ label, value, highlight }) {
   return (
@@ -109,19 +110,24 @@ export default function InventoryScreen({ navigation }) {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity
-          onPress={() =>
-            Alert.alert('Sign out', 'Do you want to sign out?', [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Sign out', style: 'destructive', onPress: () => signOut(auth) },
-            ])
-          }
-        >
-          <Text style={styles.signOut}>Sign out</Text>
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity onPress={() => exportShoesToCsv(shoes)}>
+            <Text style={styles.headerAction}>Export</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() =>
+              Alert.alert('Sign out', 'Do you want to sign out?', [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Sign out', style: 'destructive', onPress: () => signOut(auth) },
+              ])
+            }
+          >
+            <Text style={styles.headerAction}>Sign out</Text>
+          </TouchableOpacity>
+        </View>
       ),
     });
-  }, [navigation]);
+  }, [navigation, shoes]);
 
   const filtered = useMemo(
     () => shoes.filter((s) => matchesSearch(s, search)),
@@ -207,7 +213,8 @@ export default function InventoryScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  signOut: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  headerButtons: { flexDirection: 'row', gap: 18 },
+  headerAction: { color: '#fff', fontSize: 15, fontWeight: '600' },
   statsRow: {
     flexDirection: 'row',
     paddingHorizontal: 12,

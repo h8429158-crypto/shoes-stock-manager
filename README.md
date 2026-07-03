@@ -28,6 +28,8 @@ everyone else's phone within a second or two.
 - ➖➕ **Quick sell/restock** — on a shoe's page, tap − when a carton is sold
   and ＋ when new stock arrives.
 - 🧾 **Who changed what** — every article shows who last updated it.
+- 📤 **Export to Excel/CSV** — tap **Export** on the home screen to share the
+  whole stock list as a spreadsheet file (WhatsApp, email, print, backup).
 
 ---
 
