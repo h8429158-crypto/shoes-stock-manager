@@ -95,6 +95,11 @@ export default function AddEditShoeScreen({ navigation, route }) {
   };
 
   const choosePhoto = () => {
+    // On the web there's no separate camera/gallery — just open the file picker.
+    if (Platform.OS === 'web') {
+      pickImage(false);
+      return;
+    }
     Alert.alert('Shoe photo', 'Where do you want the photo from?', [
       { text: 'Take photo 📷', onPress: () => pickImage(true) },
       { text: 'Choose from gallery 🖼️', onPress: () => pickImage(false) },

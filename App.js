@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { onAuthStateChanged } from 'firebase/auth';
 
+import './src/webAlert';
 import { auth, isConfigured } from './src/firebase';
 import { COLORS } from './src/theme';
 import LoginScreen from './src/screens/LoginScreen';
@@ -65,12 +66,26 @@ export default function App() {
     <NavigationContainer>
       <StatusBar style="light" />
       <Stack.Navigator
-        screenOptions={{
+        screenOptions={({ navigation }) => ({
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: '700' },
           contentStyle: { backgroundColor: COLORS.background },
-        }}
+          // On web the default back-arrow icon asset may not load, so show a
+          // clear text chevron instead. No effect on phone builds.
+          headerLeft:
+            Platform.OS === 'web'
+              ? (props) =>
+                  props.canGoBack ? (
+                    <TouchableOpacity
+                      onPress={() => navigation.goBack()}
+                      style={{ paddingHorizontal: 6, paddingVertical: 4 }}
+                    >
+                      <Text style={{ color: '#fff', fontSize: 26, fontWeight: '700' }}>‹</Text>
+                    </TouchableOpacity>
+                  ) : null
+              : undefined,
+        })}
       >
         {user ? (
           <>

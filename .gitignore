@@ -5,3 +5,7 @@ web-build/
 *.log
 .DS_Store
 .env
+
+# demo/web build output
+.demo-web/
+.web-test/
