@@ -1,0 +1,413 @@
+<!-- ============================================================
+     STEEMLITE — Footwear Manufacturer & Wholesaler
+     Single-page site. Plain HTML/CSS/JS. No build step.
+     Host free on Netlify / Vercel / GitHub Pages.
+
+     QUICK-EDIT INDEX (search these tags):
+       [EDIT-WHATSAPP]  -> your WhatsApp number
+       [EDIT-INSTAGRAM] -> your Instagram handle/link
+       [EDIT-PHONE]     -> your phone number
+       [EDIT-EMAIL]     -> your email
+       [EDIT-ADDRESS]   -> your business address
+       [EDIT-HOURS]     -> your business hours
+       [EDIT-STATS]     -> the animated numbers in the About section
+       REPLACE THIS IMAGE -> swap placeholder photos for your own
+     ============================================================ -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0d0d0f" />
+
+  <!-- ============ SEO META TAGS ============ -->
+  <title>STEEMLITE — Footwear Manufacturer &amp; Wholesaler | Factory-Direct Bulk Orders</title>
+  <meta name="description" content="STEEMLITE manufactures and wholesales quality footwear at factory-direct prices. Slippers, sandals, casual, sports, formal &amp; kids footwear. Bulk orders welcome — enquire on WhatsApp." />
+  <meta name="keywords" content="footwear manufacturer, footwear wholesaler, bulk footwear, slippers wholesale, sandals wholesale, sports shoes wholesale, factory direct footwear, STEEMLITE" />
+  <meta name="author" content="STEEMLITE" />
+  <link rel="canonical" href="https://steemlite.example.com/" /> <!-- [EDIT] your final domain -->
+
+  <!-- ============ OPEN GRAPH (Instagram / WhatsApp / Facebook link preview) ============ -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="STEEMLITE" />
+  <meta property="og:title" content="STEEMLITE — Footwear Manufacturer &amp; Wholesaler" />
+  <meta property="og:description" content="Factory-direct footwear at wholesale prices. Slippers, sandals, casual, sports, formal &amp; kids. Bulk orders welcome." />
+  <meta property="og:url" content="https://steemlite.example.com/" /> <!-- [EDIT] your final domain -->
+  <!-- REPLACE THIS IMAGE: use a 1200x630 branded preview image hosted on your domain for the best share preview -->
+  <meta property="og:image" content="https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=1200&h=630&q=80" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- ============ TWITTER CARD ============ -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="STEEMLITE — Footwear Manufacturer &amp; Wholesaler" />
+  <meta name="twitter:description" content="Factory-direct footwear at wholesale prices. Bulk orders welcome." />
+  <meta name="twitter:image" content="https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=1200&h=630&q=80" />
+
+  <!-- ============ FAVICON PLACEHOLDER (inline SVG "S" — replace with your own favicon.ico later) ============ -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230d0d0f'/%3E%3Ctext x='50' y='72' font-family='Arial,sans-serif' font-size='68' font-weight='900' text-anchor='middle' fill='%23ff5c35'%3ES%3C/text%3E%3C/svg%3E" />
+
+  <!-- ============ JSON-LD structured data (helps Google understand the business) ============ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "STEEMLITE",
+    "description": "Footwear manufacturer and wholesaler offering factory-direct bulk orders.",
+    "url": "https://steemlite.example.com/",
+    "sameAs": ["https://instagram.com/steemlite"]
+  }
+  </script>
+
+  <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============ SKIP LINK (accessibility) ============ -->
+  <a class="skip-link" href="#collections">Skip to collections</a>
+
+  <!-- ============ STICKY TOP NAV ============ -->
+  <header class="nav" id="nav">
+    <div class="nav__inner">
+      <a href="#top" class="nav__logo" aria-label="STEEMLITE home">STEEM<span>LITE</span></a>
+
+      <nav class="nav__links" id="navLinks" aria-label="Primary">
+        <a href="#collections">Collections</a>
+        <a href="#about">About</a>
+        <a href="#why">Why Us</a>
+        <a href="#contact">Contact</a>
+      </nav>
+
+      <button class="nav__toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- ============================================================
+         01 — HERO
+         ============================================================ -->
+    <section class="hero" id="hero">
+      <div class="hero__glow" aria-hidden="true"></div>
+
+      <div class="hero__content">
+        <p class="hero__eyebrow reveal">Footwear Manufacturer &amp; Wholesaler</p>
+
+        <h1 class="hero__title">
+          <span class="reveal">STEEM</span><span class="reveal hero__title--accent">LITE</span>
+        </h1>
+
+        <p class="hero__tagline reveal">Crafting footwear for every step.</p>
+
+        <div class="hero__actions reveal">
+          <a href="#collections" class="btn btn--primary">View Collections</a>
+          <!-- [EDIT-WHATSAPP] change the number below (keep country code, no + or spaces) -->
+          <a href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27m%20interested%20in%20a%20bulk%20order."
+             class="btn btn--ghost" target="_blank" rel="noopener">WhatsApp Us</a>
+        </div>
+      </div>
+
+      <!-- REPLACE THIS IMAGE: hero shoe photo -->
+      <div class="hero__media reveal" aria-hidden="true">
+        <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80"
+             alt="Premium sneaker" width="900" height="900" fetchpriority="high" />
+      </div>
+
+      <a href="#collections" class="hero__scroll reveal" aria-label="Scroll to collections">
+        <span>Scroll</span>
+        <span class="hero__scroll-line" aria-hidden="true"></span>
+      </a>
+    </section>
+
+    <!-- ============ MARQUEE STRIP ============ -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <span>MANUFACTURER • WHOLESALER • SLIPPERS • SANDALS • CASUAL • SPORTS • FORMAL • KIDS • </span>
+        <span>MANUFACTURER • WHOLESALER • SLIPPERS • SANDALS • CASUAL • SPORTS • FORMAL • KIDS • </span>
+        <span>MANUFACTURER • WHOLESALER • SLIPPERS • SANDALS • CASUAL • SPORTS • FORMAL • KIDS • </span>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         02 — COLLECTIONS
+         ============================================================ -->
+    <section class="section collections" id="collections">
+      <div class="section__head reveal">
+        <span class="section__num">02</span>
+        <h2 class="section__title">Collections</h2>
+        <p class="section__lead">Six footwear categories, built in-house and ready for bulk order.</p>
+      </div>
+
+      <div class="cards">
+        <!-- Card 1: Slippers -->
+        <article class="card card--tall reveal">
+          <div class="card__media">
+            <!-- REPLACE THIS IMAGE: Slippers -->
+            <img loading="lazy" src="https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=800&q=80" alt="Slippers" width="800" height="1000" />
+          </div>
+          <div class="card__body">
+            <h3 class="card__title">Slippers</h3>
+            <p class="card__desc">Everyday comfort in soft, durable soles.</p>
+            <!-- [EDIT-WHATSAPP] -->
+            <a class="card__link" target="_blank" rel="noopener"
+               href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27m%20interested%20in%20bulk%20order%20of%20Slippers">Enquire &rarr;</a>
+          </div>
+        </article>
+
+        <!-- Card 2: Sandals -->
+        <article class="card reveal">
+          <div class="card__media">
+            <!-- REPLACE THIS IMAGE: Sandals -->
+            <img loading="lazy" src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=800&q=80" alt="Sandals" width="800" height="800" />
+          </div>
+          <div class="card__body">
+            <h3 class="card__title">Sandals</h3>
+            <p class="card__desc">Breezy styles for warm-weather retail.</p>
+            <!-- [EDIT-WHATSAPP] -->
+            <a class="card__link" target="_blank" rel="noopener"
+               href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27m%20interested%20in%20bulk%20order%20of%20Sandals">Enquire &rarr;</a>
+          </div>
+        </article>
+
+        <!-- Card 3: Casual Footwear -->
+        <article class="card reveal">
+          <div class="card__media">
+            <!-- REPLACE THIS IMAGE: Casual Footwear -->
+            <img loading="lazy" src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80" alt="Casual footwear" width="800" height="800" />
+          </div>
+          <div class="card__body">
+            <h3 class="card__title">Casual Footwear</h3>
+            <p class="card__desc">Versatile everyday shoes that move fast.</p>
+            <!-- [EDIT-WHATSAPP] -->
+            <a class="card__link" target="_blank" rel="noopener"
+               href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27m%20interested%20in%20bulk%20order%20of%20Casual%20Footwear">Enquire &rarr;</a>
+          </div>
+        </article>
+
+        <!-- Card 4: Sports Shoes -->
+        <article class="card card--tall reveal">
+          <div class="card__media">
+            <!-- REPLACE THIS IMAGE: Sports Shoes -->
+            <img loading="lazy" src="https://images.unsplash.com/photo-1595341888016-a392ef81b7de?auto=format&fit=crop&w=800&q=80" alt="Sports shoes" width="800" height="1000" />
+          </div>
+          <div class="card__body">
+            <h3 class="card__title">Sports Shoes</h3>
+            <p class="card__desc">Performance builds with grip and cushioning.</p>
+            <!-- [EDIT-WHATSAPP] -->
+            <a class="card__link" target="_blank" rel="noopener"
+               href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27m%20interested%20in%20bulk%20order%20of%20Sports%20Shoes">Enquire &rarr;</a>
+          </div>
+        </article>
+
+        <!-- Card 5: Formal Shoes -->
+        <article class="card reveal">
+          <div class="card__media">
+            <!-- REPLACE THIS IMAGE: Formal Shoes -->
+            <img loading="lazy" src="https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=800&q=80" alt="Formal shoes" width="800" height="800" />
+          </div>
+          <div class="card__body">
+            <h3 class="card__title">Formal Shoes</h3>
+            <p class="card__desc">Sharp, office-ready leather-look finishes.</p>
+            <!-- [EDIT-WHATSAPP] -->
+            <a class="card__link" target="_blank" rel="noopener"
+               href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27m%20interested%20in%20bulk%20order%20of%20Formal%20Shoes">Enquire &rarr;</a>
+          </div>
+        </article>
+
+        <!-- Card 6: Kids Footwear -->
+        <article class="card reveal">
+          <div class="card__media">
+            <!-- REPLACE THIS IMAGE: Kids Footwear -->
+            <img loading="lazy" src="https://images.unsplash.com/photo-1514989940723-e8e51635b782?auto=format&fit=crop&w=800&q=80" alt="Kids footwear" width="800" height="800" />
+          </div>
+          <div class="card__body">
+            <h3 class="card__title">Kids Footwear</h3>
+            <p class="card__desc">Playful, tough little shoes that last.</p>
+            <!-- [EDIT-WHATSAPP] -->
+            <a class="card__link" target="_blank" rel="noopener"
+               href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27m%20interested%20in%20bulk%20order%20of%20Kids%20Footwear">Enquire &rarr;</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ MARQUEE STRIP ============ -->
+    <div class="marquee marquee--reverse" aria-hidden="true">
+      <div class="marquee__track">
+        <span>FACTORY-DIRECT • IN-HOUSE PRODUCTION • QUALITY CONTROL • BULK ORDERS • OEM • </span>
+        <span>FACTORY-DIRECT • IN-HOUSE PRODUCTION • QUALITY CONTROL • BULK ORDERS • OEM • </span>
+        <span>FACTORY-DIRECT • IN-HOUSE PRODUCTION • QUALITY CONTROL • BULK ORDERS • OEM • </span>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         03 — ABOUT
+         ============================================================ -->
+    <section class="section about" id="about">
+      <div class="section__head reveal">
+        <span class="section__num">03</span>
+        <h2 class="section__title">About Steemlite</h2>
+      </div>
+
+      <div class="about__grid">
+        <div class="about__copy reveal">
+          <!-- [EDIT] Rewrite this copy in your own voice anytime. -->
+          <p class="about__lead">We are a footwear <strong>manufacturer and wholesaler</strong> — making quality footwear at factory-direct prices, and shipping it in bulk to retailers and distributors across the country.</p>
+          <p>Everything is produced <strong>in-house</strong>, so we control quality at every stage and keep prices honest. From everyday slippers to performance sports shoes, our range is wide, our designs stay fresh, and our quality stays consistent order after order.</p>
+          <p>New retailer or established distributor — bulk orders are always welcome, and custom / OEM manufacturing is available on request.</p>
+        </div>
+
+        <!-- REPLACE THIS IMAGE: factory / workshop photo -->
+        <div class="about__media reveal">
+          <img loading="lazy" src="https://images.unsplash.com/photo-1556906781-9a412961c28c?auto=format&fit=crop&w=800&q=80" alt="Footwear production" width="800" height="1000" />
+        </div>
+      </div>
+
+      <!-- ============ STATS ROW (animated count-up) ============ -->
+      <!-- [EDIT-STATS] change data-target and the label text for each stat -->
+      <div class="stats reveal">
+        <div class="stat">
+          <span class="stat__num" data-target="10" data-suffix="+">0</span>
+          <span class="stat__label">Years Experience</span>
+        </div>
+        <div class="stat">
+          <span class="stat__num" data-target="500" data-suffix="+">0</span>
+          <span class="stat__label">Designs</span>
+        </div>
+        <div class="stat">
+          <span class="stat__num" data-target="50" data-suffix="+">0</span>
+          <span class="stat__label">Cities Served</span>
+        </div>
+        <div class="stat">
+          <span class="stat__num" data-target="100" data-suffix="%">0</span>
+          <span class="stat__label">In-House Manufacturing</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         04 — WHY CHOOSE US
+         ============================================================ -->
+    <section class="section why" id="why">
+      <div class="section__head reveal">
+        <span class="section__num">04</span>
+        <h2 class="section__title">Why Choose Us</h2>
+      </div>
+
+      <div class="why__grid">
+        <div class="why__item reveal"><span class="why__k">01</span><h3>Factory-Direct Pricing</h3><p>No middlemen. You buy straight from the people who make the shoes.</p></div>
+        <div class="why__item reveal"><span class="why__k">02</span><h3>Low MOQ for New Retailers</h3><p>Start small and scale up — we make it easy to test the market.</p></div>
+        <div class="why__item reveal"><span class="why__k">03</span><h3>Fresh Designs, Regularly</h3><p>New styles drop often so your shelves always feel current.</p></div>
+        <div class="why__item reveal"><span class="why__k">04</span><h3>Durable Materials</h3><p>Built to survive daily wear — fewer returns, happier customers.</p></div>
+        <div class="why__item reveal"><span class="why__k">05</span><h3>Timely Dispatch</h3><p>Orders confirmed and packed fast, then shipped to your city.</p></div>
+        <div class="why__item reveal"><span class="why__k">06</span><h3>Custom / OEM Available</h3><p>Your brand, your specs — we manufacture to order.</p></div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         05 — PROCESS STRIP
+         ============================================================ -->
+    <section class="section process" id="process">
+      <div class="section__head reveal">
+        <span class="section__num">05</span>
+        <h2 class="section__title">How To Order In Bulk</h2>
+      </div>
+
+      <ol class="steps">
+        <li class="step reveal"><span class="step__n">1</span><h3>Browse Collections</h3><p>Pick the categories and styles you want to stock.</p></li>
+        <li class="step reveal"><span class="step__n">2</span><h3>Send Enquiry on WhatsApp</h3><p>Message us with the categories you're interested in.</p></li>
+        <li class="step reveal"><span class="step__n">3</span><h3>Confirm Designs &amp; Quantity</h3><p>We finalise designs, quantities and pricing together.</p></li>
+        <li class="step reveal"><span class="step__n">4</span><h3>Dispatch to Your City</h3><p>We pack and ship your order straight to you.</p></li>
+      </ol>
+    </section>
+
+    <!-- ============================================================
+         06 — GALLERY / LOOKBOOK (horizontal scroll-snap)
+         ============================================================ -->
+    <section class="section lookbook" id="lookbook">
+      <div class="section__head reveal">
+        <span class="section__num">06</span>
+        <h2 class="section__title">Lookbook</h2>
+        <p class="section__lead">Swipe through a few of our latest builds.</p>
+      </div>
+
+      <div class="lookbook__scroll" role="list">
+        <!-- REPLACE THIS IMAGE: lookbook 1 -->
+        <figure class="shot" role="listitem"><img loading="lazy" src="https://images.unsplash.com/photo-1600269452121-4f2416e55c28?auto=format&fit=crop&w=700&q=80" alt="Footwear look 1" width="700" height="875" /></figure>
+        <!-- REPLACE THIS IMAGE: lookbook 2 -->
+        <figure class="shot" role="listitem"><img loading="lazy" src="https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&w=700&q=80" alt="Footwear look 2" width="700" height="875" /></figure>
+        <!-- REPLACE THIS IMAGE: lookbook 3 -->
+        <figure class="shot" role="listitem"><img loading="lazy" src="https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=700&q=80" alt="Footwear look 3" width="700" height="875" /></figure>
+        <!-- REPLACE THIS IMAGE: lookbook 4 -->
+        <figure class="shot" role="listitem"><img loading="lazy" src="https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=700&q=80" alt="Footwear look 4" width="700" height="875" /></figure>
+        <!-- REPLACE THIS IMAGE: lookbook 5 -->
+        <figure class="shot" role="listitem"><img loading="lazy" src="https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?auto=format&fit=crop&w=700&q=80" alt="Footwear look 5" width="700" height="875" /></figure>
+        <!-- REPLACE THIS IMAGE: lookbook 6 -->
+        <figure class="shot" role="listitem"><img loading="lazy" src="https://images.unsplash.com/photo-1520256862855-398228c41684?auto=format&fit=crop&w=700&q=80" alt="Footwear look 6" width="700" height="875" /></figure>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         07 — CONTACT / FOOTER
+         ============================================================ -->
+    <section class="section contact" id="contact">
+      <div class="section__head reveal">
+        <span class="section__num">07</span>
+      </div>
+
+      <h2 class="contact__title reveal">LET'S TALK<br />BUSINESS</h2>
+
+      <div class="contact__actions reveal">
+        <!-- [EDIT-WHATSAPP] -->
+        <a class="btn btn--primary btn--lg" target="_blank" rel="noopener"
+           href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27d%20like%20to%20discuss%20a%20bulk%20order.">Chat on WhatsApp</a>
+        <!-- [EDIT-INSTAGRAM] change steemlite to your handle -->
+        <a class="btn btn--ghost btn--lg" target="_blank" rel="noopener"
+           href="https://instagram.com/steemlite">Instagram &rarr;</a>
+      </div>
+
+      <div class="contact__details reveal">
+        <!-- [EDIT-PHONE] -->
+        <div class="detail"><span class="detail__k">Phone</span><a href="tel:+91XXXXXXXXXX">+91 XXXXX XXXXX</a></div>
+        <!-- [EDIT-EMAIL] -->
+        <div class="detail"><span class="detail__k">Email</span><a href="mailto:hello@steemlite.com">hello@steemlite.com</a></div>
+        <!-- [EDIT-ADDRESS] -->
+        <div class="detail"><span class="detail__k">Address</span><span>Your Street, Your City,<br />Your State — PIN</span></div>
+        <!-- [EDIT-HOURS] -->
+        <div class="detail"><span class="detail__k">Hours</span><span>Mon–Sat, 10am – 7pm</span></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER MARQUEE ============ -->
+  <div class="marquee marquee--footer" aria-hidden="true">
+    <div class="marquee__track">
+      <span>STEEMLITE • CRAFTING FOOTWEAR FOR EVERY STEP • STEEMLITE • CRAFTING FOOTWEAR FOR EVERY STEP • </span>
+      <span>STEEMLITE • CRAFTING FOOTWEAR FOR EVERY STEP • STEEMLITE • CRAFTING FOOTWEAR FOR EVERY STEP • </span>
+      <span>STEEMLITE • CRAFTING FOOTWEAR FOR EVERY STEP • STEEMLITE • CRAFTING FOOTWEAR FOR EVERY STEP • </span>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; <span id="year">2026</span> STEEMLITE. All rights reserved.</p>
+    <p class="footer__made">Footwear Manufacturer &amp; Wholesaler</p>
+  </footer>
+
+  <!-- ============ FLOATING WHATSAPP BUTTON ============ -->
+  <!-- [EDIT-WHATSAPP] -->
+  <a class="fab-wa" target="_blank" rel="noopener" aria-label="Chat on WhatsApp"
+     href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27m%20interested%20in%20a%20bulk%20order.">
+    <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor" aria-hidden="true"><path d="M16.04 3C9.4 3 4 8.4 4 15.04c0 2.12.56 4.19 1.62 6.02L4 29l8.13-1.58a12.02 12.02 0 0 0 3.9.65h.01C22.68 28.07 28 22.67 28 16.03 28 8.4 22.68 3 16.04 3zm0 21.9h-.01c-1.2 0-2.38-.32-3.42-.94l-.24-.14-4.83.94.95-4.7-.16-.25a9.9 9.9 0 0 1-1.52-5.28c0-5.47 4.46-9.92 9.94-9.92 2.65 0 5.14 1.04 7.02 2.92a9.85 9.85 0 0 1 2.9 7.01c0 5.48-4.46 9.93-9.6 9.93zm5.45-7.43c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.44-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.06 2.88 1.21 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.22 1.36.19 1.87.12.57-.09 1.77-.72 2.02-1.42.25-.7.25-1.29.17-1.42-.07-.13-.27-.2-.57-.35z"/></svg>
+  </a>
+
+  <!-- ============ BACK TO TOP ============ -->
+  <button class="to-top" id="toTop" aria-label="Back to top">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+  </button>
+
+  <script src="script.js"></script>
+</body>
+</html>
