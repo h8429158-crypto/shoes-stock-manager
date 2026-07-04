@@ -99,7 +99,6 @@
         <path id="laceMaskPath" fill="none" stroke="#fff" stroke-width="52" stroke-linecap="round" />
       </mask>
     </defs>
-    <g id="laceEyelets"></g>
     <!-- flat woven lace: neon halo, dark edge, bright band, weave ribs, center sheen -->
     <g mask="url(#laceDraw)">
       <path id="laceGlowOuter" fill="none" stroke="#ff9440" stroke-opacity="0.12" stroke-width="44" stroke-linecap="round" />
@@ -115,6 +114,12 @@
       <rect x="-26" y="-6.5" width="34" height="5.5" rx="2.75" fill="#ffffff" opacity="0.55" />
       <rect x="3" y="-5" width="8" height="10" rx="2.5" fill="#8a4a18" />
     </g>
+  </svg>
+
+  <!-- Eyelets + waypoint labels live above the content, like grommets
+       punched through the page that the cord threads behind -->
+  <svg class="lace lace--markers" id="laceMarkers" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <g id="laceEyelets"></g>
   </svg>
 
   <!-- ============ STICKY TOP NAV ============ -->
@@ -192,7 +197,7 @@
     <!-- ============================================================
          02 — COLLECTIONS
          ============================================================ -->
-    <section class="section collections" id="collections">
+    <section class="section collections" id="collections" data-lace="Collections">
       <div class="section__head reveal">
         <span class="section__num">02</span>
         <h2 class="section__title">Collections</h2>
@@ -201,7 +206,7 @@
 
       <div class="cards">
         <!-- Card 1: Slippers -->
-        <article class="card card--tall reveal">
+        <article class="card card--tall reveal" data-lace="Slippers">
           <div class="card__media">
             <!-- REPLACE THIS IMAGE: Slippers -->
             <img loading="lazy" src="https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=800&q=80" alt="Slippers" width="800" height="1000" />
@@ -216,7 +221,7 @@
         </article>
 
         <!-- Card 2: Sandals -->
-        <article class="card reveal">
+        <article class="card reveal" data-lace="Sandals">
           <div class="card__media">
             <!-- REPLACE THIS IMAGE: Sandals -->
             <img loading="lazy" src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=800&q=80" alt="Sandals" width="800" height="800" />
@@ -231,7 +236,7 @@
         </article>
 
         <!-- Card 3: Casual Footwear -->
-        <article class="card reveal">
+        <article class="card reveal" data-lace="Casual">
           <div class="card__media">
             <!-- REPLACE THIS IMAGE: Casual Footwear -->
             <img loading="lazy" src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80" alt="Casual footwear" width="800" height="800" />
@@ -246,7 +251,7 @@
         </article>
 
         <!-- Card 4: Sports Shoes -->
-        <article class="card card--tall reveal">
+        <article class="card card--tall reveal" data-lace="Sports">
           <div class="card__media">
             <!-- REPLACE THIS IMAGE: Sports Shoes -->
             <img loading="lazy" src="https://images.unsplash.com/photo-1595341888016-a392ef81b7de?auto=format&fit=crop&w=800&q=80" alt="Sports shoes" width="800" height="1000" />
@@ -261,7 +266,7 @@
         </article>
 
         <!-- Card 5: Formal Shoes -->
-        <article class="card reveal">
+        <article class="card reveal" data-lace="Formal">
           <div class="card__media">
             <!-- REPLACE THIS IMAGE: Formal Shoes -->
             <img loading="lazy" src="https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=800&q=80" alt="Formal shoes" width="800" height="800" />
@@ -276,7 +281,7 @@
         </article>
 
         <!-- Card 6: Kids Footwear -->
-        <article class="card reveal">
+        <article class="card reveal" data-lace="Kids">
           <div class="card__media">
             <!-- REPLACE THIS IMAGE: Kids Footwear -->
             <img loading="lazy" src="https://images.unsplash.com/photo-1514989940723-e8e51635b782?auto=format&fit=crop&w=800&q=80" alt="Kids footwear" width="800" height="800" />
@@ -304,7 +309,7 @@
     <!-- ============================================================
          03 — ABOUT
          ============================================================ -->
-    <section class="section about" id="about">
+    <section class="section about" id="about" data-lace="About">
       <div class="section__head reveal">
         <span class="section__num">03</span>
         <h2 class="section__title">About Steemlite</h2>
@@ -349,7 +354,7 @@
     <!-- ============================================================
          04 — WHY CHOOSE US
          ============================================================ -->
-    <section class="section why" id="why">
+    <section class="section why" id="why" data-lace="Why Us">
       <div class="section__head reveal">
         <span class="section__num">04</span>
         <h2 class="section__title">Why Choose Us</h2>
@@ -368,7 +373,7 @@
     <!-- ============================================================
          05 — PROCESS STRIP
          ============================================================ -->
-    <section class="section process" id="process">
+    <section class="section process" id="process" data-lace="Process">
       <div class="section__head reveal">
         <span class="section__num">05</span>
         <h2 class="section__title">How To Order In Bulk</h2>
@@ -385,7 +390,7 @@
     <!-- ============================================================
          06 — GALLERY / LOOKBOOK (horizontal scroll-snap)
          ============================================================ -->
-    <section class="section lookbook" id="lookbook">
+    <section class="section lookbook" id="lookbook" data-lace="Lookbook">
       <div class="section__head reveal">
         <span class="section__num">06</span>
         <h2 class="section__title">Lookbook</h2>
@@ -411,7 +416,7 @@
     <!-- ============================================================
          07 — CONTACT / FOOTER
          ============================================================ -->
-    <section class="section contact" id="contact">
+    <section class="section contact" id="contact" data-lace="Contact">
       <div class="section__head reveal">
         <span class="section__num">07</span>
       </div>

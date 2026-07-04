@@ -100,6 +100,28 @@ main, .marquee, .footer { position: relative; z-index: 1; }
   position: absolute; top: 0; left: 0; z-index: 0;
   pointer-events: none; overflow: visible;
 }
+.lace--markers { z-index: 2; }   /* eyelets & labels float over the content */
+
+/* waypoint markers: grommet + label that lights up when the lace arrives */
+.lace .wp-ring { stroke: #46578f; transition: stroke .4s var(--ease); }
+.lace .wp-pulse {
+  fill: none; stroke: #ffa04e; stroke-width: 2; opacity: 0;
+  transform-box: fill-box; transform-origin: center;
+}
+.lace .wp-label {
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+  fill: rgba(142,151,179,.75); transition: fill .4s var(--ease);
+  paint-order: stroke; stroke: rgba(12,18,35,.85); stroke-width: 3px;  /* readable over photos */
+}
+.lace .wp--sm .wp-label { font-size: 11px; }
+.lace g.wp.is-lit .wp-ring { stroke: #ffa04e; }
+.lace g.wp.is-lit .wp-label { fill: #ffa757; }
+.lace g.wp.is-lit .wp-pulse { animation: wpPing .9s var(--ease) forwards; }
+@keyframes wpPing {
+  from { opacity: .9; transform: scale(.4); }
+  to   { opacity: 0;  transform: scale(1.9); }
+}
 
 /* ---------- Scroll progress bar ---------- */
 .scroll-progress {
