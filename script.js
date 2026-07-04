@@ -11,6 +11,144 @@
   var yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
+  /* ---------- Category gallery: every style in a collection, one click away ----------
+     Placeholder photos below are reused from elsewhere on the page — swap each
+     "items" array for your own per-style product shots when you have them. */
+  var CATEGORY_ITEMS = {
+    Slippers: {
+      desc: "Everyday comfort in soft, durable soles.",
+      whatsapp: "Slippers",
+      items: [
+        "https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1600269452121-4f2416e55c28?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=500&q=80"
+      ]
+    },
+    Sandals: {
+      desc: "Breezy styles for warm-weather retail.",
+      whatsapp: "Sandals",
+      items: [
+        "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?auto=format&fit=crop&w=500&q=80"
+      ]
+    },
+    Casual: {
+      desc: "Versatile everyday shoes that move fast.",
+      whatsapp: "Casual Footwear",
+      items: [
+        "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1520256862855-398228c41684?auto=format&fit=crop&w=500&q=80"
+      ]
+    },
+    Sports: {
+      desc: "Performance builds with grip and cushioning.",
+      whatsapp: "Sports Shoes",
+      items: [
+        "https://images.unsplash.com/photo-1595341888016-a392ef81b7de?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1520256862855-398228c41684?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=500&q=80"
+      ]
+    },
+    Formal: {
+      desc: "Sharp, office-ready leather-look finishes.",
+      whatsapp: "Formal Shoes",
+      items: [
+        "https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1520256862855-398228c41684?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1600269452121-4f2416e55c28?auto=format&fit=crop&w=500&q=80"
+      ]
+    },
+    Kids: {
+      desc: "Playful, tough little shoes that last.",
+      whatsapp: "Kids Footwear",
+      items: [
+        "https://images.unsplash.com/photo-1514989940723-e8e51635b782?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1520256862855-398228c41684?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1600269452121-4f2416e55c28?auto=format&fit=crop&w=500&q=80",
+        "https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&w=500&q=80"
+      ]
+    }
+  };
+
+  var galleryModal = document.getElementById("galleryModal");
+  var galleryTitle = document.getElementById("galleryTitle");
+  var galleryDesc = document.getElementById("galleryDesc");
+  var galleryGrid = document.getElementById("galleryGrid");
+  var galleryEnquire = document.getElementById("galleryEnquire");
+  var galleryLastFocus = null;
+
+  function waMsg(text) {
+    return "https://wa.me/91XXXXXXXXXX?text=" + encodeURIComponent(text);
+  }
+
+  function openGallery(key) {
+    var data = CATEGORY_ITEMS[key];
+    if (!data || !galleryModal) return;
+
+    galleryTitle.textContent = key === "Casual" ? "Casual Footwear" : data.whatsapp;
+    galleryDesc.textContent = data.desc;
+    galleryGrid.innerHTML = data.items.map(function (src, i) {
+      var n = String(i + 1).padStart(2, "0");
+      var href = waMsg("Hi Steemlite, I'm interested in bulk order of " + data.whatsapp + " — Style " + n);
+      return '<figure class="gitem">' +
+        '<div class="gitem__media"><img loading="lazy" src="' + src + '" alt="' + data.whatsapp + " style " + n + '" width="350" height="350" /></div>' +
+        '<figcaption><span>Style ' + n + '</span><a href="' + href + '" target="_blank" rel="noopener">Enquire &rarr;</a></figcaption>' +
+        '</figure>';
+    }).join("");
+    galleryEnquire.href = waMsg("Hi Steemlite, I'm interested in bulk order of " + data.whatsapp);
+
+    galleryLastFocus = document.activeElement;
+    galleryModal.classList.add("is-open");
+    galleryModal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("gallery-open");
+    galleryModal.querySelector(".gallery__close").focus();
+  }
+
+  function closeGallery() {
+    if (!galleryModal) return;
+    galleryModal.classList.remove("is-open");
+    galleryModal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("gallery-open");
+    if (galleryLastFocus) galleryLastFocus.focus();
+  }
+
+  if (galleryModal) {
+    document.querySelectorAll(".card[data-lace]").forEach(function (card) {
+      card.setAttribute("tabindex", "0");
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-haspopup", "dialog");
+      card.addEventListener("click", function (e) {
+        if (e.target.closest(".card__link")) return; // let the direct Enquire link work as-is
+        openGallery(card.getAttribute("data-lace"));
+      });
+      card.addEventListener("keydown", function (e) {
+        if ((e.key === "Enter" || e.key === " ") && !e.target.closest(".card__link")) {
+          e.preventDefault();
+          openGallery(card.getAttribute("data-lace"));
+        }
+      });
+    });
+    galleryModal.querySelectorAll("[data-gallery-close]").forEach(function (el) {
+      el.addEventListener("click", closeGallery);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && galleryModal.classList.contains("is-open")) closeGallery();
+    });
+  }
+
   /* ---------- Mobile nav toggle ---------- */
   var toggle = document.getElementById("navToggle");
   var navLinks = document.getElementById("navLinks");

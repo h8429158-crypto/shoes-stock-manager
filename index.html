@@ -206,7 +206,7 @@
 
       <div class="cards">
         <!-- Card 1: Slippers -->
-        <article class="card card--tall reveal" data-lace="Slippers">
+        <article class="card reveal" data-lace="Slippers">
           <div class="card__media">
             <!-- REPLACE THIS IMAGE: Slippers -->
             <img loading="lazy" src="https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=800&q=80" alt="Slippers" width="800" height="1000" />
@@ -251,7 +251,7 @@
         </article>
 
         <!-- Card 4: Sports Shoes -->
-        <article class="card card--tall reveal" data-lace="Sports">
+        <article class="card reveal" data-lace="Sports">
           <div class="card__media">
             <!-- REPLACE THIS IMAGE: Sports Shoes -->
             <img loading="lazy" src="https://images.unsplash.com/photo-1595341888016-a392ef81b7de?auto=format&fit=crop&w=800&q=80" alt="Sports shoes" width="800" height="1000" />
@@ -470,6 +470,27 @@
   <button class="to-top" id="toTop" aria-label="Back to top">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
   </button>
+
+  <!-- ============ CATEGORY GALLERY MODAL ============
+       Opens when a collection card is clicked; script.js fills it with
+       every style in that category (see CATEGORY_ITEMS in script.js —
+       replace those placeholder photos with your real per-style shots). -->
+  <div class="gallery" id="galleryModal" aria-hidden="true">
+    <div class="gallery__backdrop" data-gallery-close></div>
+    <div class="gallery__panel" role="dialog" aria-modal="true" aria-labelledby="galleryTitle">
+      <button class="gallery__close" data-gallery-close aria-label="Close gallery">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <div class="gallery__head">
+        <h3 class="gallery__title" id="galleryTitle"></h3>
+        <p class="gallery__desc" id="galleryDesc"></p>
+      </div>
+      <div class="gallery__body">
+        <div class="gallery__grid" id="galleryGrid"></div>
+      </div>
+      <a class="btn btn--primary gallery__cta" id="galleryEnquire" target="_blank" rel="noopener">Enquire in Bulk &rarr;</a>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
