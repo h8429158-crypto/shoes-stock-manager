@@ -5,14 +5,16 @@
 
 /* ---------- Design tokens ---------- */
 :root {
-  --bg:        #0d0d0f;   /* charcoal-black background */
-  --bg-2:      #141417;   /* raised surface */
-  --bg-3:      #1c1c21;   /* card surface */
-  --text:      #f4f1ea;   /* off-white */
-  --muted:     #9a978f;   /* muted grey text */
-  --line:      #2a2a30;   /* hairline borders */
-  --accent:    #ff5c35;   /* warm orange accent — change here to re-theme */
-  --accent-2:  #ff7a4d;
+  /* Palette drawn from the STEEMLITE logo: deep navy, cream, copper steps */
+  --bg:        #131b31;   /* deep navy background */
+  --bg-2:      #192341;   /* raised surface */
+  --bg-3:      #202c4e;   /* card surface (logo navy) */
+  --text:      #f0ebe0;   /* cream (logo wordmark) */
+  --muted:     #8e97b3;   /* muted blue-grey */
+  --line:      #2b3760;   /* hairline borders */
+  --accent:    #c8722f;   /* copper (logo steps) — change here to re-theme */
+  --accent-2:  #d98a45;   /* lighter copper */
+  --ink:       #141d36;   /* dark ink for text on copper */
 
   --maxw: 1280px;
   --pad: clamp(1.25rem, 5vw, 5rem);
@@ -48,17 +50,65 @@ a { color: inherit; text-decoration: none; }
 ul, ol { list-style: none; }
 
 /* ---------- Selection & scrollbar ---------- */
-::selection { background: var(--accent); color: #0d0d0f; }
+::selection { background: var(--accent); color: var(--ink); }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: #33333a; border-radius: 10px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb { background: #2e3a63; border-radius: 10px; border: 2px solid var(--bg); }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-html { scrollbar-color: #33333a var(--bg); scrollbar-width: thin; }
+html { scrollbar-color: #2e3a63 var(--bg); scrollbar-width: thin; }
+
+/* ============================================================
+   LIVE BACKGROUND SCENE
+   Fixed layer behind all content. JS shifts each element on
+   scroll (parallax) so the page feels alive while you browse.
+   ============================================================ */
+.bg-scene {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none; overflow: hidden;
+}
+/* content sits above the scene */
+main, .marquee, .footer { position: relative; z-index: 1; }
+
+.bg-orb {
+  position: absolute; border-radius: 50%;
+  filter: blur(52px); will-change: transform;
+}
+.bg-orb--1 {
+  width: 55vmax; height: 55vmax; top: -18vmax; right: -16vmax;
+  background: radial-gradient(circle, rgba(200,114,47,.15), transparent 65%);
+}
+.bg-orb--2 {
+  width: 46vmax; height: 46vmax; bottom: -22vmax; left: -14vmax;
+  background: radial-gradient(circle, rgba(217,138,69,.10), transparent 65%);
+}
+.bg-word {
+  position: absolute; white-space: nowrap; will-change: transform;
+  font-weight: 900; text-transform: uppercase; letter-spacing: -.02em;
+  font-size: clamp(7rem, 26vw, 24rem); line-height: 1;
+  color: transparent; -webkit-text-stroke: 1px rgba(142,151,179,.15);
+  user-select: none;
+}
+.bg-word--1 { top: 16%; left: -4%; }
+.bg-word--2 { top: 60%; right: -8%; }
+@media (prefers-reduced-motion: reduce) {
+  .bg-word, .bg-orb { display: none; }
+}
+
+/* ---------- Scroll progress bar ---------- */
+.scroll-progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px;
+  z-index: 120; pointer-events: none;
+}
+.scroll-progress span {
+  display: block; height: 100%; width: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transform: scaleX(0); transform-origin: 0 50%;
+}
 
 /* ---------- Skip link (a11y) ---------- */
 .skip-link {
   position: absolute; left: 50%; top: -60px; transform: translateX(-50%);
-  background: var(--accent); color: #0d0d0f; padding: .6rem 1rem; border-radius: 0 0 10px 10px;
+  background: var(--accent); color: var(--ink); padding: .6rem 1rem; border-radius: 0 0 10px 10px;
   font-weight: 700; z-index: 200; transition: top .2s var(--ease);
 }
 .skip-link:focus { top: 0; }
@@ -72,7 +122,7 @@ html { scrollbar-color: #33333a var(--bg); scrollbar-width: thin; }
   transition: transform .25s var(--ease), background .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease);
   white-space: nowrap;
 }
-.btn--primary { background: var(--accent); color: #0d0d0f; }
+.btn--primary { background: var(--accent); color: var(--ink); }
 .btn--primary:hover { background: var(--accent-2); transform: translateY(-2px); }
 .btn--ghost { border-color: var(--line); color: var(--text); }
 .btn--ghost:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
@@ -87,7 +137,7 @@ html { scrollbar-color: #33333a var(--bg); scrollbar-width: thin; }
   border-bottom: 1px solid transparent;
 }
 .nav.is-scrolled {
-  background: rgba(13,13,15,.72);
+  background: rgba(19,27,49,.72);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom-color: var(--line);
@@ -99,8 +149,11 @@ html { scrollbar-color: #33333a var(--bg); scrollbar-width: thin; }
 }
 .nav__logo {
   font-weight: 800; font-size: 1.25rem; letter-spacing: .04em;
+  display: inline-flex; align-items: center; gap: .55rem;
 }
-.nav__logo span { color: var(--accent); }
+.nav__word { color: var(--text); }
+.nav__word span { color: var(--accent); }
+.nav__steps { flex-shrink: 0; }
 
 .nav__links { display: flex; gap: 2rem; }
 .nav__links a {
@@ -130,7 +183,7 @@ html { scrollbar-color: #33333a var(--bg); scrollbar-width: thin; }
   .nav__links {
     position: fixed; inset: 0; flex-direction: column;
     align-items: center; justify-content: center; gap: 2.2rem;
-    background: rgba(13,13,15,.97); backdrop-filter: blur(8px);
+    background: rgba(19,27,49,.97); backdrop-filter: blur(8px);
     transform: translateX(100%); transition: transform .4s var(--ease);
   }
   .nav__links a { font-size: 1.5rem; color: var(--text); }
@@ -153,7 +206,7 @@ html { scrollbar-color: #33333a var(--bg); scrollbar-width: thin; }
 .hero__glow {
   position: absolute; top: -10%; right: -10%;
   width: 60vmax; height: 60vmax; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,92,53,.22), transparent 62%);
+  background: radial-gradient(circle, rgba(200,114,47,.26), transparent 62%);
   filter: blur(20px); pointer-events: none; z-index: 0;
 }
 .hero__content { position: relative; z-index: 2; }
@@ -345,7 +398,7 @@ html { scrollbar-color: #33333a var(--bg); scrollbar-width: thin; }
 .step__n {
   display: inline-flex; align-items: center; justify-content: center;
   width: 46px; height: 46px; border-radius: 50%;
-  background: var(--accent); color: #0d0d0f; font-weight: 900; font-size: 1.2rem; margin-bottom: 1rem;
+  background: var(--accent); color: var(--ink); font-weight: 900; font-size: 1.2rem; margin-bottom: 1rem;
 }
 .step h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: .4rem; }
 .step p { color: var(--muted); font-size: .95rem; }
@@ -419,7 +472,7 @@ html { scrollbar-color: #33333a var(--bg); scrollbar-width: thin; }
   transition: opacity .3s var(--ease), transform .3s var(--ease), background .2s var(--ease), color .2s var(--ease);
 }
 .to-top.is-visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
-.to-top:hover { background: var(--accent); color: #0d0d0f; }
+.to-top:hover { background: var(--accent); color: var(--ink); }
 
 /* ============================================================
    SCROLL REVEAL

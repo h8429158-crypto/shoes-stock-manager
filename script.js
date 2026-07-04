@@ -55,6 +55,48 @@
     });
   }
 
+  /* ---------- Live background: parallax + marquee skew + progress ----------
+     One requestAnimationFrame loop drives everything the scroll touches:
+     - .bg-scene orbs/watermark words drift at their data-speed
+     - marquee strips skew with scroll velocity, then ease back
+     - top progress bar tracks how far down the page you are            */
+  var parallaxEls = document.querySelectorAll(".bg-scene [data-speed]");
+  var marquees = document.querySelectorAll(".marquee");
+  var progress = document.getElementById("scrollProgress");
+
+  if (!reduceMotion && (parallaxEls.length || marquees.length || progress)) {
+    var lastY = window.pageYOffset;
+    var skew = 0;
+
+    var tick = function () {
+      var y = window.pageYOffset || document.documentElement.scrollTop;
+
+      // parallax drift
+      parallaxEls.forEach(function (el) {
+        var s = parseFloat(el.getAttribute("data-speed")) || 0;
+        el.style.transform = "translate3d(" + (y * s) + "px," + (y * s * 0.35) + "px,0)";
+      });
+
+      // marquee skew follows scroll velocity, eased back to 0
+      var vel = y - lastY;
+      lastY = y;
+      skew += ((Math.max(-14, Math.min(14, vel * 0.45))) - skew) * 0.12;
+      if (Math.abs(skew) < 0.01) skew = 0;
+      marquees.forEach(function (m) {
+        m.style.transform = "skewX(" + skew.toFixed(2) + "deg)";
+      });
+
+      // progress bar
+      if (progress) {
+        var max = document.documentElement.scrollHeight - window.innerHeight;
+        progress.style.transform = "scaleX(" + (max > 0 ? Math.min(y / max, 1) : 0) + ")";
+      }
+
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
   /* ---------- Scroll reveal via IntersectionObserver ---------- */
   var revealEls = document.querySelectorAll(".reveal");
   if (reduceMotion || !("IntersectionObserver" in window)) {
