@@ -30,6 +30,7 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  overflow-x: clip;   /* skewed marquees & lace exit points never cause sideways scroll */
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -94,6 +95,12 @@ main, .marquee, .footer { position: relative; z-index: 1; }
   .bg-word, .bg-orb { display: none; }
 }
 
+/* ---------- Shoelace thread ---------- */
+.lace {
+  position: absolute; top: 0; left: 0; z-index: 0;
+  pointer-events: none; overflow: visible;
+}
+
 /* ---------- Scroll progress bar ---------- */
 .scroll-progress {
   position: fixed; top: 0; left: 0; right: 0; height: 3px;
@@ -102,6 +109,7 @@ main, .marquee, .footer { position: relative; z-index: 1; }
 .scroll-progress span {
   display: block; height: 100%; width: 100%;
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 12px rgba(255,148,64,.65), 0 0 26px rgba(255,148,64,.3);
   transform: scaleX(0); transform-origin: 0 50%;
 }
 
@@ -239,6 +247,11 @@ main, .marquee, .footer { position: relative; z-index: 1; }
   width: 100%; border-radius: var(--radius);
   filter: drop-shadow(0 30px 60px rgba(0,0,0,.6));
   transform: rotate(-8deg);
+  animation: heroFloat 7s ease-in-out infinite;  /* weightless hover */
+}
+@keyframes heroFloat {
+  0%, 100% { transform: rotate(-8deg) translateY(0); }
+  50%      { transform: rotate(-3deg) translateY(-18px); }
 }
 
 .hero__scroll {
@@ -259,7 +272,6 @@ main, .marquee, .footer { position: relative; z-index: 1; }
     position: absolute; top: 50%; right: 4vw; transform: translateY(-50%);
     width: min(38vw, 460px); margin: 0;
   }
-  .hero__media img { transform: rotate(-10deg); }
   .hero__tagline { max-width: 24ch; }
 }
 

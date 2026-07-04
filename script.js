@@ -55,6 +55,103 @@
     });
   }
 
+  /* ---------- Shoelace: laces up the page as you scroll ----------
+     Anchor points hug alternating page edges at each section boundary
+     (grommet eyelets), joined by smooth curves. stroke-dashoffset draws
+     the cord in sync with scroll; the aglet rides the drawn tip.      */
+  var laceSvg = document.getElementById("lace");
+  var lacePath = document.getElementById("laceBody");        // geometry + length reference
+  var laceMaskPath = document.getElementById("laceMaskPath"); // animated reveal stroke
+  var laceLayers = ["laceGlowOuter", "laceGlowInner", "laceEdge", "laceBody", "laceRibs", "laceSheen", "laceMaskPath"]
+    .map(function (id) { return document.getElementById(id); })
+    .filter(Boolean);
+  var laceEyelets = document.getElementById("laceEyelets");
+  var laceAglet = document.getElementById("laceAglet");
+  var laceLen = 0;
+
+  function buildLace() {
+    if (!laceSvg || !lacePath) return;
+    var docH = document.documentElement.scrollHeight;
+    var vw = document.documentElement.clientWidth;
+    var vh = window.innerHeight;
+    laceSvg.setAttribute("width", vw);
+    laceSvg.setAttribute("height", docH);
+    laceSvg.setAttribute("viewBox", "0 0 " + vw + " " + docH);
+
+    var xL = Math.max(vw * 0.06, 22);
+    var xR = vw - xL;
+    var pts = [{ x: -30, y: vh * 0.18 }];
+    var side = 1; // 1 = right edge next, -1 = left
+    document.querySelectorAll("main section").forEach(function (sec, i) {
+      var r = sec.getBoundingClientRect();
+      var top = r.top + window.pageYOffset;
+      pts.push({ x: side > 0 ? xR : xL, y: top + 46, eyelet: i > 0 });
+      // tall sections get a mid-section pass on the opposite edge
+      if (r.height > vh * 1.2) {
+        side = -side;
+        pts.push({ x: side > 0 ? xR : xL, y: top + r.height * 0.6, eyelet: true });
+      }
+      side = -side;
+    });
+    pts.push({ x: side > 0 ? vw + 30 : -30, y: docH - 60 });
+
+    var d = "M " + pts[0].x + " " + pts[0].y;
+    for (var i = 1; i < pts.length; i++) {
+      var cy = (pts[i - 1].y + pts[i].y) / 2;
+      d += " C " + pts[i - 1].x + " " + cy + " " + pts[i].x + " " + cy + " " + pts[i].x + " " + pts[i].y;
+    }
+    laceLayers.forEach(function (el) { el.setAttribute("d", d); });
+
+    // ribbon width scales down a little on small screens
+    var scale = vw < 700 ? 0.72 : 1;
+    var widths = { laceGlowOuter: 44, laceGlowInner: 27, laceEdge: 16, laceBody: 12.5, laceRibs: 12.5, laceSheen: 3.5, laceMaskPath: 52 };
+    laceLayers.forEach(function (el) {
+      el.setAttribute("stroke-width", (widths[el.id] * scale).toFixed(1));
+    });
+
+    // grommets the cord threads through
+    var rings = "";
+    pts.forEach(function (p) {
+      if (!p.eyelet) return;
+      rings += '<circle cx="' + p.x + '" cy="' + p.y + '" r="' + (13 * scale).toFixed(1) + '" fill="#0c1223" stroke="#46578f" stroke-width="' + (3.5 * scale).toFixed(1) + '"/>';
+    });
+    laceEyelets.innerHTML = rings;
+
+    laceLen = lacePath.getTotalLength();
+    // only the mask stroke animates; the woven layers keep their own textures
+    laceMaskPath.style.strokeDasharray = laceLen;
+    updateLace(window.pageYOffset || 0);
+  }
+
+  function updateLace(y) {
+    if (!laceLen) return;
+    var docH = document.documentElement.scrollHeight;
+    var vh = window.innerHeight;
+    // tip rides ~80% down the viewport; hits exactly 100% at page bottom
+    var progress = reduceMotion ? 1
+      : Math.min(1, Math.max(0.03, (y + vh * 0.8) / (docH - vh * 0.2)));
+    var drawn = laceLen * progress;
+    laceMaskPath.style.strokeDashoffset = laceLen - drawn;
+    var tip = lacePath.getPointAtLength(drawn);
+    var back = lacePath.getPointAtLength(Math.max(0, drawn - 16));
+    var ang = Math.atan2(tip.y - back.y, tip.x - back.x) * 180 / Math.PI;
+    laceAglet.setAttribute("transform", "translate(" + tip.x + " " + tip.y + ") rotate(" + ang + ")");
+  }
+
+  // (re)build once now, again when everything has loaded, and on layout changes
+  var laceRebuildTimer;
+  function queueLaceRebuild() {
+    clearTimeout(laceRebuildTimer);
+    laceRebuildTimer = setTimeout(buildLace, 200);
+  }
+  buildLace();
+  window.addEventListener("load", buildLace);
+  if ("ResizeObserver" in window) {
+    new ResizeObserver(queueLaceRebuild).observe(document.body);
+  } else {
+    window.addEventListener("resize", queueLaceRebuild);
+  }
+
   /* ---------- Live background: parallax + marquee skew + progress ----------
      One requestAnimationFrame loop drives everything the scroll touches:
      - .bg-scene orbs/watermark words drift at their data-speed
@@ -91,6 +188,9 @@
         var max = document.documentElement.scrollHeight - window.innerHeight;
         progress.style.transform = "scaleX(" + (max > 0 ? Math.min(y / max, 1) : 0) + ")";
       }
+
+      // lace up the page
+      updateLace(y);
 
       requestAnimationFrame(tick);
     };
