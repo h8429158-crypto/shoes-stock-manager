@@ -146,7 +146,7 @@
     pts.forEach(function (p) {
       if (!p.eyelet) return;
       var r = (p.small ? 9 : 13) * scale;
-      var ring = '<circle class="wp-ring" cx="' + p.x + '" cy="' + p.y + '" r="' + r.toFixed(1) + '" fill="#0c1223" stroke-width="' + (3.5 * scale).toFixed(1) + '"/>';
+      var ring = '<circle class="wp-ring" cx="' + p.x + '" cy="' + p.y + '" r="' + r.toFixed(1) + '" fill="#0b0b0a" stroke-width="' + (3.5 * scale).toFixed(1) + '"/>';
       if (!p.label) { mk += ring; return; }
       var left = p.x < vw / 2;
       var tx = left ? p.x + r + 14 : p.x - r - 14;

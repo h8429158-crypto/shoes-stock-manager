@@ -5,16 +5,16 @@
 
 /* ---------- Design tokens ---------- */
 :root {
-  /* Palette drawn from the STEEMLITE logo: deep navy, cream, copper steps */
-  --bg:        #131b31;   /* deep navy background */
-  --bg-2:      #192341;   /* raised surface */
-  --bg-3:      #202c4e;   /* card surface (logo navy) */
-  --text:      #f0ebe0;   /* cream (logo wordmark) */
-  --muted:     #8e97b3;   /* muted blue-grey */
-  --line:      #2b3760;   /* hairline borders */
-  --accent:    #c8722f;   /* copper (logo steps) — change here to re-theme */
-  --accent-2:  #d98a45;   /* lighter copper */
-  --ink:       #141d36;   /* dark ink for text on copper */
+  /* Matte Black + Gold */
+  --bg:        #101010;   /* matte black background */
+  --bg-2:      #1b1a18;   /* raised surface */
+  --bg-3:      #252420;   /* card surface */
+  --text:      #ece5d8;   /* warm off-white */
+  --muted:     #8d8778;   /* muted warm grey */
+  --line:      #3a382f;   /* hairline borders */
+  --accent:    #d4af5a;   /* gold — change here to re-theme */
+  --accent-2:  #dfc178;   /* lighter gold */
+  --ink:       #141210;   /* dark ink for text on gold */
 
   --maxw: 1280px;
   --pad: clamp(1.25rem, 5vw, 5rem);
@@ -54,9 +54,9 @@ ul, ol { list-style: none; }
 ::selection { background: var(--accent); color: var(--ink); }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: #2e3a63; border-radius: 10px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb { background: #3a3833; border-radius: 10px; border: 2px solid var(--bg); }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-html { scrollbar-color: #2e3a63 var(--bg); scrollbar-width: thin; }
+html { scrollbar-color: #3a3833 var(--bg); scrollbar-width: thin; }
 
 /* ============================================================
    LIVE BACKGROUND SCENE
@@ -76,17 +76,17 @@ main, .marquee, .footer { position: relative; z-index: 1; }
 }
 .bg-orb--1 {
   width: 55vmax; height: 55vmax; top: -18vmax; right: -16vmax;
-  background: radial-gradient(circle, rgba(200,114,47,.15), transparent 65%);
+  background: radial-gradient(circle, rgba(212,175,90,.13), transparent 65%);
 }
 .bg-orb--2 {
   width: 46vmax; height: 46vmax; bottom: -22vmax; left: -14vmax;
-  background: radial-gradient(circle, rgba(217,138,69,.10), transparent 65%);
+  background: radial-gradient(circle, rgba(223,193,120,.08), transparent 65%);
 }
 .bg-word {
   position: absolute; white-space: nowrap; will-change: transform;
   font-weight: 900; text-transform: uppercase; letter-spacing: -.02em;
   font-size: clamp(7rem, 26vw, 24rem); line-height: 1;
-  color: transparent; -webkit-text-stroke: 1px rgba(142,151,179,.15);
+  color: transparent; -webkit-text-stroke: 1px rgba(141,135,120,.16);
   user-select: none;
 }
 .bg-word--1 { top: 16%; left: -4%; }
@@ -103,20 +103,20 @@ main, .marquee, .footer { position: relative; z-index: 1; }
 .lace--markers { z-index: 2; }   /* eyelets & labels float over the content */
 
 /* waypoint markers: grommet + label that lights up when the lace arrives */
-.lace .wp-ring { stroke: #46578f; transition: stroke .4s var(--ease); }
+.lace .wp-ring { stroke: #4a4636; transition: stroke .4s var(--ease); }
 .lace .wp-pulse {
-  fill: none; stroke: #ffa04e; stroke-width: 2; opacity: 0;
+  fill: none; stroke: #dfc178; stroke-width: 2; opacity: 0;
   transform-box: fill-box; transform-origin: center;
 }
 .lace .wp-label {
   font-family: var(--font); font-size: 13px; font-weight: 700;
   letter-spacing: .14em; text-transform: uppercase;
-  fill: rgba(142,151,179,.75); transition: fill .4s var(--ease);
-  paint-order: stroke; stroke: rgba(12,18,35,.85); stroke-width: 3px;  /* readable over photos */
+  fill: rgba(141,135,120,.8); transition: fill .4s var(--ease);
+  paint-order: stroke; stroke: rgba(10,10,10,.85); stroke-width: 3px;  /* readable over photos */
 }
 .lace .wp--sm .wp-label { font-size: 11px; }
-.lace g.wp.is-lit .wp-ring { stroke: #ffa04e; }
-.lace g.wp.is-lit .wp-label { fill: #ffa757; }
+.lace g.wp.is-lit .wp-ring { stroke: #dfc178; }
+.lace g.wp.is-lit .wp-label { fill: #e3c987; }
 .lace g.wp.is-lit .wp-pulse { animation: wpPing .9s var(--ease) forwards; }
 @keyframes wpPing {
   from { opacity: .9; transform: scale(.4); }
@@ -131,7 +131,7 @@ main, .marquee, .footer { position: relative; z-index: 1; }
 .scroll-progress span {
   display: block; height: 100%; width: 100%;
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  box-shadow: 0 0 12px rgba(255,148,64,.65), 0 0 26px rgba(255,148,64,.3);
+  box-shadow: 0 0 12px rgba(212,175,90,.65), 0 0 26px rgba(212,175,90,.3);
   transform: scaleX(0); transform-origin: 0 50%;
 }
 
@@ -167,7 +167,7 @@ main, .marquee, .footer { position: relative; z-index: 1; }
   border-bottom: 1px solid transparent;
 }
 .nav.is-scrolled {
-  background: rgba(19,27,49,.72);
+  background: rgba(16,16,16,.75);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom-color: var(--line);
@@ -213,7 +213,7 @@ main, .marquee, .footer { position: relative; z-index: 1; }
   .nav__links {
     position: fixed; inset: 0; flex-direction: column;
     align-items: center; justify-content: center; gap: 2.2rem;
-    background: rgba(19,27,49,.97); backdrop-filter: blur(8px);
+    background: rgba(16,16,16,.97); backdrop-filter: blur(8px);
     transform: translateX(100%); transition: transform .4s var(--ease);
   }
   .nav__links a { font-size: 1.5rem; color: var(--text); }
@@ -236,7 +236,7 @@ main, .marquee, .footer { position: relative; z-index: 1; }
 .hero__glow {
   position: absolute; top: -10%; right: -10%;
   width: 60vmax; height: 60vmax; border-radius: 50%;
-  background: radial-gradient(circle, rgba(200,114,47,.26), transparent 62%);
+  background: radial-gradient(circle, rgba(212,175,90,.22), transparent 62%);
   filter: blur(20px); pointer-events: none; z-index: 0;
 }
 .hero__content { position: relative; z-index: 2; }
