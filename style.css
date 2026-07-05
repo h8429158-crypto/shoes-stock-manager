@@ -341,6 +341,28 @@ main, .marquee, .footer { position: relative; z-index: 1; }
   margin-top: 1.2rem; max-width: 46ch; color: var(--muted);
   font-size: clamp(1rem, 2.6vw, 1.15rem);
 }
+.section__pdf {
+  display: inline-block; margin-top: 1rem; font-weight: 700; color: var(--accent);
+}
+.section__pdf:hover { color: var(--accent-2); }
+
+/* ============================================================
+   TRUSTED BY (social proof strip)
+   ============================================================ */
+.trust {
+  max-width: var(--maxw); margin: 0 auto;
+  padding: 0 var(--pad) clamp(2rem, 6vw, 3.5rem); text-align: center;
+}
+.trust__label {
+  font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 1.1rem;
+}
+.trust__logos { display: flex; flex-wrap: wrap; justify-content: center; gap: .8rem; }
+.trust__logo {
+  border: 1px dashed var(--line); border-radius: 10px; padding: .65rem 1.4rem;
+  font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted);
+}
 
 /* ============================================================
    COLLECTIONS
@@ -499,6 +521,28 @@ body.gallery-open { overflow: hidden; }
 .shot img { width: 100%; aspect-ratio: 4/5; object-fit: cover; }
 @media (min-width: 700px) { .shot { flex-basis: 42%; max-width: 380px; } }
 @media (min-width: 1100px) { .shot { flex-basis: 28%; } }
+
+/* ============================================================
+   FAQ (native <details> accordion — no JS needed)
+   ============================================================ */
+.faq__list { display: flex; flex-direction: column; gap: .9rem; max-width: 760px; }
+.faq__item {
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 0 1.4rem;
+}
+.faq__item summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 1.15rem 0; font-weight: 700; font-size: clamp(1rem, 2.4vw, 1.1rem);
+}
+.faq__item summary::-webkit-details-marker { display: none; }
+.faq__item summary::after {
+  content: "+"; font-size: 1.4rem; font-weight: 400; color: var(--accent);
+  flex-shrink: 0; transition: transform .3s var(--ease);
+}
+.faq__item[open] summary::after { transform: rotate(45deg); }
+.faq__item summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.faq__item p { color: var(--muted); max-width: 65ch; padding: 0 0 1.3rem; }
 
 /* ============================================================
    CONTACT
