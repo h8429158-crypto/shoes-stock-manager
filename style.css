@@ -570,6 +570,8 @@ body.gallery-open { overflow: hidden; }
   display: flex; flex-wrap: wrap; gap: .6rem 2rem; justify-content: space-between;
   color: var(--muted); font-size: .9rem;
 }
+.footer__col { display: flex; flex-direction: column; gap: .3rem; }
+.footer__unit { font-size: .82rem; color: var(--muted); opacity: .8; }
 
 /* ============================================================
    FLOATING WHATSAPP + BACK TO TOP
