@@ -20,6 +20,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#101010" />
 
+  <!-- ============ ANALYTICS (optional — disabled by default) ============
+       Left commented out on purpose: an unconfigured tracking ID still makes
+       every visitor's browser fetch the script for nothing, which fights the
+       "must load fast" goal. Uncomment ONE OR BOTH once you have real IDs.
+
+       Google Analytics 4 — [EDIT-ANALYTICS] replace G-XXXXXXXXXX with your
+       Measurement ID (GA4 Admin > Data Streams > your stream).
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "G-XXXXXXXXXX");
+  </script>
+  -->
+
+  <!-- Meta Pixel — [EDIT-ANALYTICS] replace YOUR_PIXEL_ID with your ID from
+       Meta Events Manager.
+  <script>
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+    (window,document,"script","https://connect.facebook.net/en_US/fbevents.js");
+    fbq("init", "YOUR_PIXEL_ID");
+    fbq("track", "PageView");
+  </script>
+  <noscript><img height="1" width="1" style="display:none" alt=""
+    src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1" /></noscript>
+  -->
+
   <!-- ============ SEO META TAGS ============ -->
   <title>STEEMLITE Footwear — Manufacturer &amp; Wholesaler Since 1998 | Made in India</title>
   <meta name="description" content="STEEMLITE Footwear — manufacturer and wholesaler since 1998, made in India. Slippers, sandals, casual, sports, formal &amp; kids footwear at factory-direct prices. Bulk orders welcome — enquire on WhatsApp." />
@@ -220,6 +251,9 @@
         <a class="section__pdf" href="catalog.pdf" download>Prefer a PDF? Download our catalog &rarr;</a>
       </div>
 
+      <!-- [EDIT-BADGE] to flag a category as new, add <span class="card__badge">New</span>
+           as the first child inside that card's .card__media (see Sports Shoes below).
+           Remove it again once the style isn't new anymore. -->
       <div class="cards">
         <!-- Card 1: Slippers -->
         <article class="card reveal" data-lace="Slippers">
@@ -269,6 +303,7 @@
         <!-- Card 4: Sports Shoes -->
         <article class="card reveal" data-lace="Sports">
           <div class="card__media">
+            <span class="card__badge">New</span>
             <!-- REPLACE THIS IMAGE: Sports Shoes -->
             <img loading="lazy" src="https://images.unsplash.com/photo-1595341888016-a392ef81b7de?auto=format&fit=crop&w=800&q=80" alt="Sports shoes" width="800" height="1000" />
           </div>
@@ -498,6 +533,8 @@
         <div class="detail"><span class="detail__k">Address</span><span>Your Street, Your City,<br />Your State — PIN</span></div>
         <!-- [EDIT-HOURS] -->
         <div class="detail"><span class="detail__k">Hours</span><span>Mon–Sat, 10am – 7pm</span></div>
+        <!-- [EDIT-GST] replace with your real 15-digit GSTIN -->
+        <div class="detail"><span class="detail__k">GSTIN</span><span>22AAAAA0000A1Z5</span></div>
       </div>
     </section>
   </main>
