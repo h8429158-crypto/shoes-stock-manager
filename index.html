@@ -4,14 +4,25 @@
      Host free on Netlify / Vercel / GitHub Pages.
 
      QUICK-EDIT INDEX (search these tags):
-       [EDIT-WHATSAPP]  -> your WhatsApp number
-       [EDIT-INSTAGRAM] -> your Instagram handle/link
-       [EDIT-PHONE]     -> your phone number
-       [EDIT-EMAIL]     -> your email
-       [EDIT-ADDRESS]   -> your business address
-       [EDIT-HOURS]     -> your business hours
-       [EDIT-STATS]     -> the animated numbers in the About section
+       [EDIT-WHATSAPP]   -> your WhatsApp number
+       [EDIT-INSTAGRAM]  -> your Instagram handle/link
+       [EDIT-PHONE]      -> your phone number
+       [EDIT-EMAIL]      -> your email
+       [EDIT-ADDRESS]    -> your business address
+       [EDIT-HOURS]      -> your business hours
+       [EDIT-STATS]      -> the animated numbers in the About section
+       [EDIT-GST]        -> your real GSTIN
+       [EDIT-CATALOG]    -> point at your real catalog PDF
+       [EDIT-ANALYTICS]  -> your GA4 / Meta Pixel IDs (disabled by default)
+       [EDIT-PRIVACY]    -> the privacy policy text (have it reviewed)
+       [EDIT-BADGE]      -> flag a collection card as "New"
        REPLACE THIS IMAGE -> swap placeholder photos for your own
+
+     Text on the page is bilingual (English / Hindi). Visible copy lives
+     in TRANSLATIONS in script.js, keyed by the data-i18n / data-i18n-html
+     attributes below — edit the strings there, not here, so both
+     languages stay in sync. WhatsApp message bodies and image alt text
+     are kept English-only on purpose (see script.js comment).
      ============================================================ -->
 <!doctype html>
 <html lang="en">
@@ -24,6 +35,8 @@
        Left commented out on purpose: an unconfigured tracking ID still makes
        every visitor's browser fetch the script for nothing, which fights the
        "must load fast" goal. Uncomment ONE OR BOTH once you have real IDs.
+       Once real tracking is live, also update the Privacy Policy modal
+       (search [EDIT-PRIVACY] in this file) to say so honestly.
 
        Google Analytics 4 — [EDIT-ANALYTICS] replace G-XXXXXXXXXX with your
        Measurement ID (GA4 Admin > Data Streams > your stream).
@@ -89,7 +102,19 @@
     "slogan": "Crafting footwear for every step",
     "url": "https://steemlite.example.com/",
     "logo": "https://steemlite.example.com/images/steemlite-logo.jpeg",
-    "sameAs": ["https://instagram.com/steemlite"]
+    "sameAs": ["https://instagram.com/steemlite"],
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "STEEMLITE Footwear Collections",
+      "itemListElement": [
+        { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Slippers", "category": "Footwear > Slippers" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Sandals", "category": "Footwear > Sandals" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Casual Footwear", "category": "Footwear > Casual" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Sports Shoes", "category": "Footwear > Sports" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Formal Shoes", "category": "Footwear > Formal" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Kids Footwear", "category": "Footwear > Kids" } }
+      ]
+    }
   }
   </script>
 
@@ -153,6 +178,9 @@
     <g id="laceEyelets"></g>
   </svg>
 
+  <!-- ============ SHARE TOAST (feedback for the share button) ============ -->
+  <div class="toast" id="shareToast" role="status" aria-live="polite"></div>
+
   <!-- ============ STICKY TOP NAV ============ -->
   <header class="nav" id="nav">
     <div class="nav__inner">
@@ -166,16 +194,31 @@
         <span class="nav__word">STEEM<span>LITE</span></span>
       </a>
 
-      <nav class="nav__links" id="navLinks" aria-label="Primary">
-        <a href="#collections">Collections</a>
-        <a href="#about">About</a>
-        <a href="#why">Why Us</a>
-        <a href="#contact">Contact</a>
-      </nav>
+      <div class="nav__right">
+        <nav class="nav__links" id="navLinks" aria-label="Primary">
+          <a href="#collections" data-i18n="nav.collections">Collections</a>
+          <a href="#about" data-i18n="nav.about">About</a>
+          <a href="#why" data-i18n="nav.whyUs">Why Us</a>
+          <a href="#contact" data-i18n="nav.contact">Contact</a>
+        </nav>
 
-      <button class="nav__toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks">
-        <span></span><span></span><span></span>
-      </button>
+        <!-- ============ LANGUAGE TOGGLE (English / Hindi) ============ -->
+        <button class="nav__lang" id="langToggle" type="button" aria-label="Switch language / भाषा बदलें">
+          <span class="nav__lang-en">EN</span><span class="nav__lang-sep">/</span><span class="nav__lang-hi">हि</span>
+        </button>
+
+        <!-- ============ SHARE BUTTON ============ -->
+        <button class="nav__share" id="shareBtn" type="button" data-i18n-aria="share.label" aria-label="Share this site">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+            <path d="M8.6 10.6l6.8-3.8M8.6 13.4l6.8 3.8" />
+          </svg>
+        </button>
+
+        <button class="nav__toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -188,19 +231,19 @@
       <div class="hero__glow" aria-hidden="true"></div>
 
       <div class="hero__content">
-        <p class="hero__eyebrow reveal">Footwear Manufacturer &amp; Wholesaler &middot; Since 1998</p>
+        <p class="hero__eyebrow reveal" data-i18n="hero.eyebrow">Footwear Manufacturer &amp; Wholesaler &middot; Since 1998</p>
 
         <h1 class="hero__title">
           <span class="reveal">STEEM</span><span class="reveal hero__title--accent">LITE</span>
         </h1>
 
-        <p class="hero__tagline reveal">Crafting footwear for every step.</p>
+        <p class="hero__tagline reveal" data-i18n="hero.tagline">Crafting footwear for every step.</p>
 
         <div class="hero__actions reveal">
-          <a href="#collections" class="btn btn--primary">View Collections</a>
+          <a href="#collections" class="btn btn--primary" data-i18n="hero.viewCollections">View Collections</a>
           <!-- [EDIT-WHATSAPP] change the number below (keep country code, no + or spaces) -->
           <a href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27m%20interested%20in%20a%20bulk%20order."
-             class="btn btn--ghost" target="_blank" rel="noopener">WhatsApp Us</a>
+             class="btn btn--ghost" target="_blank" rel="noopener" data-i18n="hero.whatsapp">WhatsApp Us</a>
         </div>
       </div>
 
@@ -211,7 +254,7 @@
       </div>
 
       <a href="#collections" class="hero__scroll reveal" aria-label="Scroll to collections">
-        <span>Scroll</span>
+        <span data-i18n="hero.scroll">Scroll</span>
         <span class="hero__scroll-line" aria-hidden="true"></span>
       </a>
     </section>
@@ -220,17 +263,19 @@
          Placeholder tiles — [EDIT-TRUST] swap each one for a real
          retailer/distributor logo once you have permission to display it. -->
     <div class="trust reveal">
-      <p class="trust__label">Trusted by retailers &amp; distributors across India</p>
+      <p class="trust__label" data-i18n="trust.label">Trusted by retailers &amp; distributors across India</p>
       <div class="trust__logos">
-        <span class="trust__logo">Retailer Logo</span>
-        <span class="trust__logo">Retailer Logo</span>
-        <span class="trust__logo">Retailer Logo</span>
-        <span class="trust__logo">Retailer Logo</span>
-        <span class="trust__logo">Retailer Logo</span>
+        <span class="trust__logo" data-i18n="trust.logo">Retailer Logo</span>
+        <span class="trust__logo" data-i18n="trust.logo">Retailer Logo</span>
+        <span class="trust__logo" data-i18n="trust.logo">Retailer Logo</span>
+        <span class="trust__logo" data-i18n="trust.logo">Retailer Logo</span>
+        <span class="trust__logo" data-i18n="trust.logo">Retailer Logo</span>
       </div>
     </div>
 
-    <!-- ============ MARQUEE STRIP ============ -->
+    <!-- ============ MARQUEE STRIP ============
+         Decorative ticker text — kept English-only in both languages
+         so brand/category names stay recognizable at a glance. -->
     <div class="marquee" aria-hidden="true">
       <div class="marquee__track">
         <span>MANUFACTURER • WHOLESALER • SLIPPERS • SANDALS • CASUAL • SPORTS • FORMAL • KIDS • </span>
@@ -245,13 +290,13 @@
     <section class="section collections" id="collections" data-lace="Collections">
       <div class="section__head reveal">
         <span class="section__num">02</span>
-        <h2 class="section__title">Collections</h2>
-        <p class="section__lead">Six footwear categories, built in-house and ready for bulk order.</p>
+        <h2 class="section__title" data-i18n="collections.title">Collections</h2>
+        <p class="section__lead" data-i18n="collections.lead">Six footwear categories, built in-house and ready for bulk order.</p>
         <!-- [EDIT-CATALOG] point this at your real PDF once you have one -->
-        <a class="section__pdf" href="catalog.pdf" download>Prefer a PDF? Download our catalog &rarr;</a>
+        <a class="section__pdf" href="catalog.pdf" download data-i18n="collections.pdf">Prefer a PDF? Download our catalog &rarr;</a>
       </div>
 
-      <!-- [EDIT-BADGE] to flag a category as new, add <span class="card__badge">New</span>
+      <!-- [EDIT-BADGE] to flag a category as new, add <span class="card__badge" data-i18n="card.badge.new">New</span>
            as the first child inside that card's .card__media (see Sports Shoes below).
            Remove it again once the style isn't new anymore. -->
       <div class="cards">
@@ -262,10 +307,10 @@
             <img loading="lazy" src="https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=800&q=80" alt="Slippers" width="800" height="1000" />
           </div>
           <div class="card__body">
-            <h3 class="card__title">Slippers</h3>
-            <p class="card__desc">Everyday comfort in soft, durable soles.</p>
+            <h3 class="card__title" data-i18n="card.slippers.title">Slippers</h3>
+            <p class="card__desc" data-i18n="card.slippers.desc">Everyday comfort in soft, durable soles.</p>
             <!-- [EDIT-WHATSAPP] -->
-            <a class="card__link" target="_blank" rel="noopener"
+            <a class="card__link" target="_blank" rel="noopener" data-i18n="card.enquire"
                href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27m%20interested%20in%20bulk%20order%20of%20Slippers">Enquire &rarr;</a>
           </div>
         </article>
@@ -277,10 +322,10 @@
             <img loading="lazy" src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=800&q=80" alt="Sandals" width="800" height="800" />
           </div>
           <div class="card__body">
-            <h3 class="card__title">Sandals</h3>
-            <p class="card__desc">Breezy styles for warm-weather retail.</p>
+            <h3 class="card__title" data-i18n="card.sandals.title">Sandals</h3>
+            <p class="card__desc" data-i18n="card.sandals.desc">Breezy styles for warm-weather retail.</p>
             <!-- [EDIT-WHATSAPP] -->
-            <a class="card__link" target="_blank" rel="noopener"
+            <a class="card__link" target="_blank" rel="noopener" data-i18n="card.enquire"
                href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27m%20interested%20in%20bulk%20order%20of%20Sandals">Enquire &rarr;</a>
           </div>
         </article>
@@ -292,10 +337,10 @@
             <img loading="lazy" src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80" alt="Casual footwear" width="800" height="800" />
           </div>
           <div class="card__body">
-            <h3 class="card__title">Casual Footwear</h3>
-            <p class="card__desc">Versatile everyday shoes that move fast.</p>
+            <h3 class="card__title" data-i18n="card.casual.title">Casual Footwear</h3>
+            <p class="card__desc" data-i18n="card.casual.desc">Versatile everyday shoes that move fast.</p>
             <!-- [EDIT-WHATSAPP] -->
-            <a class="card__link" target="_blank" rel="noopener"
+            <a class="card__link" target="_blank" rel="noopener" data-i18n="card.enquire"
                href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27m%20interested%20in%20bulk%20order%20of%20Casual%20Footwear">Enquire &rarr;</a>
           </div>
         </article>
@@ -303,15 +348,15 @@
         <!-- Card 4: Sports Shoes -->
         <article class="card reveal" data-lace="Sports">
           <div class="card__media">
-            <span class="card__badge">New</span>
+            <span class="card__badge" data-i18n="card.badge.new">New</span>
             <!-- REPLACE THIS IMAGE: Sports Shoes -->
             <img loading="lazy" src="https://images.unsplash.com/photo-1595341888016-a392ef81b7de?auto=format&fit=crop&w=800&q=80" alt="Sports shoes" width="800" height="1000" />
           </div>
           <div class="card__body">
-            <h3 class="card__title">Sports Shoes</h3>
-            <p class="card__desc">Performance builds with grip and cushioning.</p>
+            <h3 class="card__title" data-i18n="card.sports.title">Sports Shoes</h3>
+            <p class="card__desc" data-i18n="card.sports.desc">Performance builds with grip and cushioning.</p>
             <!-- [EDIT-WHATSAPP] -->
-            <a class="card__link" target="_blank" rel="noopener"
+            <a class="card__link" target="_blank" rel="noopener" data-i18n="card.enquire"
                href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27m%20interested%20in%20bulk%20order%20of%20Sports%20Shoes">Enquire &rarr;</a>
           </div>
         </article>
@@ -323,10 +368,10 @@
             <img loading="lazy" src="https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=800&q=80" alt="Formal shoes" width="800" height="800" />
           </div>
           <div class="card__body">
-            <h3 class="card__title">Formal Shoes</h3>
-            <p class="card__desc">Sharp, office-ready leather-look finishes.</p>
+            <h3 class="card__title" data-i18n="card.formal.title">Formal Shoes</h3>
+            <p class="card__desc" data-i18n="card.formal.desc">Sharp, office-ready leather-look finishes.</p>
             <!-- [EDIT-WHATSAPP] -->
-            <a class="card__link" target="_blank" rel="noopener"
+            <a class="card__link" target="_blank" rel="noopener" data-i18n="card.enquire"
                href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27m%20interested%20in%20bulk%20order%20of%20Formal%20Shoes">Enquire &rarr;</a>
           </div>
         </article>
@@ -338,10 +383,10 @@
             <img loading="lazy" src="https://images.unsplash.com/photo-1514989940723-e8e51635b782?auto=format&fit=crop&w=800&q=80" alt="Kids footwear" width="800" height="800" />
           </div>
           <div class="card__body">
-            <h3 class="card__title">Kids Footwear</h3>
-            <p class="card__desc">Playful, tough little shoes that last.</p>
+            <h3 class="card__title" data-i18n="card.kids.title">Kids Footwear</h3>
+            <p class="card__desc" data-i18n="card.kids.desc">Playful, tough little shoes that last.</p>
             <!-- [EDIT-WHATSAPP] -->
-            <a class="card__link" target="_blank" rel="noopener"
+            <a class="card__link" target="_blank" rel="noopener" data-i18n="card.enquire"
                href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27m%20interested%20in%20bulk%20order%20of%20Kids%20Footwear">Enquire &rarr;</a>
           </div>
         </article>
@@ -363,15 +408,15 @@
     <section class="section about" id="about" data-lace="About">
       <div class="section__head reveal">
         <span class="section__num">03</span>
-        <h2 class="section__title">About Steemlite</h2>
+        <h2 class="section__title" data-i18n="about.title">About Steemlite</h2>
       </div>
 
       <div class="about__grid">
         <div class="about__copy reveal">
-          <!-- [EDIT] Rewrite this copy in your own voice anytime. -->
-          <p class="about__lead">Since 1998, we've been a footwear <strong>manufacturer and wholesaler</strong> — making quality footwear in India at factory-direct prices, and shipping it in bulk to retailers and distributors across the country.</p>
-          <p>Everything is produced <strong>in-house</strong>, so we control quality at every stage and keep prices honest. From everyday slippers to performance sports shoes, our range is wide, our designs stay fresh, and our quality stays consistent order after order.</p>
-          <p>New retailer or established distributor — bulk orders are always welcome, and custom / OEM manufacturing is available on request.</p>
+          <!-- [EDIT] Rewrite this copy in your own voice anytime — edit TRANSLATIONS in script.js -->
+          <p class="about__lead" data-i18n-html="about.lead">Since 1998, we've been a footwear <strong>manufacturer and wholesaler</strong> — making quality footwear in India at factory-direct prices, and shipping it in bulk to retailers and distributors across the country.</p>
+          <p data-i18n-html="about.p1">Everything is produced <strong>in-house</strong>, so we control quality at every stage and keep prices honest. From everyday slippers to performance sports shoes, our range is wide, our designs stay fresh, and our quality stays consistent order after order.</p>
+          <p data-i18n="about.p2">New retailer or established distributor — bulk orders are always welcome, and custom / OEM manufacturing is available on request.</p>
         </div>
 
         <!-- REPLACE THIS IMAGE: factory / workshop photo -->
@@ -381,23 +426,23 @@
       </div>
 
       <!-- ============ STATS ROW (animated count-up) ============ -->
-      <!-- [EDIT-STATS] change data-target and the label text for each stat -->
+      <!-- [EDIT-STATS] change data-target and the label text (in script.js) for each stat -->
       <div class="stats reveal">
         <div class="stat">
           <span class="stat__num" data-target="25" data-suffix="+">0</span>
-          <span class="stat__label">Years Since 1998</span>
+          <span class="stat__label" data-i18n="stats.years">Years Since 1998</span>
         </div>
         <div class="stat">
           <span class="stat__num" data-target="500" data-suffix="+">0</span>
-          <span class="stat__label">Designs</span>
+          <span class="stat__label" data-i18n="stats.designs">Designs</span>
         </div>
         <div class="stat">
           <span class="stat__num" data-target="50" data-suffix="+">0</span>
-          <span class="stat__label">Cities Served</span>
+          <span class="stat__label" data-i18n="stats.cities">Cities Served</span>
         </div>
         <div class="stat">
           <span class="stat__num" data-target="100" data-suffix="%">0</span>
-          <span class="stat__label">In-House Manufacturing</span>
+          <span class="stat__label" data-i18n="stats.inhouse">In-House Manufacturing</span>
         </div>
       </div>
     </section>
@@ -408,16 +453,16 @@
     <section class="section why" id="why" data-lace="Why Us">
       <div class="section__head reveal">
         <span class="section__num">04</span>
-        <h2 class="section__title">Why Choose Us</h2>
+        <h2 class="section__title" data-i18n="why.title">Why Choose Us</h2>
       </div>
 
       <div class="why__grid">
-        <div class="why__item reveal"><span class="why__k">01</span><h3>Factory-Direct Pricing</h3><p>No middlemen. You buy straight from the people who make the shoes.</p></div>
-        <div class="why__item reveal"><span class="why__k">02</span><h3>Low MOQ for New Retailers</h3><p>Start small and scale up — we make it easy to test the market.</p></div>
-        <div class="why__item reveal"><span class="why__k">03</span><h3>Fresh Designs, Regularly</h3><p>New styles drop often so your shelves always feel current.</p></div>
-        <div class="why__item reveal"><span class="why__k">04</span><h3>Durable Materials</h3><p>Built to survive daily wear — fewer returns, happier customers.</p></div>
-        <div class="why__item reveal"><span class="why__k">05</span><h3>Timely Dispatch</h3><p>Orders confirmed and packed fast, then shipped to your city.</p></div>
-        <div class="why__item reveal"><span class="why__k">06</span><h3>Custom / OEM Available</h3><p>Your brand, your specs — we manufacture to order.</p></div>
+        <div class="why__item reveal"><span class="why__k">01</span><h3 data-i18n="why.1.title">Factory-Direct Pricing</h3><p data-i18n="why.1.desc">No middlemen. You buy straight from the people who make the shoes.</p></div>
+        <div class="why__item reveal"><span class="why__k">02</span><h3 data-i18n="why.2.title">Low MOQ for New Retailers</h3><p data-i18n="why.2.desc">Start small and scale up — we make it easy to test the market.</p></div>
+        <div class="why__item reveal"><span class="why__k">03</span><h3 data-i18n="why.3.title">Fresh Designs, Regularly</h3><p data-i18n="why.3.desc">New styles drop often so your shelves always feel current.</p></div>
+        <div class="why__item reveal"><span class="why__k">04</span><h3 data-i18n="why.4.title">Durable Materials</h3><p data-i18n="why.4.desc">Built to survive daily wear — fewer returns, happier customers.</p></div>
+        <div class="why__item reveal"><span class="why__k">05</span><h3 data-i18n="why.5.title">Timely Dispatch</h3><p data-i18n="why.5.desc">Orders confirmed and packed fast, then shipped to your city.</p></div>
+        <div class="why__item reveal"><span class="why__k">06</span><h3 data-i18n="why.6.title">Custom / OEM Available</h3><p data-i18n="why.6.desc">Your brand, your specs — we manufacture to order.</p></div>
       </div>
     </section>
 
@@ -427,14 +472,14 @@
     <section class="section process" id="process" data-lace="Process">
       <div class="section__head reveal">
         <span class="section__num">05</span>
-        <h2 class="section__title">How To Order In Bulk</h2>
+        <h2 class="section__title" data-i18n="process.title">How To Order In Bulk</h2>
       </div>
 
       <ol class="steps">
-        <li class="step reveal"><span class="step__n">1</span><h3>Browse Collections</h3><p>Pick the categories and styles you want to stock.</p></li>
-        <li class="step reveal"><span class="step__n">2</span><h3>Send Enquiry on WhatsApp</h3><p>Message us with the categories you're interested in.</p></li>
-        <li class="step reveal"><span class="step__n">3</span><h3>Confirm Designs &amp; Quantity</h3><p>We finalise designs, quantities and pricing together.</p></li>
-        <li class="step reveal"><span class="step__n">4</span><h3>Dispatch to Your City</h3><p>We pack and ship your order straight to you.</p></li>
+        <li class="step reveal"><span class="step__n">1</span><h3 data-i18n="step.1.title">Browse Collections</h3><p data-i18n="step.1.desc">Pick the categories and styles you want to stock.</p></li>
+        <li class="step reveal"><span class="step__n">2</span><h3 data-i18n="step.2.title">Send Enquiry on WhatsApp</h3><p data-i18n="step.2.desc">Message us with the categories you're interested in.</p></li>
+        <li class="step reveal"><span class="step__n">3</span><h3 data-i18n="step.3.title">Confirm Designs &amp; Quantity</h3><p data-i18n="step.3.desc">We finalise designs, quantities and pricing together.</p></li>
+        <li class="step reveal"><span class="step__n">4</span><h3 data-i18n="step.4.title">Dispatch to Your City</h3><p data-i18n="step.4.desc">We pack and ship your order straight to you.</p></li>
       </ol>
     </section>
 
@@ -444,8 +489,8 @@
     <section class="section lookbook" id="lookbook" data-lace="Lookbook">
       <div class="section__head reveal">
         <span class="section__num">06</span>
-        <h2 class="section__title">Lookbook</h2>
-        <p class="section__lead">Swipe through a few of our latest builds.</p>
+        <h2 class="section__title" data-i18n="lookbook.title">Lookbook</h2>
+        <p class="section__lead" data-i18n="lookbook.lead">Swipe through a few of our latest builds.</p>
       </div>
 
       <div class="lookbook__scroll" role="list">
@@ -470,35 +515,35 @@
     <section class="section faq" id="faq" data-lace="FAQ">
       <div class="section__head reveal">
         <span class="section__num">07</span>
-        <h2 class="section__title">Frequently Asked</h2>
-        <p class="section__lead">What retailers usually ask before placing a bulk order.</p>
+        <h2 class="section__title" data-i18n="faq.title">Frequently Asked</h2>
+        <p class="section__lead" data-i18n="faq.lead">What retailers usually ask before placing a bulk order.</p>
       </div>
 
       <div class="faq__list reveal">
-        <!-- [EDIT-FAQ] edit any answer below to match your real policies -->
+        <!-- [EDIT-FAQ] edit answers in TRANSLATIONS (script.js) to match your real policies -->
         <details class="faq__item">
-          <summary>What's your Minimum Order Quantity (MOQ)?</summary>
-          <p>Our MOQ starts at 50 pairs per style for new retailers, with better per-pair pricing at higher volumes. Mix and match styles within a category is welcome.</p>
+          <summary data-i18n="faq.q1">What's your Minimum Order Quantity (MOQ)?</summary>
+          <p data-i18n="faq.a1">Our MOQ starts at 50 pairs per style for new retailers, with better per-pair pricing at higher volumes. Mix and match styles within a category is welcome.</p>
         </details>
         <details class="faq__item">
-          <summary>What are your payment terms?</summary>
-          <p>Typically 50% advance to confirm the order, with the balance due before dispatch. We can discuss terms for repeat and larger orders.</p>
+          <summary data-i18n="faq.q2">What are your payment terms?</summary>
+          <p data-i18n="faq.a2">Typically 50% advance to confirm the order, with the balance due before dispatch. We can discuss terms for repeat and larger orders.</p>
         </details>
         <details class="faq__item">
-          <summary>Can I get samples before ordering in bulk?</summary>
-          <p>Yes — message us on WhatsApp with the styles you're interested in and we'll arrange samples so you can check quality before committing to a bulk order.</p>
+          <summary data-i18n="faq.q3">Can I get samples before ordering in bulk?</summary>
+          <p data-i18n="faq.a3">Yes — message us on WhatsApp with the styles you're interested in and we'll arrange samples so you can check quality before committing to a bulk order.</p>
         </details>
         <details class="faq__item">
-          <summary>How long does dispatch take?</summary>
-          <p>Most orders are packed and dispatched within 7–10 working days of confirming designs and quantities, depending on order size.</p>
+          <summary data-i18n="faq.q4">How long does dispatch take?</summary>
+          <p data-i18n="faq.a4">Most orders are packed and dispatched within 7–10 working days of confirming designs and quantities, depending on order size.</p>
         </details>
         <details class="faq__item">
-          <summary>Do you offer custom or private-label (OEM) manufacturing?</summary>
-          <p>Yes — we manufacture to your specifications, including your own branding, on request. Share your requirements on WhatsApp and we'll take it from there.</p>
+          <summary data-i18n="faq.q5">Do you offer custom or private-label (OEM) manufacturing?</summary>
+          <p data-i18n="faq.a5">Yes — we manufacture to your specifications, including your own branding, on request. Share your requirements on WhatsApp and we'll take it from there.</p>
         </details>
         <details class="faq__item">
-          <summary>Which cities do you deliver to?</summary>
-          <p>We ship pan-India to retailers and distributors in 50+ cities. Message us your location and we'll confirm delivery timelines for your city.</p>
+          <summary data-i18n="faq.q6">Which cities do you deliver to?</summary>
+          <p data-i18n="faq.a6">We ship pan-India to retailers and distributors in 50+ cities. Message us your location and we'll confirm delivery timelines for your city.</p>
         </details>
       </div>
     </section>
@@ -511,28 +556,28 @@
         <span class="section__num">08</span>
       </div>
 
-      <h2 class="contact__title reveal">LET'S TALK<br />BUSINESS</h2>
+      <h2 class="contact__title reveal" data-i18n-html="contact.title">LET'S TALK<br />BUSINESS</h2>
 
       <div class="contact__actions reveal">
         <!-- [EDIT-WHATSAPP] -->
-        <a class="btn btn--primary btn--lg" target="_blank" rel="noopener"
+        <a class="btn btn--primary btn--lg" target="_blank" rel="noopener" data-i18n="contact.whatsappBtn"
            href="https://wa.me/91XXXXXXXXXX?text=Hi%20Steemlite%2C%20I%27d%20like%20to%20discuss%20a%20bulk%20order.">Chat on WhatsApp</a>
         <!-- [EDIT-INSTAGRAM] change steemlite to your handle -->
-        <a class="btn btn--ghost btn--lg" target="_blank" rel="noopener"
+        <a class="btn btn--ghost btn--lg" target="_blank" rel="noopener" data-i18n="contact.instagramBtn"
            href="https://instagram.com/steemlite">Instagram &rarr;</a>
         <!-- [EDIT-CATALOG] point this at your real PDF once you have one -->
-        <a class="btn btn--ghost btn--lg" href="catalog.pdf" download>Download Catalog &darr;</a>
+        <a class="btn btn--ghost btn--lg" href="catalog.pdf" download data-i18n="contact.catalogBtn">Download Catalog &darr;</a>
       </div>
 
       <div class="contact__details reveal">
         <!-- [EDIT-PHONE] -->
-        <div class="detail"><span class="detail__k">Phone</span><a href="tel:+91XXXXXXXXXX">+91 XXXXX XXXXX</a></div>
+        <div class="detail"><span class="detail__k" data-i18n="detail.phone">Phone</span><a href="tel:+91XXXXXXXXXX">+91 XXXXX XXXXX</a></div>
         <!-- [EDIT-EMAIL] -->
-        <div class="detail"><span class="detail__k">Email</span><a href="mailto:hello@steemlite.com">hello@steemlite.com</a></div>
+        <div class="detail"><span class="detail__k" data-i18n="detail.email">Email</span><a href="mailto:hello@steemlite.com">hello@steemlite.com</a></div>
         <!-- [EDIT-ADDRESS] -->
-        <div class="detail"><span class="detail__k">Address</span><span>Your Street, Your City,<br />Your State — PIN</span></div>
+        <div class="detail"><span class="detail__k" data-i18n="detail.address">Address</span><span data-i18n-html="detail.addressValue">Your Street, Your City,<br />Your State — PIN</span></div>
         <!-- [EDIT-HOURS] -->
-        <div class="detail"><span class="detail__k">Hours</span><span>Mon–Sat, 10am – 7pm</span></div>
+        <div class="detail"><span class="detail__k" data-i18n="detail.hours">Hours</span><span data-i18n="detail.hoursValue">Mon–Sat, 10am – 7pm</span></div>
         <!-- [EDIT-GST] replace with your real 15-digit GSTIN -->
         <div class="detail"><span class="detail__k">GSTIN</span><span>22AAAAA0000A1Z5</span></div>
       </div>
@@ -550,11 +595,12 @@
 
   <footer class="footer">
     <div class="footer__col">
-      <p>&copy; <span id="year">2026</span> STEEMLITE. All rights reserved.</p>
+      <p>&copy; <span id="year">2026</span> STEEMLITE. <span data-i18n="footer.rights">All rights reserved.</span></p>
       <!-- [EDIT] change "Paris Footwear Company" if the parent company name differs -->
-      <p class="footer__unit">A unit of Paris Footwear Company</p>
+      <p class="footer__unit" data-i18n="footer.unit">A unit of Paris Footwear Company</p>
+      <button class="footer__privacy" id="privacyBtn" type="button" data-i18n="privacy.linkText">Privacy Policy</button>
     </div>
-    <p class="footer__made">Footwear Manufacturer &amp; Wholesaler &middot; Since 1998 &middot; Made in India</p>
+    <p class="footer__made" data-i18n="footer.made">Footwear Manufacturer &amp; Wholesaler &middot; Since 1998 &middot; Made in India</p>
   </footer>
 
   <!-- ============ FLOATING WHATSAPP BUTTON ============ -->
@@ -576,7 +622,7 @@
   <div class="gallery" id="galleryModal" aria-hidden="true">
     <div class="gallery__backdrop" data-gallery-close></div>
     <div class="gallery__panel" role="dialog" aria-modal="true" aria-labelledby="galleryTitle">
-      <button class="gallery__close" data-gallery-close aria-label="Close gallery">
+      <button class="gallery__close" data-gallery-close aria-label="Close">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
       <div class="gallery__head">
@@ -587,6 +633,35 @@
         <div class="gallery__grid" id="galleryGrid"></div>
       </div>
       <a class="btn btn--primary gallery__cta" id="galleryEnquire" target="_blank" rel="noopener">Enquire in Bulk &rarr;</a>
+    </div>
+  </div>
+
+  <!-- ============ PRIVACY POLICY MODAL ============
+       [EDIT-PRIVACY] Generic boilerplate — have a lawyer or compliance
+       professional review this before relying on it, especially once
+       analytics is actually switched on (search [EDIT-ANALYTICS]). -->
+  <div class="gallery" id="privacyModal" aria-hidden="true">
+    <div class="gallery__backdrop" data-gallery-close></div>
+    <div class="gallery__panel" role="dialog" aria-modal="true" aria-labelledby="privacyTitle">
+      <button class="gallery__close" data-gallery-close aria-label="Close">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <div class="gallery__head">
+        <h3 class="gallery__title" id="privacyTitle" data-i18n="privacy.linkText">Privacy Policy</h3>
+      </div>
+      <div class="gallery__body">
+        <div class="privacy__text">
+          <p data-i18n="privacy.p1">This is a draft privacy policy — please have it reviewed before publishing, and update it if you turn on analytics or start collecting information beyond what's described here.</p>
+          <h4 data-i18n="privacy.h1">Information We Collect</h4>
+          <p data-i18n="privacy.p2">We don't run an online store or accounts, so we don't collect payment details or passwords through this site. When you message us on WhatsApp or Instagram, we see whatever you choose to share there (name, number, order details) so we can respond to your enquiry.</p>
+          <h4 data-i18n="privacy.h2">Analytics &amp; Cookies</h4>
+          <p data-i18n="privacy.p3">Analytics tracking is currently switched off on this site. If we turn it on in future (e.g. Google Analytics or Meta Pixel), it would collect general visit data — pages viewed, approximate location, device type — to help us understand which parts of the site are useful. This policy will be updated first.</p>
+          <h4 data-i18n="privacy.h3">Third-Party Links</h4>
+          <p data-i18n="privacy.p4">This site links out to WhatsApp and Instagram. Once you leave our site, their own privacy policies apply.</p>
+          <h4 data-i18n="privacy.h4">Contact Us</h4>
+          <p data-i18n="privacy.p5">Questions about this policy or your information? Reach us using the contact details on this page.</p>
+        </div>
+      </div>
     </div>
   </div>
 
