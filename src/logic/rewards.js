@@ -10,11 +10,18 @@ export function consistencyRatio(earned, possible) {
   return ratio;
 }
 
-// Monthly reward = ₹10,000 + (consistency × ₹10,000), bounded to [10k, 20k].
-export function rewardForConsistency(ratio) {
-  const span = REWARD_MAX - REWARD_MIN;
-  const value = REWARD_MIN + ratio * span;
-  return Math.round(Math.min(REWARD_MAX, Math.max(REWARD_MIN, value)));
+// Per-day accrual: the reward range is split evenly across the days of the
+// month. Each day is worth (max - min) / daysInMonth. A day contributes its
+// full slice when every scheduled task is done, a partial slice when some are,
+// and nothing when none are — but a missed day never subtracts what was already
+// banked. Complete everything every day of the month to reach the maximum.
+export function perDayShare(daysInMonth, min = REWARD_MIN, max = REWARD_MAX) {
+  return daysInMonth > 0 ? (max - min) / daysInMonth : 0;
+}
+
+// Clamp an accrued amount into the reward range.
+export function rewardFromAccrued(accrued, min = REWARD_MIN, max = REWARD_MAX) {
+  return Math.round(Math.min(max, Math.max(min, min + accrued)));
 }
 
 // Format a rupee amount as ₹XX,XXX using the Indian numbering system.

@@ -30,24 +30,26 @@ export default function HomeScreen({ navigation }) {
         <Text style={styles.reward}>{formatRupees(summary.reward)}</Text>
         <View style={styles.heroMetaRow}>
           <Text style={styles.heroMeta}>
-            {formatPercent(summary.consistency)} consistency
+            ₹{summary.perDay.toFixed(2)}/day
           </Text>
           <Text style={styles.heroDot}>·</Text>
           <Text style={styles.heroMeta}>
-            {summary.totalPoints} pts this month
+            {formatPercent(summary.consistency)} of tasks done
           </Text>
+          <Text style={styles.heroDot}>·</Text>
+          <Text style={styles.heroMeta}>{summary.totalPoints} pts</Text>
         </View>
         <View style={{ marginTop: spacing.md }}>
-          <ProgressBar ratio={summary.consistency} color={colors.primary} height={14} />
+          <ProgressBar ratio={summary.progress} color={colors.primary} height={14} />
           <View style={styles.rangeRow}>
-            <Text style={styles.rangeText}>₹10,000</Text>
-            <Text style={styles.rangeText}>₹20,000</Text>
+            <Text style={styles.rangeText}>{formatRupees(summary.rewardMin)}</Text>
+            <Text style={styles.rangeText}>{formatRupees(summary.rewardMax)}</Text>
           </View>
         </View>
         {summary.projectedReward > summary.reward && (
           <View style={styles.forecast}>
             <Text style={styles.forecastText}>
-              🎯 Finish every task this month → up to{' '}
+              🎯 Finish every day this month → on pace for{' '}
               <Text style={styles.forecastAmount}>{formatRupees(summary.projectedReward)}</Text>
             </Text>
           </View>

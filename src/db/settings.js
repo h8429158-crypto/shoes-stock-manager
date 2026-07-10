@@ -2,6 +2,8 @@ import { getDb } from './database';
 import {
   DEFAULT_REMINDER_HOUR,
   DEFAULT_REMINDER_MINUTE,
+  REWARD_MIN,
+  REWARD_MAX,
 } from '../constants';
 
 export async function getSetting(key, fallback = null) {
@@ -31,7 +33,14 @@ export async function getAppSettings() {
     reminderEnabled: map.reminder_enabled == null ? true : map.reminder_enabled === '1',
     reminderHour: map.reminder_hour != null ? Number(map.reminder_hour) : DEFAULT_REMINDER_HOUR,
     reminderMinute: map.reminder_minute != null ? Number(map.reminder_minute) : DEFAULT_REMINDER_MINUTE,
+    rewardMin: map.reward_min != null ? Number(map.reward_min) : REWARD_MIN,
+    rewardMax: map.reward_max != null ? Number(map.reward_max) : REWARD_MAX,
   };
+}
+
+export async function setRewardRange(min, max) {
+  await setSetting('reward_min', min);
+  await setSetting('reward_max', max);
 }
 
 export async function setName(name) {

@@ -37,6 +37,8 @@ export default function SettingsScreen({ navigation }) {
     totalPaid,
     exportBackup,
     importBackup,
+    updateRewardRange,
+    summary,
   } = useApp();
 
   const [name, setNameState] = useState(settings.name);
@@ -44,6 +46,19 @@ export default function SettingsScreen({ navigation }) {
   const [minute, setMinute] = useState(settings.reminderMinute);
   const [enabled, setEnabled] = useState(settings.reminderEnabled);
   const [busy, setBusy] = useState(false);
+  const [minText, setMinText] = useState(String(settings.rewardMin));
+  const [maxText, setMaxText] = useState(String(settings.rewardMax));
+
+  const saveRange = () => {
+    const mn = Math.round(Number(minText));
+    const mx = Math.round(Number(maxText));
+    if (!Number.isFinite(mn) || !Number.isFinite(mx) || mn < 0 || mx <= mn) {
+      Alert.alert('Invalid range', 'The maximum must be greater than the minimum.');
+      return;
+    }
+    updateRewardRange(mn, mx);
+    Alert.alert('Saved', 'Your reward range was updated.');
+  };
 
   const doExport = async () => {
     setBusy(true);
@@ -235,14 +250,41 @@ export default function SettingsScreen({ navigation }) {
         )}
       </Card>
 
+      <SectionTitle>Reward range</SectionTitle>
+      <Card>
+        <Text style={styles.help}>
+          The money you pay yourself. The minimum is guaranteed; the maximum is
+          for a perfect month.
+        </Text>
+        <Text style={[styles.label, { marginTop: spacing.md }]}>Minimum (₹)</Text>
+        <TextInput
+          value={minText}
+          onChangeText={setMinText}
+          keyboardType="number-pad"
+          style={styles.input}
+        />
+        <Text style={[styles.label, { marginTop: spacing.md }]}>Maximum (₹)</Text>
+        <TextInput
+          value={maxText}
+          onChangeText={setMaxText}
+          keyboardType="number-pad"
+          style={styles.input}
+        />
+        <Button title="Save range" variant="secondary" onPress={saveRange} />
+        <Text style={styles.rangeNote}>
+          Each fully-completed day is worth ₹{summary.perDay.toFixed(2)} this month
+          ({formatRupees(summary.rewardMax - summary.rewardMin)} ÷ {summary.daysInMonth} days).
+        </Text>
+      </Card>
+
       <SectionTitle>How rewards work</SectionTitle>
       <Card>
         <Text style={styles.help}>
-          Each month you earn a real-money reward you pay yourself: a guaranteed
-          ₹10,000, rising to ₹20,000 at 100% consistency.
-          {'\n\n'}Reward = ₹10,000 + (consistency × ₹10,000){'\n'}
-          Consistency = points earned ÷ points possible this month.
-          {'\n\n'}Points reset on the 1st of each month; your task list carries over.
+          Each day you complete all your tasks, you bank one day's slice:
+          (max − min) ÷ days in the month. Do everything every day to reach the
+          maximum. A partial day banks part of its slice; a missed day banks
+          nothing but never takes money away.
+          {'\n\n'}Everything resets on the 1st; your task list carries over.
         </Text>
       </Card>
 
@@ -302,4 +344,5 @@ const styles = StyleSheet.create({
   stepLabel: { color: colors.textFaint, fontSize: font.xs, marginTop: 4 },
   colon: { color: colors.text, fontSize: font.xxl, fontWeight: '900', marginHorizontal: spacing.md, marginBottom: 18 },
   help: { color: colors.textDim, fontSize: font.sm, lineHeight: 21 },
+  rangeNote: { color: colors.textFaint, fontSize: font.xs, marginTop: spacing.md, lineHeight: 18 },
 });

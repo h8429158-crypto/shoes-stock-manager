@@ -35,10 +35,10 @@ export default function MonthCompleteScreen({ navigation }) {
           <Text style={styles.reward}>{formatRupees(summary.reward)}</Text>
           <Text style={styles.heroSub}>Pay this to yourself 🎉</Text>
           <View style={{ width: '100%', marginTop: spacing.lg }}>
-            <ProgressBar ratio={summary.consistency} color={colors.primary} height={14} />
+            <ProgressBar ratio={summary.progress} color={colors.primary} height={14} />
             <View style={styles.rangeRow}>
-              <Text style={styles.rangeText}>₹10,000</Text>
-              <Text style={styles.rangeText}>₹20,000</Text>
+              <Text style={styles.rangeText}>{formatRupees(summary.rewardMin)}</Text>
+              <Text style={styles.rangeText}>{formatRupees(summary.rewardMax)}</Text>
             </View>
           </View>
         </Card>

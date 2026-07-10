@@ -13,16 +13,19 @@ Everything runs **fully offline** on the device. No login, no internet, no accou
 
 1. Set daily tasks (e.g. *No sugar*, *Workout 30 min*, *Read 20 pages*).
 2. Each day the tasks appear as a checklist. **Tick = done = points.**
-3. Points build **consistency**, which sets your **monthly reward**:
+3. Each day builds your **monthly reward**, which accrues one equal slice per day:
 
    ```
-   reward       = ₹10,000 + (consistency × ₹10,000)      // clamped to ₹10k–₹20k
-   consistency  = points earned this month ÷ points possible this month
+   per-day slice = (max − min) ÷ days in the month     // e.g. ₹10,000 ÷ 31 = ₹322.58
+   reward        = min + Σ over each day (day's completion % × per-day slice)
    ```
 
-   Example: 75% consistency → ₹10,000 + ₹7,500 = **₹17,500**.
+   A fully-completed day banks the whole slice; a partial day banks part of it; a
+   missed day banks nothing — but never subtracts what you've already earned.
+   Complete everything every day of the month to reach the **maximum**.
 
-The **Current Reward** on the Home screen updates live every time you tick a task.
+The **Current Reward** on the Home screen updates live every time you tick a task,
+and the **reward range (min/max) is editable** in Settings (default ₹10,000–₹20,000).
 
 ## Points
 

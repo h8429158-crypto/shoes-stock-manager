@@ -7,7 +7,8 @@ import {
   bestStreak,
   monthStreakBonus,
 } from './dayStatus';
-import { consistencyRatio, rewardForConsistency } from './rewards';
+import { consistencyRatio, perDayShare, rewardFromAccrued } from './rewards';
+import { REWARD_MIN, REWARD_MAX } from '../constants';
 import { todayStr, addDays, daysInMonthKey } from './dates';
 
 // Compute everything the Home screen needs from raw data. Kept pure so it can be
@@ -17,10 +18,20 @@ import { todayStr, addDays, daysInMonthKey } from './dates';
 //   priorityCategory  - category matching this month's priority, or null
 //   completions       - raw completion rows
 //   today             - YYYY-MM-DD (injectable for tests)
-export function computeSummary(tasks, priorityCategory, completions, today = todayStr()) {
+//   min, max          - reward range (user-configurable)
+export function computeSummary(
+  tasks,
+  priorityCategory,
+  completions,
+  today = todayStr(),
+  min = REWARD_MIN,
+  max = REWARD_MAX,
+) {
   const byDate = indexCompletions(completions);
   const monthKey = today.slice(0, 7);
   const monthStart = `${monthKey}-01`;
+  const totalDays = daysInMonthKey(monthKey);
+  const perDay = perDayShare(totalDays, min, max);
 
   // ----- Today -----
   const todaysTasks = activeTasksOn(tasks, today).map((t) => {
@@ -32,44 +43,45 @@ export function computeSummary(tasks, priorityCategory, completions, today = tod
   const todayEarned = todaysTasks.reduce((s, t) => s + (t.done ? t.points : 0), 0);
   const todayDone = todaysTasks.filter((t) => t.done).length;
 
-  // ----- Month totals -----
-  // Possible = sum over each elapsed day of that day's active-task points.
-  // Earned   = sum over each elapsed day of that day's completed points.
+  // ----- Month totals + per-day reward accrual -----
+  // Each elapsed day banks (earned/possible) of its equal reward slice.
   let monthPossible = 0;
   let monthEarned = 0;
+  let accrued = 0;
   let d = monthStart;
   while (d <= today) {
     const s = dayStatus(tasks, byDate, d, priorityCategory);
     monthPossible += s.possible;
     monthEarned += s.earned;
+    if (s.possible > 0) accrued += (s.earned / s.possible) * perDay;
     d = addDays(d, 1);
   }
 
   const bonus = monthStreakBonus(tasks, byDate, priorityCategory, monthKey, today);
-  const consistency = consistencyRatio(monthEarned, monthPossible);
-  const reward = rewardForConsistency(consistency);
+  const reward = rewardFromAccrued(accrued, min, max);
+  const consistency = consistencyRatio(monthEarned, monthPossible); // avg daily completion
+  const progress = max - min > 0 ? (reward - min) / (max - min) : 0; // money banked
   const totalPoints = monthEarned + bonus;
 
   const streakNow = currentStreak(tasks, byDate, priorityCategory, today);
   const streakBest = bestStreak(tasks, byDate, priorityCategory, today);
 
-  // ----- Forecast: the best reward still reachable if every remaining
-  // scheduled task (today's unfinished + all future days this month) is done.
-  const totalDays = daysInMonthKey(monthKey);
+  // ----- Forecast: reward still reachable if every remaining day (today's
+  // unfinished tasks + all future days that have tasks) is completed fully.
   const lastDay = `${monthKey}-${String(totalDays).padStart(2, '0')}`;
-  let futurePossible = 0;
+  const remainingToday =
+    todayPossible > 0 ? (1 - todayEarned / todayPossible) * perDay : 0;
+  let futureAccrual = 0;
   let fd = addDays(today, 1);
   while (fd <= lastDay) {
-    for (const t of activeTasksOn(tasks, fd)) {
-      futurePossible += taskPoints(t, priorityCategory);
-    }
+    if (activeTasksOn(tasks, fd).length > 0) futureAccrual += perDay;
     fd = addDays(fd, 1);
   }
-  const todayRemaining = todayPossible - todayEarned;
-  const fullMonthPossible = monthPossible + futurePossible;
-  const projectedEarned = monthEarned + todayRemaining + futurePossible;
-  const projectedConsistency = consistencyRatio(projectedEarned, fullMonthPossible);
-  const projectedReward = rewardForConsistency(projectedConsistency);
+  const projectedReward = rewardFromAccrued(
+    accrued + remainingToday + futureAccrual,
+    min,
+    max,
+  );
 
   return {
     today,
@@ -84,11 +96,14 @@ export function computeSummary(tasks, priorityCategory, completions, today = tod
     bonus,
     totalPoints,
     consistency,
+    progress,
     reward,
+    perDay,
+    rewardMin: min,
+    rewardMax: max,
+    daysInMonth: totalDays,
     currentStreak: streakNow,
     bestStreak: streakBest,
-    fullMonthPossible,
-    projectedConsistency,
     projectedReward,
   };
 }

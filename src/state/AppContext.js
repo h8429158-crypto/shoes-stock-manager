@@ -22,6 +22,7 @@ import {
   setName as dbSetName,
   setOnboarded as dbSetOnboarded,
   setReminder as dbSetReminder,
+  setRewardRange as dbSetRewardRange,
 } from '../db/settings';
 import { computeSummary } from '../logic/summary';
 import { lockedTaskIds } from '../logic/locks';
@@ -42,6 +43,8 @@ export function AppProvider({ children }) {
     reminderEnabled: true,
     reminderHour: 20,
     reminderMinute: 0,
+    rewardMin: 10000,
+    rewardMax: 20000,
   });
 
   // Pull everything fresh from SQLite and recompute derived state.
@@ -89,8 +92,16 @@ export function AppProvider({ children }) {
   const priorityCategory = priority ? priority.category : null;
 
   const summary = useMemo(
-    () => computeSummary(tasks, priorityCategory, completions),
-    [tasks, priorityCategory, completions],
+    () =>
+      computeSummary(
+        tasks,
+        priorityCategory,
+        completions,
+        undefined,
+        settings.rewardMin,
+        settings.rewardMax,
+      ),
+    [tasks, priorityCategory, completions, settings.rewardMin, settings.rewardMax],
   );
 
   const lockedIds = useMemo(
@@ -175,6 +186,10 @@ export function AppProvider({ children }) {
         }
         await dbSetOnboarded(true);
         await reload();
+      },
+      async updateRewardRange(min, max) {
+        await dbSetRewardRange(min, max);
+        setSettings((s) => ({ ...s, rewardMin: min, rewardMax: max }));
       },
       async updateReminder(next) {
         await dbSetReminder(next);
