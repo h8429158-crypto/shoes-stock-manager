@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Reward Habits",
+    "slug": "reward-habits",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "scheme": "rewardhabits",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#0B0F14",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rewardhabits.app",
+      "infoPlist": {
+        "UIBackgroundModes": []
+      }
+    },
+    "android": {
+      "package": "com.rewardhabits.app",
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": [
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "color": "#4CC38A"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
