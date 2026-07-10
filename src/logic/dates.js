@@ -55,6 +55,12 @@ export function dayOfMonth(d = new Date()) {
   return d.getDate();
 }
 
+// Weekday index (0 = Sunday … 6 = Saturday) for a YYYY-MM-DD string.
+export function weekdayOf(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).getDay();
+}
+
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',

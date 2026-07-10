@@ -7,27 +7,59 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors, spacing, font, radius, categoryColors } from '../theme/theme';
-import { CATEGORIES, IMPORTANCE_LEVELS, IMPORTANCE_POINTS } from '../constants';
+import {
+  CATEGORIES,
+  IMPORTANCE_LEVELS,
+  IMPORTANCE_POINTS,
+  WEEKDAY_LABELS,
+  SCHEDULE_ALL,
+  WEEKDAYS_ONLY,
+} from '../constants';
 import Button from '../components/Button';
 import SegmentedPicker from '../components/SegmentedPicker';
 import { useApp } from '../state/AppContext';
 import { taskPoints } from '../logic/points';
+import { parseDays, daysToString, SCHEDULE_PRESETS } from '../logic/schedule';
 
 // Add or edit a single task. Presented as a modal stack screen.
 export default function TaskEditScreen({ navigation, route }) {
-  const { tasks, priorityCategory, createTask, editTask } = useApp();
+  const { tasks, priorityCategory, createTask, editTask, lockedIds } = useApp();
   const taskId = route.params?.taskId;
   const existing = taskId ? tasks.find((t) => t.id === taskId) : null;
   const isEdit = !!existing;
+  const locked = isEdit && lockedIds.has(taskId);
 
   const [title, setTitle] = useState(existing?.title || '');
   const [category, setCategory] = useState(existing?.category || 'Health');
   const [importance, setImportance] = useState(existing?.importance || 'Medium');
+  const [days, setDays] = useState(existing?.days || SCHEDULE_ALL);
   const [saving, setSaving] = useState(false);
+
+  const preset =
+    days === SCHEDULE_ALL ? SCHEDULE_ALL : days === WEEKDAYS_ONLY ? WEEKDAYS_ONLY : 'custom';
+  const selectedDays = parseDays(days);
+
+  const setPreset = (value) => {
+    if (value === 'custom') {
+      // seed custom mode from current selection
+      setDays(daysToString(selectedDays.length === 7 ? [1, 2, 3, 4, 5] : selectedDays));
+    } else {
+      setDays(value);
+    }
+  };
+
+  const toggleDay = (idx) => {
+    const set = new Set(selectedDays);
+    if (set.has(idx)) set.delete(idx);
+    else set.add(idx);
+    if (set.size === 0) return; // never allow zero days
+    setDays(daysToString([...set]));
+  };
 
   const previewTask = { category, importance };
   const previewPoints = taskPoints(previewTask, priorityCategory);
@@ -36,7 +68,7 @@ export default function TaskEditScreen({ navigation, route }) {
   const save = async () => {
     if (!title.trim()) return;
     setSaving(true);
-    const data = { title: title.trim(), category, importance };
+    const data = { title: title.trim(), category, importance, days };
     if (isEdit) await editTask(taskId, data);
     else await createTask(data);
     navigation.goBack();
@@ -59,6 +91,16 @@ export default function TaskEditScreen({ navigation, route }) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          {locked && (
+            <View style={styles.lockBanner}>
+              <Text style={styles.lockText}>
+                🔒 Locked this month. You've already earned points from this task,
+                so its points and schedule are frozen to keep your reward honest.
+                You can still fix the name — everything unlocks on the 1st.
+              </Text>
+            </View>
+          )}
+
           <Text style={styles.label}>Task</Text>
           <TextInput
             value={title}
@@ -70,22 +112,50 @@ export default function TaskEditScreen({ navigation, route }) {
           />
 
           <Text style={styles.label}>Category</Text>
-          <SegmentedPicker
-            options={CATEGORIES}
-            value={category}
-            onChange={setCategory}
-            colorFor={(c) => categoryColors[c]}
-          />
+          <View pointerEvents={locked ? 'none' : 'auto'} style={locked && styles.disabled}>
+            <SegmentedPicker
+              options={CATEGORIES}
+              value={category}
+              onChange={setCategory}
+              colorFor={(c) => categoryColors[c]}
+            />
+          </View>
 
           <Text style={styles.label}>Importance</Text>
-          <SegmentedPicker
-            options={IMPORTANCE_LEVELS.map((l) => ({
-              label: `${l} (${IMPORTANCE_POINTS[l]})`,
-              value: l,
-            }))}
-            value={importance}
-            onChange={setImportance}
-          />
+          <View pointerEvents={locked ? 'none' : 'auto'} style={locked && styles.disabled}>
+            <SegmentedPicker
+              options={IMPORTANCE_LEVELS.map((l) => ({
+                label: `${l} (${IMPORTANCE_POINTS[l]})`,
+                value: l,
+              }))}
+              value={importance}
+              onChange={setImportance}
+            />
+          </View>
+
+          <Text style={styles.label}>Repeat</Text>
+          <View pointerEvents={locked ? 'none' : 'auto'} style={locked && styles.disabled}>
+            <SegmentedPicker options={SCHEDULE_PRESETS} value={preset} onChange={setPreset} />
+            {preset === 'custom' && (
+              <View style={styles.dayRow}>
+                {WEEKDAY_LABELS.map((label, idx) => {
+                  const on = selectedDays.includes(idx);
+                  return (
+                    <Pressable
+                      key={label}
+                      onPress={() => toggleDay(idx)}
+                      style={[styles.dayPill, on && styles.dayPillOn]}
+                    >
+                      <Text style={[styles.dayText, on && styles.dayTextOn]}>{label[0]}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
+            <Text style={styles.hint}>
+              Days with no task become rest days — they never break your streak.
+            </Text>
+          </View>
 
           <View style={styles.preview}>
             <Text style={styles.previewLabel}>Worth per day</Text>
@@ -127,6 +197,31 @@ const styles = StyleSheet.create({
   topBtn: { width: 90, minHeight: 40 },
   topTitle: { color: colors.text, fontSize: font.md, fontWeight: '800' },
   content: { padding: spacing.lg },
+  disabled: { opacity: 0.45 },
+  lockBanner: {
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  lockText: { color: colors.text, fontSize: font.xs, lineHeight: 18 },
+  dayRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.sm },
+  dayPill: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayPillOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  dayText: { color: colors.textDim, fontSize: font.sm, fontWeight: '700' },
+  dayTextOn: { color: '#06210F', fontWeight: '800' },
+  hint: { color: colors.textFaint, fontSize: font.xs, marginTop: spacing.sm },
   label: {
     color: colors.text,
     fontSize: font.sm,

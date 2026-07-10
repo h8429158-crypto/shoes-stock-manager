@@ -8,7 +8,7 @@ import {
   monthStreakBonus,
 } from './dayStatus';
 import { consistencyRatio, rewardForConsistency } from './rewards';
-import { todayStr, currentMonthKey, addDays } from './dates';
+import { todayStr, addDays, daysInMonthKey } from './dates';
 
 // Compute everything the Home screen needs from raw data. Kept pure so it can be
 // unit-tested and recomputed cheaply on every tick for a live reward.
@@ -53,6 +53,24 @@ export function computeSummary(tasks, priorityCategory, completions, today = tod
   const streakNow = currentStreak(tasks, byDate, priorityCategory, today);
   const streakBest = bestStreak(tasks, byDate, priorityCategory, today);
 
+  // ----- Forecast: the best reward still reachable if every remaining
+  // scheduled task (today's unfinished + all future days this month) is done.
+  const totalDays = daysInMonthKey(monthKey);
+  const lastDay = `${monthKey}-${String(totalDays).padStart(2, '0')}`;
+  let futurePossible = 0;
+  let fd = addDays(today, 1);
+  while (fd <= lastDay) {
+    for (const t of activeTasksOn(tasks, fd)) {
+      futurePossible += taskPoints(t, priorityCategory);
+    }
+    fd = addDays(fd, 1);
+  }
+  const todayRemaining = todayPossible - todayEarned;
+  const fullMonthPossible = monthPossible + futurePossible;
+  const projectedEarned = monthEarned + todayRemaining + futurePossible;
+  const projectedConsistency = consistencyRatio(projectedEarned, fullMonthPossible);
+  const projectedReward = rewardForConsistency(projectedConsistency);
+
   return {
     today,
     monthKey,
@@ -69,5 +87,8 @@ export function computeSummary(tasks, priorityCategory, completions, today = tod
     reward,
     currentStreak: streakNow,
     bestStreak: streakBest,
+    fullMonthPossible,
+    projectedConsistency,
+    projectedReward,
   };
 }

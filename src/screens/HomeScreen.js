@@ -44,6 +44,14 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.rangeText}>₹20,000</Text>
           </View>
         </View>
+        {summary.projectedReward > summary.reward && (
+          <View style={styles.forecast}>
+            <Text style={styles.forecastText}>
+              🎯 Finish every task this month → up to{' '}
+              <Text style={styles.forecastAmount}>{formatRupees(summary.projectedReward)}</Text>
+            </Text>
+          </View>
+        )}
       </Card>
 
       {/* Quick stats */}
@@ -155,6 +163,15 @@ const styles = StyleSheet.create({
   heroDot: { color: colors.textFaint, marginHorizontal: spacing.sm },
   rangeRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
   rangeText: { color: colors.textFaint, fontSize: font.xs },
+  forecast: {
+    marginTop: spacing.md,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  forecastText: { color: colors.textDim, fontSize: font.sm, textAlign: 'center' },
+  forecastAmount: { color: colors.accent, fontWeight: '800' },
   statsRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   miniStat: {
     flex: 1,

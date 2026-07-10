@@ -6,7 +6,8 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import { colors, spacing, font, radius } from '../theme/theme';
 import { useApp } from '../state/AppContext';
-import { pad2 } from '../logic/dates';
+import { pad2, formatMonthKey } from '../logic/dates';
+import { formatRupees, formatPercent } from '../logic/rewards';
 
 function TimeStepper({ label, value, onChange, min, max, step = 1 }) {
   const dec = () => onChange((value - step + (max + 1)) % (max + 1));
@@ -26,12 +27,60 @@ function TimeStepper({ label, value, onChange, min, max, step = 1 }) {
 }
 
 export default function SettingsScreen({ navigation }) {
-  const { settings, priority, saveName, updateReminder, factoryReset } = useApp();
+  const {
+    settings,
+    priority,
+    saveName,
+    updateReminder,
+    factoryReset,
+    payouts,
+    totalPaid,
+    exportBackup,
+    importBackup,
+  } = useApp();
 
   const [name, setNameState] = useState(settings.name);
   const [hour, setHour] = useState(settings.reminderHour);
   const [minute, setMinute] = useState(settings.reminderMinute);
   const [enabled, setEnabled] = useState(settings.reminderEnabled);
+  const [busy, setBusy] = useState(false);
+
+  const doExport = async () => {
+    setBusy(true);
+    try {
+      await exportBackup();
+    } catch (e) {
+      Alert.alert('Export failed', e.message || 'Could not create a backup file.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const doImport = async () => {
+    Alert.alert(
+      'Restore from backup?',
+      'This replaces all current tasks, history, and rewards with the contents of the backup file.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Choose file',
+          onPress: async () => {
+            setBusy(true);
+            try {
+              const res = await importBackup();
+              if (res.imported) {
+                Alert.alert('Restored', 'Your data was imported successfully.');
+              }
+            } catch (e) {
+              Alert.alert('Import failed', e.message || 'That file could not be read.');
+            } finally {
+              setBusy(false);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const saveNameNow = () => {
     if (name.trim() !== settings.name) saveName(name.trim());
@@ -94,6 +143,55 @@ export default function SettingsScreen({ navigation }) {
             variant="secondary"
             onPress={() => navigation.navigate('SetPriority')}
             style={styles.smallBtn}
+          />
+        </View>
+      </Card>
+
+      <SectionTitle>Rewards paid to yourself</SectionTitle>
+      <Card>
+        <Text style={styles.totalPaid}>{formatRupees(totalPaid)}</Text>
+        <Text style={styles.rowSub}>Total you've paid yourself so far</Text>
+        {payouts.length === 0 ? (
+          <Text style={styles.ledgerEmpty}>
+            No rewards logged yet. Finish a month and tap “Mark as paid”.
+          </Text>
+        ) : (
+          <View style={styles.ledger}>
+            {payouts.slice(0, 6).map((p) => (
+              <View key={p.month} style={styles.ledgerRow}>
+                <View>
+                  <Text style={styles.ledgerMonth}>{formatMonthKey(p.month)}</Text>
+                  <Text style={styles.ledgerSub}>
+                    {formatPercent(p.consistency)} · {p.points} pts
+                  </Text>
+                </View>
+                <Text style={styles.ledgerAmount}>{formatRupees(p.amount)}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </Card>
+
+      <SectionTitle>Backup &amp; restore</SectionTitle>
+      <Card>
+        <Text style={styles.rowSub}>
+          Everything lives only on this phone. Export a backup file to keep your
+          history safe, or restore it on a new device. Fully offline.
+        </Text>
+        <View style={styles.backupRow}>
+          <Button
+            title="Export backup"
+            variant="secondary"
+            onPress={doExport}
+            loading={busy}
+            style={styles.backupBtn}
+          />
+          <Button
+            title="Restore"
+            variant="secondary"
+            onPress={doImport}
+            disabled={busy}
+            style={styles.backupBtn}
           />
         </View>
       </Card>
@@ -173,8 +271,24 @@ const styles = StyleSheet.create({
   },
   rowBetween: { flexDirection: 'row', alignItems: 'center' },
   rowTitle: { color: colors.text, fontSize: font.md, fontWeight: '700' },
-  rowSub: { color: colors.textDim, fontSize: font.sm, marginTop: 2 },
+  rowSub: { color: colors.textDim, fontSize: font.sm, marginTop: 2, lineHeight: 20 },
   smallBtn: { minHeight: 44, paddingHorizontal: spacing.lg },
+  totalPaid: { color: colors.primary, fontSize: font.xxl, fontWeight: '900' },
+  ledgerEmpty: { color: colors.textFaint, fontSize: font.sm, marginTop: spacing.md, lineHeight: 20 },
+  ledger: { marginTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
+  ledgerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  ledgerMonth: { color: colors.text, fontSize: font.sm, fontWeight: '700' },
+  ledgerSub: { color: colors.textDim, fontSize: font.xs, marginTop: 2 },
+  ledgerAmount: { color: colors.primary, fontSize: font.md, fontWeight: '800' },
+  backupRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
+  backupBtn: { flex: 1 },
   stepperRow: {
     flexDirection: 'row',
     alignItems: 'center',

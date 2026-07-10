@@ -12,7 +12,16 @@ import { formatRupees, formatPercent } from '../logic/rewards';
 import { formatMonthKey } from '../logic/dates';
 
 export default function MonthCompleteScreen({ navigation }) {
-  const { summary } = useApp();
+  const { summary, payouts, markMonthPaid, unmarkMonthPaid } = useApp();
+  const payout = payouts.find((p) => p.month === summary.monthKey);
+  const isPaid = !!(payout && payout.paid);
+
+  const markPaid = () =>
+    markMonthPaid(summary.monthKey, {
+      amount: summary.reward,
+      consistency: summary.consistency,
+      points: summary.totalPoints,
+    });
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -67,12 +76,34 @@ export default function MonthCompleteScreen({ navigation }) {
           </View>
         </Card>
 
+        {isPaid ? (
+          <View style={styles.paidBadge}>
+            <Text style={styles.paidText}>
+              ✓ Paid to yourself — {formatRupees(payout.amount)}
+            </Text>
+            <Text style={styles.paidUndo} onPress={() => unmarkMonthPaid(summary.monthKey)}>
+              Undo
+            </Text>
+          </View>
+        ) : (
+          <Button
+            title="✓ Mark as paid to myself"
+            onPress={markPaid}
+            style={{ marginTop: spacing.lg }}
+          />
+        )}
+
         <Text style={styles.note}>
           A new month starts fresh — points reset to zero and you can set a new
           priority. Your tasks carry over.
         </Text>
 
-        <Button title="Done" onPress={() => navigation.goBack()} style={{ marginTop: spacing.lg }} />
+        <Button
+          title="Done"
+          variant="secondary"
+          onPress={() => navigation.goBack()}
+          style={{ marginTop: spacing.md }}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -96,4 +127,16 @@ const styles = StyleSheet.create({
   breakKey: { color: colors.textDim, fontSize: font.sm },
   breakVal: { color: colors.text, fontSize: font.sm, fontWeight: '700' },
   note: { color: colors.textFaint, fontSize: font.sm, textAlign: 'center', marginTop: spacing.lg, lineHeight: 20 },
+  paidBadge: {
+    marginTop: spacing.lg,
+    width: '100%',
+    backgroundColor: '#122019',
+    borderWidth: 1,
+    borderColor: colors.primaryDark,
+    borderRadius: 13,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  paidText: { color: colors.primary, fontSize: font.md, fontWeight: '800' },
+  paidUndo: { color: colors.textDim, fontSize: font.xs, marginTop: 4, textDecorationLine: 'underline' },
 });

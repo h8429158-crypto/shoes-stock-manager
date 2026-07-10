@@ -25,3 +25,11 @@ export const STREAK_BONUS_POINTS = 50;
 // Default daily reminder time (24h).
 export const DEFAULT_REMINDER_HOUR = 20;
 export const DEFAULT_REMINDER_MINUTE = 0;
+
+// Per-task scheduling. A task's `days` field is a comma-separated list of
+// weekday indices (0 = Sun … 6 = Sat), or the literal 'all' for every day.
+// Days on which no task is scheduled become neutral "rest days": they never
+// break a streak and don't count against consistency.
+export const SCHEDULE_ALL = 'all';
+export const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+export const WEEKDAYS_ONLY = '1,2,3,4,5'; // Mon–Fri

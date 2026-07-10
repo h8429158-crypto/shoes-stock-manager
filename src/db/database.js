@@ -27,7 +27,17 @@ export async function initDatabase() {
       created_date TEXT NOT NULL,
       archived INTEGER NOT NULL DEFAULT 0,
       archived_date TEXT,
-      sort_order INTEGER NOT NULL DEFAULT 0
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      days TEXT NOT NULL DEFAULT 'all'
+    );
+
+    CREATE TABLE IF NOT EXISTS payouts (
+      month TEXT PRIMARY KEY,
+      amount INTEGER NOT NULL,
+      consistency REAL NOT NULL DEFAULT 0,
+      points INTEGER NOT NULL DEFAULT 0,
+      paid INTEGER NOT NULL DEFAULT 0,
+      paid_at TEXT
     );
 
     CREATE TABLE IF NOT EXISTS completions (
@@ -53,6 +63,16 @@ export async function initDatabase() {
       value TEXT
     );
   `);
+
+  await migrate(db);
+}
+
+// Additive migrations for installs created before a column existed.
+async function migrate(db) {
+  const cols = await db.getAllAsync('PRAGMA table_info(tasks)');
+  if (!cols.some((c) => c.name === 'days')) {
+    await db.execAsync("ALTER TABLE tasks ADD COLUMN days TEXT NOT NULL DEFAULT 'all'");
+  }
 }
 
 // Danger: wipe all data. Used by the "reset app" option in Settings.
@@ -62,6 +82,7 @@ export async function resetAllData() {
     DELETE FROM completions;
     DELETE FROM tasks;
     DELETE FROM priorities;
+    DELETE FROM payouts;
     DELETE FROM settings;
   `);
 }

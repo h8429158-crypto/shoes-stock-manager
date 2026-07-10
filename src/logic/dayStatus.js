@@ -1,13 +1,26 @@
-import { STREAK_BONUS_DAYS, STREAK_BONUS_POINTS } from '../constants';
+import { STREAK_BONUS_DAYS, STREAK_BONUS_POINTS, SCHEDULE_ALL } from '../constants';
 import { taskPoints } from './points';
-import { todayStr, addDays } from './dates';
+import { todayStr, addDays, weekdayOf } from './dates';
+
+// True if a task is scheduled to appear on the given date's weekday.
+export function isScheduledOn(task, dateStr) {
+  const days = task.days;
+  if (!days || days === SCHEDULE_ALL) return true;
+  const wd = weekdayOf(dateStr);
+  return String(days)
+    .split(',')
+    .map((n) => Number(n))
+    .includes(wd);
+}
 
 // A task is "active" on a given date if it had been created on or before that
-// date and had not yet been archived (soft-deleted) by that date. This lets us
-// reconstruct exactly which tasks the checklist showed on any past day.
+// date, had not yet been archived (soft-deleted) by that date, and is scheduled
+// for that weekday. This lets us reconstruct exactly which tasks the checklist
+// showed on any past day.
 export function isTaskActiveOn(task, dateStr) {
   if (task.created_date && task.created_date > dateStr) return false;
   if (task.archived && task.archived_date && task.archived_date <= dateStr) return false;
+  if (!isScheduledOn(task, dateStr)) return false;
   return true;
 }
 

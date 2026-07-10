@@ -12,12 +12,19 @@ import { getAllTasks, addTask, updateTask, deleteTask } from '../db/tasks';
 import { getAllCompletions, toggleCompletion } from '../db/completions';
 import { getPriority, setPriority as dbSetPriority } from '../db/priorities';
 import {
+  getAllPayouts,
+  markPaid as dbMarkPaid,
+  unmarkPaid as dbUnmarkPaid,
+} from '../db/payouts';
+import { exportBackup as dbExportBackup, importBackup as dbImportBackup } from '../db/backup';
+import {
   getAppSettings,
   setName as dbSetName,
   setOnboarded as dbSetOnboarded,
   setReminder as dbSetReminder,
 } from '../db/settings';
 import { computeSummary } from '../logic/summary';
+import { lockedTaskIds } from '../logic/locks';
 import { currentMonthKey } from '../logic/dates';
 import { scheduleDailyReminder } from '../notifications/reminders';
 
@@ -28,6 +35,7 @@ export function AppProvider({ children }) {
   const [tasks, setTasks] = useState([]); // all tasks incl. archived
   const [completions, setCompletions] = useState([]);
   const [priority, setPriorityRow] = useState(null); // { month, category, label }
+  const [payouts, setPayouts] = useState([]);
   const [settings, setSettings] = useState({
     name: '',
     onboarded: false,
@@ -38,17 +46,19 @@ export function AppProvider({ children }) {
 
   // Pull everything fresh from SQLite and recompute derived state.
   const reload = useCallback(async () => {
-    const [allTasks, allCompletions, prio, appSettings] = await Promise.all([
+    const [allTasks, allCompletions, prio, appSettings, allPayouts] = await Promise.all([
       getAllTasks(),
       getAllCompletions(),
       getPriority(currentMonthKey()),
       getAppSettings(),
+      getAllPayouts(),
     ]);
     setTasks(allTasks);
     setCompletions(allCompletions);
     setPriorityRow(prio || null);
     setSettings(appSettings);
-    return { allTasks, allCompletions, prio, appSettings };
+    setPayouts(allPayouts);
+    return { allTasks, allCompletions, prio, appSettings, allPayouts };
   }, []);
 
   useEffect(() => {
@@ -81,6 +91,16 @@ export function AppProvider({ children }) {
   const summary = useMemo(
     () => computeSummary(tasks, priorityCategory, completions),
     [tasks, priorityCategory, completions],
+  );
+
+  const lockedIds = useMemo(
+    () => lockedTaskIds(completions, currentMonthKey()),
+    [completions],
+  );
+
+  const totalPaid = useMemo(
+    () => payouts.reduce((s, p) => s + (p.paid ? p.amount : 0), 0),
+    [payouts],
   );
 
   // Keep the scheduled reminder body in sync with pending count / settings.
@@ -119,12 +139,29 @@ export function AppProvider({ children }) {
         await reload();
       },
       async removeTask(id) {
-        await deleteTask(id);
+        const result = await deleteTask(id);
         await reload();
+        return result;
       },
       async savePriority(category, label) {
         await dbSetPriority(category, label);
         setPriorityRow(await getPriority(currentMonthKey()));
+      },
+      async markMonthPaid(month, details) {
+        await dbMarkPaid(month, details);
+        setPayouts(await getAllPayouts());
+      },
+      async unmarkMonthPaid(month) {
+        await dbUnmarkPaid(month);
+        setPayouts(await getAllPayouts());
+      },
+      async exportBackup() {
+        return dbExportBackup();
+      },
+      async importBackup() {
+        const result = await dbImportBackup();
+        if (result.imported) await reload();
+        return result;
       },
       async saveName(name) {
         await dbSetName(name);
@@ -165,9 +202,24 @@ export function AppProvider({ children }) {
       priorityCategory,
       settings,
       summary,
+      payouts,
+      totalPaid,
+      lockedIds,
       ...actions,
     }),
-    [ready, tasks, completions, priority, priorityCategory, settings, summary, actions],
+    [
+      ready,
+      tasks,
+      completions,
+      priority,
+      priorityCategory,
+      settings,
+      summary,
+      payouts,
+      totalPaid,
+      lockedIds,
+      actions,
+    ],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

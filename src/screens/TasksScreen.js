@@ -7,15 +7,28 @@ import Button from '../components/Button';
 import { colors, spacing, font, radius, categoryColors } from '../theme/theme';
 import { useApp } from '../state/AppContext';
 import { taskPoints } from '../logic/points';
+import { scheduleLabel } from '../logic/schedule';
 
 export default function TasksScreen({ navigation }) {
-  const { tasks, priorityCategory, removeTask } = useApp();
+  const { tasks, priorityCategory, removeTask, lockedIds } = useApp();
   const activeTasks = tasks.filter((t) => !t.archived);
 
   const confirmDelete = (task) => {
     Alert.alert('Delete task', `Remove "${task.title}"?`, [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => removeTask(task.id) },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          const res = await removeTask(task.id);
+          if (res && res.locked) {
+            Alert.alert(
+              'Locked this month',
+              'You\'ve already earned points from this task, so it can\'t be removed until the 1st. This keeps your monthly reward honest.',
+            );
+          }
+        },
+      },
     ]);
   };
 
@@ -50,11 +63,14 @@ export default function TasksScreen({ navigation }) {
             >
               <View style={[styles.bar, { backgroundColor: categoryColors[task.category] }]} />
               <View style={styles.middle}>
-                <Text style={styles.title}>{task.title}</Text>
+                <Text style={styles.title}>
+                  {lockedIds.has(task.id) ? '🔒 ' : ''}{task.title}
+                </Text>
                 <Text style={styles.meta}>
                   {task.category} · {task.importance}
                   {isPriority ? '  ⭐ 2×' : ''}
                 </Text>
+                <Text style={styles.schedule}>{scheduleLabel(task.days)}</Text>
               </View>
               <View style={styles.right}>
                 <Text style={styles.points}>+{pts}</Text>
@@ -91,6 +107,7 @@ const styles = StyleSheet.create({
   middle: { flex: 1, paddingVertical: spacing.md, paddingHorizontal: spacing.md },
   title: { color: colors.text, fontSize: font.md, fontWeight: '700' },
   meta: { color: colors.textDim, fontSize: font.xs, marginTop: 3 },
+  schedule: { color: colors.textFaint, fontSize: font.xs, marginTop: 2 },
   right: { alignItems: 'flex-end', paddingRight: spacing.md },
   points: { color: colors.accent, fontSize: font.md, fontWeight: '800' },
   deleteBtn: { marginTop: 4 },
