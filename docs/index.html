@@ -43,16 +43,20 @@
   }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; overscroll-behavior: none; }
+  /* IMPORTANT: body must NOT get height:100% — with top+bottom anchoring below,
+     an explicit height would win over bottom:0 and re-introduce the iOS gap
+     (height:100% resolves against a stale initial-containing-block at launch
+     in standalone mode; edge anchoring is resolved by the compositor against
+     the real screen and is always correct). */
+  html { height: 100%; margin: 0; padding: 0; overflow: hidden; overscroll-behavior: none; background: var(--surface); }
+  body { margin: 0; padding: 0; overflow: hidden; overscroll-behavior: none; }
   body {
     font-family: var(--sys); color: var(--text);
-    /* Matches the tab bar's colour, not the page background. If the app's
-       height is ever a pixel short of the true screen on some device, this
-       makes the gap look like intentional tab-bar padding instead of a
-       jarring black seam — a safety net on top of the height fix below. */
+    /* Matches the tab bar's colour, so any residual sliver on any device reads
+       as tab-bar padding rather than a black seam. */
     background: var(--surface);
     -webkit-font-smoothing: antialiased;
-    position: fixed; top: 0; right: 0; bottom: 0; left: 0; width: 100%;
+    position: fixed; top: 0; right: 0; bottom: 0; left: 0;
     touch-action: manipulation;
   }
   /* Belt-and-suspenders: a strip pinned to the true bottom edge of the screen,
@@ -66,15 +70,13 @@
   button { font-family: var(--sys); touch-action: manipulation; }
   :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-  /* --app-vh is set from JS to window.visualViewport.height, which is the only
-     value that reliably matches the true visible screen on iOS Safari/standalone
-     — vh/dvh units and position:fixed;inset:0 alone can still leave a gap under
-     the home-indicator area. Falls back to a real 1vh unit before JS runs. */
+  /* No height property at all: the app is anchored to all four screen edges
+     (top:0 + bottom:0), which the browser resolves against the real visible
+     screen. Height units (vh/dvh/100%) and JS measurements are all unreliable
+     at launch in iOS standalone mode — anchoring is the one thing that isn't. */
   .app {
-    position: relative; width: 100%; max-width: 520px; margin: 0 auto;
-    height: 100vh;
-    height: 100dvh;
-    height: calc(var(--app-vh, 1vh) * 100);
+    position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+    max-width: 520px; margin: 0 auto;
     background: var(--bg);
     display: flex; flex-direction: column; overflow: hidden;
     border-left: 1px solid var(--border); border-right: 1px solid var(--border);
@@ -321,23 +323,6 @@
 <script>
 (function () {
   'use strict';
-
-  // ---------------- true viewport height (kills the iOS bottom gap) ----------------
-  // window.innerHeight / vh / dvh units are all unreliable on iOS Safari once a
-  // page is added to the Home Screen — they can leave a strip of the body's
-  // background showing below the app under the home-indicator area.
-  // window.visualViewport.height is the one number that always matches what's
-  // actually drawn on screen, so we mirror it into a CSS var the .app height uses.
-  function setAppHeight() {
-    const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
-    document.documentElement.style.setProperty('--app-vh', (h / 100) + 'px');
-  }
-  setAppHeight();
-  window.addEventListener('resize', setAppHeight);
-  window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 120));
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', setAppHeight);
-  }
 
   // ---------------- constants ----------------
   const IMPORTANCE = { High: 30, Medium: 20, Low: 10 };
