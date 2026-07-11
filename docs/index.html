@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="description" content="A personal, offline habit tracker that turns daily consistency into a real monthly money reward.">
-<meta name="theme-color" content="#0B0F14">
+<meta name="theme-color" content="#151B23">
 <meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -45,10 +45,23 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; overscroll-behavior: none; }
   body {
-    font-family: var(--sys); background: var(--bg); color: var(--text);
+    font-family: var(--sys); color: var(--text);
+    /* Matches the tab bar's colour, not the page background. If the app's
+       height is ever a pixel short of the true screen on some device, this
+       makes the gap look like intentional tab-bar padding instead of a
+       jarring black seam — a safety net on top of the height fix below. */
+    background: var(--surface);
     -webkit-font-smoothing: antialiased;
     position: fixed; top: 0; right: 0; bottom: 0; left: 0; width: 100%;
     touch-action: manipulation;
+  }
+  /* Belt-and-suspenders: a strip pinned to the true bottom edge of the screen,
+     exactly as tall as the home-indicator safe area, always the tab bar's
+     colour. Independent of any height calculation elsewhere on the page. */
+  .safe-bottom {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    height: env(safe-area-inset-bottom); background: var(--surface);
+    z-index: 50; pointer-events: none;
   }
   button { font-family: var(--sys); touch-action: manipulation; }
   :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
@@ -60,6 +73,7 @@
   .app {
     position: relative; width: 100%; max-width: 520px; margin: 0 auto;
     height: 100vh;
+    height: 100dvh;
     height: calc(var(--app-vh, 1vh) * 100);
     background: var(--bg);
     display: flex; flex-direction: column; overflow: hidden;
@@ -302,6 +316,7 @@
   <div class="overlay" id="overlay"></div>
   <input type="file" id="importFile" accept="application/json,.json" style="display:none">
 </div>
+<div class="safe-bottom"></div>
 
 <script>
 (function () {
