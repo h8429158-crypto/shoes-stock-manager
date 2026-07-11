@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="description" content="A personal, offline habit tracker that turns daily consistency into a real monthly money reward.">
 <meta name="theme-color" content="#0B0F14">
 <meta name="color-scheme" content="dark">
@@ -42,18 +42,20 @@
     --sys: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
 
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; overscroll-behavior: none; }
   body {
-    margin: 0; font-family: var(--sys); background: var(--bg); color: var(--text);
-    -webkit-font-smoothing: antialiased; overflow: hidden;
+    font-family: var(--sys); background: var(--bg); color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    position: fixed; inset: 0; width: 100%;
+    touch-action: manipulation;
   }
-  button { font-family: var(--sys); }
+  button { font-family: var(--sys); touch-action: manipulation; }
   :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
   .app {
     position: relative; width: 100%; max-width: 520px; margin: 0 auto;
-    height: 100vh; height: 100dvh; background: var(--bg);
+    height: 100%; background: var(--bg);
     display: flex; flex-direction: column; overflow: hidden;
     border-left: 1px solid var(--border); border-right: 1px solid var(--border);
   }
@@ -105,7 +107,7 @@
   .section .pending { color: var(--dim); font-size: 13px; font-weight: 600; }
 
   .task { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 13px; margin-bottom: 10px; cursor: pointer; user-select: none;
+    border-radius: 14px; padding: 13px; margin-bottom: 10px; cursor: pointer; user-select: none; touch-action: manipulation;
     transition: transform .12s ease, background .2s ease, border-color .2s ease; width: 100%; text-align: left; }
   .task:active { transform: scale(.985); }
   .task.done { background: #122019; border-color: var(--primary-dark); }
@@ -209,7 +211,7 @@
   .set-title { font-size: 15px; font-weight: 700; }
   .set-sub { color: var(--dim); font-size: 13px; margin-top: 2px; line-height: 1.4; }
   .chip { background: var(--surface-alt); border: 1px solid var(--border); color: var(--dim);
-    font-size: 13px; font-weight: 700; padding: 9px 14px; border-radius: 999px; cursor: pointer; }
+    font-size: 13px; font-weight: 700; padding: 9px 14px; border-radius: 999px; cursor: pointer; touch-action: manipulation; }
   .chip.sel { background: var(--primary); border-color: var(--primary); color: #06210F; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .switch { width: 46px; height: 28px; border-radius: 999px; background: var(--border); position: relative; cursor: pointer; transition: background .2s; flex: none; }
@@ -336,6 +338,34 @@
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const catColor = c => `var(--cat-${c})`;
 
+  // ---------------- category auto-detection ----------------
+  // Simple keyword match so a new task guesses its own category from the title.
+  // Checked in this order so specific "no X" discipline habits win over the
+  // generic Health word they contain (e.g. "no sugar" -> Discipline, not Health).
+  const CATEGORY_KEYWORDS = {
+    Discipline: ['no sugar', 'no junk', 'no smoking', 'no alcohol', 'no phone', 'screen time',
+      'wake up', 'wake early', 'early rise', 'budget', 'save money', 'saving', 'clean', 'tidy',
+      'declutter', 'plan my', 'planning', 'routine', 'journal my', 'digital detox', 'quit'],
+    Health: ['workout', 'gym', 'exercise', 'run', 'jog', 'walk', 'yoga', 'meditate', 'meditation',
+      'sleep', 'water', 'diet', 'stretch', 'cardio', 'fitness', 'swim', 'cycle', 'cycling',
+      'steps', 'protein', 'vitamins', 'skincare', 'push up', 'pushup', 'squat'],
+    Learning: ['read', 'book', 'study', 'course', 'learn', 'practice', 'skill', 'language',
+      'write', 'writing', 'journal', 'research', 'homework', 'exam', 'quiz', 'coding', 'code'],
+    Business: ['work', 'meeting', 'client', 'sales', 'email', 'invoice', 'marketing', 'project',
+      'deadline', 'call', 'pitch', 'revenue', 'startup', 'business', 'office', 'networking',
+      'linkedin', 'resume', 'job'],
+  };
+  function guessCategory(title) {
+    const t = String(title || '').toLowerCase().trim();
+    if (!t) return null;
+    for (const cat of ['Discipline', 'Health', 'Learning', 'Business']) {
+      for (const w of CATEGORY_KEYWORDS[cat]) {
+        if (t.includes(w)) return cat;
+      }
+    }
+    return null;
+  }
+
   // ---------------- state ----------------
   function defaultState() {
     return {
@@ -352,8 +382,20 @@
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
   // ---------------- domain logic (mirrors src/logic) ----------------
-  function priorityCat() { const p = S.priorities[curMonth()]; return p ? p.category : null; }
-  function taskPoints(t, pc) { const base = IMPORTANCE[t.importance] || 10; return pc && t.category === pc ? base * 2 : base; }
+  // Monthly priority supports multiple categories. Normalizes older
+  // single-category records ({category: 'X'}) into the {categories: [...]} shape.
+  function normalizePriority(p) {
+    if (!p) return { categories: [], label: '' };
+    if (Array.isArray(p.categories)) return { categories: p.categories, label: p.label || '' };
+    if (p.category) return { categories: [p.category], label: p.label || '' };
+    return { categories: [], label: p.label || '' };
+  }
+  function priorityCategories() { return normalizePriority(S.priorities[curMonth()]).categories; }
+  function taskPoints(t, cats) {
+    const base = IMPORTANCE[t.importance] || 10;
+    const list = Array.isArray(cats) ? cats : (cats ? [cats] : []);
+    return list.includes(t.category) ? base * 2 : base;
+  }
   function isScheduled(t, date) {
     if (!t.days || t.days === 'all') return true;
     return String(t.days).split(',').map(Number).includes(weekdayOf(date));
@@ -424,7 +466,7 @@
   function isLocked(id) { const mk = curMonth(); return S.completions.some(c => c.taskId === id && monthOf(c.date) === mk); }
 
   function summary() {
-    const today = todayStr(); const mk = monthOf(today); const pc = priorityCat();
+    const today = todayStr(); const mk = monthOf(today); const pc = priorityCategories();
     const by = indexCompletions();
     const todays = activeOn(today).map(t => ({ ...t, pts: taskPoints(t, pc), done: by[today] ? by[today].done.has(t.id) : false }));
     const todayPossible = todays.reduce((s, t) => s + t.pts, 0);
@@ -469,7 +511,7 @@
     const i = S.completions.findIndex(c => c.taskId === id && c.date === today);
     if (i >= 0) { S.completions.splice(i, 1); return false; }
     const t = S.tasks.find(x => x.id === id); if (!t) return false;
-    S.completions.push({ taskId: id, date: today, points: taskPoints(t, priorityCat()) });
+    S.completions.push({ taskId: id, date: today, points: taskPoints(t, priorityCategories()) });
     return true;
   }
   function addTask(data) {
@@ -489,7 +531,10 @@
     else { S.tasks = S.tasks.filter(x => x.id !== id); }
     return { locked: false };
   }
-  function setPriority(cat, label) { S.priorities[curMonth()] = { category: cat, label: label || cat }; }
+  function setPriority(categories, label) {
+    const cats = Array.isArray(categories) ? categories : (categories ? [categories] : []);
+    S.priorities[curMonth()] = { categories: cats, label: label || cats.join(', ') };
+  }
   function totalPaid() { return Object.values(S.payouts).reduce((s, p) => s + (p.paid ? p.amount : 0), 0); }
 
   // ---------------- UI shell ----------------
@@ -504,16 +549,20 @@
   function toast(msg) { toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 1200); }
   function vibrate(ms) { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) {} } }
 
-  function setTab(tab) { ui.tab = tab; renderTab(); syncTabbar(); }
+  function setTab(tab) { ui.tab = tab; renderTab(); screen.scrollTop = 0; syncTabbar(); }
   function syncTabbar() {
     [...tabbar.children].forEach(b => b.classList.toggle('active', b.dataset.tab === ui.tab));
   }
 
   // ---------------- screens ----------------
+  // Re-renders the current tab in place. Preserves scroll position so ticking a
+  // task, adding/deleting, or toggling a setting doesn't jump you back to the
+  // top — only an explicit tab switch (setTab) resets scroll.
   function renderTab() {
+    const prevScroll = screen.scrollTop;
     const map = { home: renderHome, tasks: renderTasks, history: renderHistory, stats: renderStats, settings: renderSettings };
     screen.innerHTML = (map[ui.tab] || renderHome)();
-    screen.scrollTop = 0;
+    screen.scrollTop = prevScroll;
     screen.firstElementChild && screen.firstElementChild.classList.add('fade');
   }
 
@@ -537,10 +586,13 @@
       <div class="mini"><div class="v">${s.bestStreak}</div><div class="l">Best streak</div></div>
     </div>`;
     if (p) {
-      html += `<div class="prio" data-act="setprio" style="border-left-color:${catColor(p.category)}">
+      const norm = normalizePriority(p);
+      const cats = norm.categories;
+      const accent = cats.length ? catColor(cats[0]) : 'var(--border)';
+      html += `<div class="prio" data-act="setprio" style="border-left-color:${accent}">
         <div class="lbl">THIS MONTH'S PRIORITY</div>
-        <div class="val">${esc(p.label || p.category)}</div>
-        <div class="sub">${p.category} tasks earn 2× points · tap to change</div>
+        <div class="val">${esc(norm.label || cats.join(' + ') || 'Priority')}</div>
+        <div class="sub">${cats.length ? cats.join(' + ') + ' tasks earn 2× points' : 'No 2× category selected'} · tap to change</div>
       </div>`;
     } else {
       html += `<div class="card" style="margin-top:12px">
@@ -571,7 +623,7 @@
 
   function renderTasks() {
     const active = S.tasks.filter(t => !t.archived);
-    const pc = priorityCat();
+    const pc = priorityCategories();
     let html = `<div class="head-row"><div><div class="h-title">My tasks</div><div class="h-sub">${active.length} daily habit${active.length === 1 ? '' : 's'}</div></div></div>`;
     if (active.length === 0) {
       html += `<div class="card"><p class="empty-hint">No tasks yet. Tap “Add a task” to create your first daily habit.</p></div>`;
@@ -582,7 +634,7 @@
           <div class="stripe" style="background:${catColor(t.category)}"></div>
           <div class="mid" data-act="edit" data-id="${t.id}">
             <div class="ti">${locked ? '🔒 ' : ''}${esc(t.title)}</div>
-            <div class="sub">${t.category} · ${t.importance}${pc && t.category === pc ? '  ⭐ 2×' : ''}</div>
+            <div class="sub">${t.category} · ${t.importance}${pc.includes(t.category) ? '  ⭐ 2×' : ''}</div>
             <div class="sched">${scheduleLabel(t.days)}</div>
           </div>
           <div class="right"><div class="n">+${taskPoints(t, pc)}</div><button class="del" data-act="del" data-id="${t.id}">Delete</button></div>
@@ -601,7 +653,7 @@
   }
 
   function renderHistory() {
-    const pc = priorityCat(); const by = indexCompletions(); const today = todayStr();
+    const pc = priorityCategories(); const by = indexCompletions(); const today = todayStr();
     const mk = ui.month;
     const statusFor = d => d > today ? 'future' : dayStatus(d, by, pc).status;
     const counts = { green: 0, yellow: 0, red: 0 };
@@ -689,8 +741,8 @@
       </div>
       <div class="section"><span class="t">Monthly priority</span></div>
       <div class="card set-row">
-        <div><div class="set-title">${p ? esc(p.label || p.category) : 'Not set'}</div>
-          <div class="set-sub">${p ? p.category + ' · 2× points' : 'Set a focus for this month'}</div></div>
+        <div><div class="set-title">${p ? esc(normalizePriority(p).label || normalizePriority(p).categories.join(' + ') || 'Priority') : 'Not set'}</div>
+          <div class="set-sub">${p && normalizePriority(p).categories.length ? normalizePriority(p).categories.join(' + ') + ' · 2× points' : 'Set a focus for this month'}</div></div>
         <button class="chip" data-act="setprio">Change</button>
       </div>
       <div class="section"><span class="t">Rewards paid to yourself</span></div>
@@ -745,13 +797,29 @@
   // task editor
   function openEditor(id) {
     const t = id ? S.tasks.find(x => x.id === id) : null;
-    ui.editor = t ? { id, title: t.title, category: t.category, importance: t.importance, days: t.days || 'all' }
-                   : { id: null, title: '', category: 'Health', importance: 'Medium', days: 'all' };
+    // categoryAuto: while true, typing the title keeps re-guessing the category.
+    // It turns off the moment the user taps a category chip themselves, or
+    // immediately for an existing task (never override a category you already set).
+    ui.editor = t ? { id, title: t.title, category: t.category, importance: t.importance, days: t.days || 'all', categoryAuto: false }
+                   : { id: null, title: '', category: 'Health', importance: 'Medium', days: 'all', categoryAuto: true };
     renderEditor(true);
   }
   function syncEditorTitle() { const el = document.getElementById('edTitle'); if (el) ui.editor.title = el.value; }
+  // Updates the category chip highlight + points preview in place, without a
+  // full re-render, so the title input keeps focus and the cursor position
+  // while the user is still typing.
+  function refreshEditorCategoryUI() {
+    const chips = overlay.querySelectorAll('[data-act="edcat"]');
+    chips.forEach(b => b.classList.toggle('sel', b.dataset.v === ui.editor.category));
+    const pc = priorityCategories();
+    const pts = taskPoints({ category: ui.editor.category, importance: ui.editor.importance }, pc);
+    const pv = overlay.querySelector('.preview-pts .pv');
+    const pn = overlay.querySelector('.preview-pts .pn');
+    if (pv) pv.textContent = '+' + pts + ' pts';
+    if (pn) pn.textContent = pc.includes(ui.editor.category) ? '⭐ Doubled — matches the monthly priority' : 'Match the monthly priority category for 2×.';
+  }
   function renderEditor(focus) {
-    const e = ui.editor; const pc = priorityCat();
+    const e = ui.editor; const pc = priorityCategories();
     const locked = e.id != null && isLocked(e.id);
     const preset = e.days === 'all' ? 'all' : e.days === WEEKDAYS_ONLY ? 'weekdays' : 'custom';
     const sel = (e.days && e.days !== 'all') ? String(e.days).split(',').map(Number) : [0,1,2,3,4,5,6];
@@ -768,6 +836,7 @@
         <input class="input" id="edTitle" value="${esc(e.title)}" placeholder="e.g. Read 20 pages">
         <div class="field-label">Category</div>
         <div class="chips ${locked ? 'disabled' : ''}">${CATS.map(c => `<button class="chip ${e.category === c ? 'sel' : ''}" data-act="edcat" data-v="${c}">${c}</button>`).join('')}</div>
+        ${e.categoryAuto && !locked ? `<div class="hint" style="margin-top:6px">✨ Auto-detected from the task name — tap a category to override.</div>` : ''}
         <div class="field-label">Importance</div>
         <div class="chips ${locked ? 'disabled' : ''}">${IMPS.map(i => `<button class="chip ${e.importance === i ? 'sel' : ''}" data-act="edimp" data-v="${i}">${i} (${IMPORTANCE[i]})</button>`).join('')}</div>
         <div class="field-label">Repeat</div>
@@ -779,17 +848,17 @@
         ${preset === 'custom' ? `<div class="wd-row ${locked ? 'disabled' : ''}">${WD.map((w, i) => `<button class="wd ${sel.includes(i) ? 'on' : ''}" data-act="edday" data-v="${i}">${w[0]}</button>`).join('')}</div>` : ''}
         <div class="hint">Days with no task become rest days — they never break your streak.</div>
         <div class="preview-pts"><div class="pl">WORTH PER DAY</div><div class="pv">+${pts} pts</div>
-          <div class="pn">${pc && e.category === pc ? '⭐ Doubled — matches the monthly priority' : 'Match the monthly priority category for 2×.'}</div></div>
+          <div class="pn">${pc.includes(e.category) ? '⭐ Doubled — matches the monthly priority' : 'Match the monthly priority category for 2×.'}</div></div>
       </div>
       <div class="ov-foot"><button class="btn-primary" data-act="savetask" ${e.title.trim() ? '' : 'disabled'}>${e.id ? 'Save changes' : 'Add task'}</button></div>
     `);
     if (focus) { const el = document.getElementById('edTitle'); if (el && !e.id) el.focus(); }
   }
 
-  // set priority
+  // set priority (multi-select: any number of categories can earn 2×)
   function openPriority() {
-    const p = S.priorities[curMonth()];
-    ui.prio = { category: p ? p.category : 'Health', label: p ? p.label : '' };
+    const norm = normalizePriority(S.priorities[curMonth()]);
+    ui.prio = { categories: norm.categories.length ? [...norm.categories] : ['Health'], label: norm.label };
     renderPriority();
   }
   function syncPrioLabel() { const el = document.getElementById('prioLabel'); if (el) ui.prio.label = el.value; }
@@ -799,11 +868,12 @@
       <div class="ov-top"><button data-act="closeov">Cancel</button><div class="tt">Monthly priority</div><div class="spacer"></div></div>
       <div class="ov-scroll">
         <div style="color:var(--primary);font-weight:800;font-size:18px">${fmtMonth(curMonth())}</div>
-        <p class="help" style="margin-top:8px">Choose one focus for this month. Tasks tagged with the matching category earn double points.</p>
+        <p class="help" style="margin-top:8px">Choose one or more focuses for this month. Tasks tagged with any selected category earn double points.</p>
         <div class="field-label">Goal name</div>
         <input class="input" id="prioLabel" value="${esc(pr.label)}" placeholder="e.g. Weight Loss, Business Growth">
-        <div class="field-label">Category (for 2× matching)</div>
-        <div class="chips">${CATS.map(c => `<button class="chip ${pr.category === c ? 'sel' : ''}" data-act="priocat" data-v="${c}">${c}</button>`).join('')}</div>
+        <div class="field-label">Categories (for 2× matching) — tap to select multiple</div>
+        <div class="chips">${CATS.map(c => `<button class="chip ${pr.categories.includes(c) ? 'sel' : ''}" data-act="priocat" data-v="${c}">${c}</button>`).join('')}</div>
+        ${pr.categories.length === 0 ? `<p class="hint">Pick at least one category to enable 2× points.</p>` : ''}
       </div>
       <div class="ov-foot"><button class="btn-primary" data-act="saveprio">Save priority</button></div>
     `);
@@ -834,7 +904,7 @@
 
   // onboarding
   function openOnboarding() {
-    ui.ob = { step: 0, name: '', label: '', category: 'Health',
+    ui.ob = { step: 0, name: '', label: '', categories: ['Health'],
       tasks: [{ title: '', category: 'Health', importance: 'Medium' }, { title: '', category: 'Discipline', importance: 'Medium' }, { title: '', category: 'Learning', importance: 'Medium' }] };
     renderOnboarding(true);
   }
@@ -857,8 +927,8 @@
         <p class="help">Pick one focus. Tasks in this category earn double points, so you stay pulled toward what matters.</p>
         <div class="field-label">Name your goal</div>
         <input class="input" id="obLabel" value="${esc(ob.label)}" placeholder="e.g. Weight Loss, Learning">
-        <div class="field-label">Category (2× matching)</div>
-        <div class="chips">${CATS.map(c => `<button class="chip ${ob.category === c ? 'sel' : ''}" data-act="obcat" data-v="${c}">${c}</button>`).join('')}</div>`;
+        <div class="field-label">Categories (2× matching) — tap to select multiple</div>
+        <div class="chips">${CATS.map(c => `<button class="chip ${ob.categories.includes(c) ? 'sel' : ''}" data-act="obcat" data-v="${c}">${c}</button>`).join('')}</div>`;
     } else {
       body = `<div class="ob-emoji">✅</div><div class="ob-h1">Your first tasks</div>
         <p class="help">Add up to three daily tasks to start. You can change these anytime.</p>
@@ -915,6 +985,13 @@
       ui.editor.title = t.value;
       const b = overlay.querySelector('[data-act="savetask"]');
       if (b) b.disabled = !t.value.trim();
+      if (ui.editor.categoryAuto) {
+        const guess = guessCategory(t.value);
+        if (guess && guess !== ui.editor.category) {
+          ui.editor.category = guess;
+          refreshEditorCategoryUI();
+        }
+      }
     }
   });
 
@@ -929,7 +1006,7 @@
         vibrate(now ? 14 : 8);
         renderTab();
         const r = document.getElementById('rewardNum'); if (r) { r.classList.add('bump'); setTimeout(() => r.classList.remove('bump'), 200); }
-        if (now) { const t = S.tasks.find(x => x.id === id); if (t) toast('+' + taskPoints(t, priorityCat()) + ' pts 🎉'); }
+        if (now) { const t = S.tasks.find(x => x.id === id); if (t) toast('+' + taskPoints(t, priorityCategories()) + ' pts 🎉'); }
         break;
       }
       case 'month': openMonth(); break;
@@ -946,7 +1023,7 @@
       }
 
       // editor
-      case 'edcat': syncEditorTitle(); ui.editor.category = v; renderEditor(); break;
+      case 'edcat': syncEditorTitle(); ui.editor.category = v; ui.editor.categoryAuto = false; renderEditor(); break;
       case 'edimp': syncEditorTitle(); ui.editor.importance = v; renderEditor(); break;
       case 'edpreset':
         syncEditorTitle();
@@ -966,9 +1043,20 @@
         save(); closeOverlay(); renderTab(); break;
       }
 
-      // priority
-      case 'priocat': syncPrioLabel(); ui.prio.category = v; renderPriority(); break;
-      case 'saveprio': syncPrioLabel(); setPriority(ui.prio.category, ui.prio.label.trim() || ui.prio.category); save(); closeOverlay(); renderTab(); break;
+      // priority (multi-select)
+      case 'priocat': {
+        syncPrioLabel();
+        const idx = ui.prio.categories.indexOf(v);
+        if (idx >= 0) ui.prio.categories.splice(idx, 1); else ui.prio.categories.push(v);
+        renderPriority();
+        break;
+      }
+      case 'saveprio': {
+        syncPrioLabel();
+        setPriority(ui.prio.categories, ui.prio.label.trim() || ui.prio.categories.join(', ') || 'Priority');
+        save(); closeOverlay(); renderTab();
+        break;
+      }
 
       // month complete
       case 'pay': {
@@ -978,15 +1066,26 @@
       case 'unpay': { const s = summary(); delete S.payouts[s.mk]; save(); openMonth(); break; }
 
       // onboarding
-      case 'obcat': syncOb(); ui.ob.category = v; renderOnboarding(); break;
+      case 'obcat': {
+        syncOb();
+        const idx = ui.ob.categories.indexOf(v);
+        if (idx >= 0) ui.ob.categories.splice(idx, 1); else ui.ob.categories.push(v);
+        renderOnboarding();
+        break;
+      }
       case 'obback': syncOb(); ui.ob.step--; renderOnboarding(true); break;
       case 'obnext': {
         syncOb();
         if (ui.ob.step < 2) { ui.ob.step++; renderOnboarding(true); break; }
         const ob = ui.ob;
         S.settings.name = ob.name.trim();
-        setPriority(ob.category, ob.label.trim() || ob.category);
-        ob.tasks.forEach(t => { if (t.title.trim()) addTask({ title: t.title, category: t.category, importance: t.importance, days: 'all' }); });
+        setPriority(ob.categories.length ? ob.categories : ['Health'], ob.label.trim() || ob.categories.join(', ') || 'Priority');
+        ob.tasks.forEach(t => {
+          if (t.title.trim()) {
+            const guess = guessCategory(t.title);
+            addTask({ title: t.title, category: guess || t.category, importance: t.importance, days: 'all' });
+          }
+        });
         S.settings.onboarded = true; save(); closeOverlay(); boot(); break;
       }
 
