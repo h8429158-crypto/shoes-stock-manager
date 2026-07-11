@@ -2,7 +2,7 @@
    Network-first so updates arrive when online, with a cache fallback so the app
    keeps working with no connection. The app itself is a single self-contained
    file, so caching the shell + icons is enough. */
-const CACHE = 'reward-habits-v5';
+const CACHE = 'reward-habits-v6';
 const ASSETS = [
   './',
   './index.html',
