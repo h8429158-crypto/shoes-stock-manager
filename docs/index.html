@@ -47,15 +47,21 @@
   body {
     font-family: var(--sys); background: var(--bg); color: var(--text);
     -webkit-font-smoothing: antialiased;
-    position: fixed; inset: 0; width: 100%;
+    position: fixed; top: 0; right: 0; bottom: 0; left: 0; width: 100%;
     touch-action: manipulation;
   }
   button { font-family: var(--sys); touch-action: manipulation; }
   :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
+  /* --app-vh is set from JS to window.visualViewport.height, which is the only
+     value that reliably matches the true visible screen on iOS Safari/standalone
+     — vh/dvh units and position:fixed;inset:0 alone can still leave a gap under
+     the home-indicator area. Falls back to a real 1vh unit before JS runs. */
   .app {
     position: relative; width: 100%; max-width: 520px; margin: 0 auto;
-    height: 100%; background: var(--bg);
+    height: 100vh;
+    height: calc(var(--app-vh, 1vh) * 100);
+    background: var(--bg);
     display: flex; flex-direction: column; overflow: hidden;
     border-left: 1px solid var(--border); border-right: 1px solid var(--border);
   }
@@ -300,6 +306,23 @@
 <script>
 (function () {
   'use strict';
+
+  // ---------------- true viewport height (kills the iOS bottom gap) ----------------
+  // window.innerHeight / vh / dvh units are all unreliable on iOS Safari once a
+  // page is added to the Home Screen — they can leave a strip of the body's
+  // background showing below the app under the home-indicator area.
+  // window.visualViewport.height is the one number that always matches what's
+  // actually drawn on screen, so we mirror it into a CSS var the .app height uses.
+  function setAppHeight() {
+    const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    document.documentElement.style.setProperty('--app-vh', (h / 100) + 'px');
+  }
+  setAppHeight();
+  window.addEventListener('resize', setAppHeight);
+  window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 120));
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', setAppHeight);
+  }
 
   // ---------------- constants ----------------
   const IMPORTANCE = { High: 30, Medium: 20, Low: 10 };
