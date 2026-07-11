@@ -8,7 +8,7 @@
 <meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Reward Habits">
 <link rel="apple-touch-icon" href="./icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
@@ -810,7 +810,27 @@
       <div class="section"><span class="t">How rewards work</span></div>
       <div class="card"><p class="help">Each day you complete <b>all</b> your tasks, you bank one day's slice: <b>(max − min) ÷ days in the month</b>. Do everything every day to reach the maximum. A partial day banks part of its slice; a missed day banks nothing but never takes money away. Everything resets on the 1st; your tasks carry over.</p></div>
       <button class="btn-danger" data-act="reset">Reset all data</button>
+      <p class="hint" style="text-align:center">${diagLine()}</p>
       <div style="height:16px"></div>`;
+  }
+
+  // One-line device diagnostics shown at the bottom of Settings, so a single
+  // screenshot reveals whether a layout gap is inside the page (appBottom
+  // shorter than the window) or the OS gave us a short window (inner/vv
+  // shorter than screen) — an iOS standalone-mode system bug.
+  function diagLine() {
+    let sab = '?';
+    try {
+      const p = document.createElement('div');
+      p.style.cssText = 'position:fixed;left:-99px;height:env(safe-area-inset-bottom);width:1px;';
+      document.body.appendChild(p);
+      sab = Math.round(p.getBoundingClientRect().height);
+      p.remove();
+    } catch (err) { /* probe is best-effort */ }
+    const vv = window.visualViewport ? Math.round(window.visualViewport.height) : '-';
+    const appEl = document.querySelector('.app');
+    const ab = appEl ? Math.round(appEl.getBoundingClientRect().bottom) : '-';
+    return `v6 · inner ${window.innerHeight} · vv ${vv} · screen ${screen.height} · app ${ab} · safeB ${sab} · standalone ${!!navigator.standalone}`;
   }
 
   // ---------------- overlays ----------------
