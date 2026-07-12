@@ -55,6 +55,8 @@ interface StoreState extends AppData {
   // lifecycle
   setHydrated: () => void;
   seedIfEmpty: () => void;
+  reseedSample: () => void;
+  clearAllData: () => void;
 
   // settings
   updateSettings: (patch: Partial<Settings>) => void;
@@ -157,6 +159,31 @@ export const useStore = create<StoreState>()(
           settings: { ...get().settings, activeSplitId: ppl.id },
         });
       },
+
+      reseedSample: () => {
+        const ppl = buildSampleSplit();
+        const ul = buildUpperLowerSplit();
+        set((s) => ({
+          _seeded: true,
+          splits: [ppl, ul],
+          customExercises: [],
+          sessions: buildSampleSessions(ppl),
+          bodyweight: buildSampleBodyweight(),
+          activeSession: null,
+          settings: { ...s.settings, activeSplitId: ppl.id },
+        }));
+      },
+
+      clearAllData: () =>
+        set((s) => ({
+          _seeded: true, // don't auto-reseed after an intentional wipe
+          splits: [],
+          customExercises: [],
+          sessions: [],
+          bodyweight: [],
+          activeSession: null,
+          settings: { ...s.settings, activeSplitId: undefined },
+        })),
 
       updateSettings: (patch) =>
         set((s) => ({ settings: { ...s.settings, ...patch } })),

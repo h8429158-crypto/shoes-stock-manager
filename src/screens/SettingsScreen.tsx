@@ -26,8 +26,37 @@ export function SettingsScreen() {
   const exportData = useStore((s) => s.exportData);
   const importData = useStore((s) => s.importData);
 
+  const reseedSample = useStore((s) => s.reseedSample);
+  const clearAllData = useStore((s) => s.clearAllData);
+
   const [importing, setImporting] = useState(false);
   const [importText, setImportText] = useState('');
+
+  const confirmReseed = () =>
+    Alert.alert('Restore sample data?', 'This replaces your current splits, history and body-weight with the demo data.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Restore',
+        style: 'destructive',
+        onPress: () => {
+          reseedSample();
+          haptic.success();
+        },
+      },
+    ]);
+
+  const confirmClear = () =>
+    Alert.alert('Clear all data?', 'Every split, workout and body-weight entry will be permanently deleted. This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete everything',
+        style: 'destructive',
+        onPress: () => {
+          clearAllData();
+          haptic.warning();
+        },
+      },
+    ]);
 
   const doExport = async () => {
     try {
@@ -165,6 +194,23 @@ export function SettingsScreen() {
           <Button title="Import & replace" variant="danger" style={{ marginTop: spacing.md }} onPress={doImport} disabled={!importText.trim()} />
         </Card>
       )}
+
+      <SectionHeader title="Manage" />
+      <Card padded={false}>
+        <LinkRow icon="refresh-outline" label="Restore sample data" onPress={confirmReseed} />
+        <Divider />
+        <Pressable onPress={confirmClear} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.lg }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+              <Ionicons name="trash-outline" size={20} color={t.danger} />
+              <Txt weight="700" color={t.danger}>
+                Clear all data
+              </Txt>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={t.dim} />
+          </View>
+        </Pressable>
+      </Card>
 
       <Txt faint size={12} center style={{ marginTop: spacing.xl }}>
         Gym Performance Tracker · offline · v1.0

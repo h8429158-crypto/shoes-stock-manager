@@ -4,11 +4,11 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 
-import { Screen, ScreenTitle } from '@/components/Screen';
+import { Screen } from '@/components/Screen';
 import { Card, IconButton, Pill, Txt } from '@/components/ui';
 import { useTheme } from '@/theme/useTheme';
 import { radius, spacing } from '@/theme';
-import { WorkoutStackParamList } from '@/navigation/types';
+import { RootStackParamList, WorkoutStackParamList } from '@/navigation/types';
 import { exerciseName, useStore } from '@/store/useStore';
 import { WEEKDAYS_LONG } from '@/utils/date';
 import { haptic } from '@/utils/feedback';
@@ -21,12 +21,20 @@ export function SplitEditorScreen() {
   const nav = useNavigation<Nav>();
   const { splitId } = useRoute<Rt>().params;
 
+  const rootNav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const split = useStore((s) => s.splits.find((x) => x.id === splitId));
   const renameSplit = useStore((s) => s.renameSplit);
   const setDayRest = useStore((s) => s.setDayRest);
   const setDayName = useStore((s) => s.setDayName);
+  const startSession = useStore((s) => s.startSession);
   const custom = useStore((s) => s.customExercises);
   const exState = { customExercises: custom } as any;
+
+  const startDay = (dayIndex: number) => {
+    haptic.medium();
+    startSession(splitId, dayIndex);
+    rootNav.navigate('ActiveWorkout');
+  };
 
   if (!split) {
     return (
@@ -78,6 +86,14 @@ export function SplitEditorScreen() {
                   />
                 )}
               </View>
+              {!day.isRest && day.exercises.length > 0 && (
+                <IconButton
+                  name="play-circle"
+                  size={26}
+                  color={t.primary}
+                  onPress={() => startDay(i)}
+                />
+              )}
               <Pill
                 label={day.isRest ? 'Rest' : 'Training'}
                 active={!day.isRest}
