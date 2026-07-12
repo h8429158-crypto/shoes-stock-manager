@@ -143,6 +143,38 @@ export function weeklyMuscleVolume(
   return buckets;
 }
 
+export interface ExerciseLogEntry {
+  sessionId: string;
+  /** ISO date-time of the session. */
+  date: string;
+  dayName: string;
+  sets: { weightKg: number; reps: number }[];
+  topWeightKg: number;
+}
+
+/**
+ * Every logged session that included this exercise, newest first, with the
+ * exact sets performed — for answering "what did I lift on X day?".
+ */
+export function exerciseLog(
+  sessions: Session[],
+  exerciseId: string
+): ExerciseLogEntry[] {
+  const out: ExerciseLogEntry[] = [];
+  for (const s of sessions) {
+    const ex = s.exercises.find((e) => e.exerciseId === exerciseId);
+    if (!ex || ex.sets.length === 0) continue;
+    out.push({
+      sessionId: s.id,
+      date: s.finishedAt ?? s.startedAt,
+      dayName: s.dayName,
+      sets: ex.sets.map((st) => ({ weightKg: st.weightKg, reps: st.reps })),
+      topWeightKg: ex.sets.reduce((m, st) => Math.max(m, st.weightKg), 0),
+    });
+  }
+  return out.sort((a, b) => b.date.localeCompare(a.date));
+}
+
 /** Est-1RM and top-set series for one exercise over time (chronological). */
 export function exerciseSeries(
   sessions: Session[],

@@ -15,8 +15,9 @@ import {
   useStore,
 } from '@/store/useStore';
 import { MUSCLE_GROUPS } from '@/types';
-import { exerciseSeries, weeklyMuscleVolume } from '@/utils/stats';
+import { exerciseLog, exerciseSeries, weeklyMuscleVolume } from '@/utils/stats';
 import { formatVolume, formatWeight, fromKg } from '@/utils/units';
+import { formatDate } from '@/utils/date';
 
 export function ProgressScreen() {
   const t = useTheme();
@@ -41,6 +42,10 @@ export function ProgressScreen() {
   );
   const pr = useMemo(
     () => (activeEx ? computePR(sessions, activeEx) : null),
+    [sessions, activeEx]
+  );
+  const log = useMemo(
+    () => (activeEx ? exerciseLog(sessions, activeEx) : []),
     [sessions, activeEx]
   );
 
@@ -94,6 +99,46 @@ export function ProgressScreen() {
             </View>
           )}
         </Card>
+      )}
+
+      {/* Per-exercise session log */}
+      {activeEx && log.length > 0 && (
+        <>
+          <SectionHeader title={`${exerciseName(exState, activeEx)} log`} />
+          <Card padded={false}>
+            {log.map((entry, i) => (
+              <View key={entry.sessionId}>
+                {i > 0 && <View style={{ height: 1, backgroundColor: t.border }} />}
+                <View style={{ padding: spacing.md }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Txt weight="800">{formatDate(entry.date)}</Txt>
+                    <Txt dim size={12} weight="700">
+                      {entry.dayName} · top {formatWeight(entry.topWeightKg, unit)}
+                    </Txt>
+                  </View>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm }}>
+                    {entry.sets.map((st, j) => (
+                      <View
+                        key={j}
+                        style={{
+                          backgroundColor: t.surfaceAlt,
+                          borderRadius: 8,
+                          paddingHorizontal: 10,
+                          paddingVertical: 5,
+                        }}
+                      >
+                        <Txt size={13} weight="700">
+                          {formatWeight(st.weightKg, unit, false)}
+                          <Txt dim size={12}> × {st.reps}</Txt>
+                        </Txt>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              </View>
+            ))}
+          </Card>
+        </>
       )}
 
       {/* Weekly muscle volume */}
