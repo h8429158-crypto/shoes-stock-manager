@@ -16,11 +16,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/components/Screen';
 import { Button, Card, IconButton, Pill, Txt } from '@/components/ui';
 import { CircularCountdown } from '@/components/CircularCountdown';
+import { ExerciseGlyph } from '@/components/ExerciseGlyph';
 import { useTheme } from '@/theme/useTheme';
 import { radius, spacing } from '@/theme';
 import { RootStackParamList } from '@/navigation/types';
 import {
   computePR,
+  exerciseById,
   exerciseName,
   lastSessionForExercise,
   useStore,
@@ -350,6 +352,9 @@ function ExercisePage({
   const updateActiveSet = useStore((s) => s.updateActiveSet);
   const addSet = useStore((s) => s.addSet);
   const removeSet = useStore((s) => s.removeSet);
+  const customExercises = useStore((s) => s.customExercises);
+  const muscle =
+    exerciseById({ customExercises } as any, exercise.exerciseId)?.muscle ?? 'chest';
   const [showWarmup, setShowWarmup] = useState(false);
 
   const repRange = target ? `${target.repMin}–${target.repMax}` : null;
@@ -378,9 +383,12 @@ function ExercisePage({
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      <Txt size={24} weight="900">
-        {nameOf(exercise.exerciseId)}
-      </Txt>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+        <ExerciseGlyph muscle={muscle} size={52} />
+        <Txt size={24} weight="900" style={{ flex: 1 }}>
+          {nameOf(exercise.exerciseId)}
+        </Txt>
+      </View>
       <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: 6, flexWrap: 'wrap' }}>
         {target && <Pill label={`Target ${target.targetSets}×${repRange}`} />}
         {target?.targetWeightKg != null && <Pill label={formatWeight(target.targetWeightKg, unit)} />}

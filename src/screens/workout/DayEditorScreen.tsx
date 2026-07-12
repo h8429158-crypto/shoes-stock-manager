@@ -8,10 +8,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/components/Screen';
 import { Button, Card, IconButton, Txt } from '@/components/ui';
 import { Stepper } from '@/components/Stepper';
+import { ExerciseGlyph } from '@/components/ExerciseGlyph';
 import { useTheme } from '@/theme/useTheme';
 import { radius, spacing } from '@/theme';
 import { WorkoutStackParamList, RootStackParamList } from '@/navigation/types';
-import { exerciseName, useStore } from '@/store/useStore';
+import { exerciseById, exerciseName, useStore } from '@/store/useStore';
 import { SplitExercise } from '@/types';
 import { fromKg, toKg, weightStep } from '@/utils/units';
 import { haptic } from '@/utils/feedback';
@@ -104,6 +105,7 @@ export function DayEditorScreen() {
                     style={{ width: 30, height: 26 }}
                   />
                 </View>
+                <ExerciseGlyph muscle={exerciseById(exState, se.exerciseId)?.muscle ?? 'chest'} size={38} />
                 <Txt size={16} weight="800" style={{ flex: 1 }} numberOfLines={2}>
                   {name}
                 </Txt>

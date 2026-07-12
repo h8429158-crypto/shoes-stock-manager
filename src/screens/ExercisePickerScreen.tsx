@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Screen } from '@/components/Screen';
 import { Button, IconButton, Pill, Txt } from '@/components/ui';
+import { ExerciseGlyph } from '@/components/ExerciseGlyph';
 import { useTheme } from '@/theme/useTheme';
 import { radius, spacing } from '@/theme';
 import { RootStackParamList } from '@/navigation/types';
@@ -124,8 +125,10 @@ export function ExercisePickerScreen() {
               marginBottom: 6,
               borderWidth: 1,
               borderColor: t.border,
+              gap: spacing.md,
             })}
           >
+            <ExerciseGlyph muscle={item.muscle} size={40} />
             <View style={{ flex: 1 }}>
               <Txt weight="700">{item.name}</Txt>
               {item.custom && (
