@@ -325,7 +325,7 @@
   var openGalleryKey = null;
 
   function waMsg(text) {
-    return "https://wa.me/91XXXXXXXXXX?text=" + encodeURIComponent(text);
+    return "https://wa.me/919306889718?text=" + encodeURIComponent(text);
   }
 
   function openGallery(key, refreshOnly) {
