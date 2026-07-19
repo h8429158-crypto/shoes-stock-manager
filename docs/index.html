@@ -1474,7 +1474,7 @@ function renderOnboarding() {
 
 /* ============================== THEME / BOOT ============================== */
 function applyTheme() { document.documentElement.setAttribute('data-theme', S.theme === 'light' ? 'light' : 'dark');
-  document.querySelector('meta[name=theme-color]').setAttribute('content', S.theme === 'light' ? '#F4F6F9' : '#0B0F14'); }
+  const m = document.querySelector('meta[name=theme-color]'); if (m) m.setAttribute('content', S.theme === 'light' ? '#F4F6F9' : '#0B0F14'); }
 
 function boot() {
   applyTheme();
