@@ -239,6 +239,49 @@
   .spin { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 999px; animation: sp .7s linear infinite; }
   @keyframes sp { to { transform: rotate(360deg); } }
   .center { display: grid; place-items: center; }
+
+  /* Cutout stickers: contain on a subtle checker so transparency reads clearly */
+  .tile img.cut, .collage .cell img.cut { object-fit: contain; padding: 8%; }
+  .checker { background-color: var(--surface-alt);
+    background-image: linear-gradient(45deg, rgba(128,128,128,.09) 25%, transparent 25%, transparent 75%, rgba(128,128,128,.09) 75%),
+                      linear-gradient(45deg, rgba(128,128,128,.09) 25%, transparent 25%, transparent 75%, rgba(128,128,128,.09) 75%);
+    background-size: 18px 18px; background-position: 0 0, 9px 9px; }
+
+  /* ---- Studio (freeform outfit canvas) ---- */
+  .studio-overlay { position: fixed; inset: 0; z-index: 260; background: var(--bg); display: flex; flex-direction: column; }
+  .studio-top { display: flex; align-items: center; gap: 8px; padding: calc(env(safe-area-inset-top) + 10px) 14px 10px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .studio-top input { flex: 1; background: var(--surface-alt); border: 1px solid var(--border); border-radius: 10px; color: var(--text); padding: 9px 12px; font-size: 15px; font-weight: 700; }
+  .stage-wrap { flex: 1; overflow: hidden; display: grid; place-items: center; padding: 14px; }
+  .stage { position: relative; width: 100%; max-width: 460px; aspect-ratio: 3/4; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 16px; overflow: hidden; touch-action: none;
+    background-image: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--primary) 9%, var(--surface)), var(--surface) 70%); }
+  .stage .layer { position: absolute; left: 0; top: 0; touch-action: none; will-change: transform; cursor: grab; user-select: none; -webkit-user-select: none; }
+  .stage .layer img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; -webkit-user-drag: none;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,.28)); }
+  .stage .layer.sel { outline: 2px dashed var(--primary); outline-offset: 3px; border-radius: 6px; }
+  .stage .handle { position: absolute; width: 30px; height: 30px; border-radius: 999px; background: var(--primary); color: #fff;
+    display: grid; place-items: center; font-size: 14px; border: 2px solid var(--surface); box-shadow: var(--shadow); touch-action: none; }
+  .stage .handle.del { background: var(--red); top: -15px; left: -15px; }
+  .stage .handle.scale { bottom: -15px; right: -15px; cursor: nwse-resize; }
+  .stage .stage-empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: var(--faint); font-size: 13px; padding: 24px; }
+  .studio-tray { border-top: 1px solid var(--border); background: var(--surface); padding: 8px 10px calc(env(safe-area-inset-bottom) + 8px); }
+  .tray-cats { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 8px; }
+  .tray-items { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; min-height: 70px; }
+  .tray-item { flex: none; width: 62px; height: 62px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-alt); overflow: hidden; position: relative; }
+  .tray-item img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
+
+  /* ---- Calendar ---- */
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin: 6px 0 12px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+  .cal-dow { font-size: 10.5px; font-weight: 700; color: var(--faint); text-align: center; padding: 2px 0; }
+  .cal-day { aspect-ratio: 1/1; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 4px; }
+  .cal-day.blank { background: transparent; border: none; }
+  .cal-day.today { border-color: var(--primary); }
+  .cal-day .dnum { font-size: 11px; font-weight: 700; color: var(--dim); z-index: 2; }
+  .cal-day.today .dnum { color: var(--primary); }
+  .cal-day .planimg { position: absolute; inset: 0; }
+  .cal-day .planimg img { width: 100%; height: 100%; object-fit: cover; opacity: .9; }
+  .cal-day .dot-plan { position: absolute; bottom: 4px; right: 4px; width: 7px; height: 7px; border-radius: 999px; background: var(--accent); z-index: 2; }
 </style>
 </head>
 <body>
@@ -346,6 +389,8 @@ const defaultState = () => ({
   theme: 'dark',
   items: [],        // wardrobe items
   outfits: [],      // history + favorites: {id, occasion, itemIds, date, favorite, weather}
+  looks: [],        // hand-styled canvas collages: {id, name, layers:[{itemId,x,y,scale,rot,z}], createdAt}
+  plan: {},         // calendar plan: { 'YYYY-MM-DD': { lookId } | { itemIds:[] } }
   profile: null,    // {undertone, skinHex, bodyType, palette:[], updatedAt}
   location: null,   // {lat, lon, label}
   units: 'C',       // C | F
@@ -440,22 +485,103 @@ function dominantColor(imgEl) {
   return rgbToHex(best.r / best.w, best.g / best.w, best.b / best.w);
 }
 
+// Dominant colour straight from ImageData, respecting transparency (so cutouts
+// only consider the garment, not the removed background).
+function dominantFromData(data) {
+  const buckets = new Map();
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+    if (a < 200) continue;
+    const [, s, l] = rgbToHsl(r, g, b);
+    const w = 1 + s * 2 + (l > .12 && l < .9 ? 1 : 0) - (l > .93 ? 2 : 0);
+    if (w <= 0) continue;
+    const key = (r >> 4) + ',' + (g >> 4) + ',' + (b >> 4);
+    const cur = buckets.get(key) || { r: 0, g: 0, b: 0, w: 0 };
+    cur.r += r * w; cur.g += g * w; cur.b += b * w; cur.w += w; buckets.set(key, cur);
+  }
+  let best = null, bw = -1;
+  for (const v of buckets.values()) if (v.w > bw) { bw = v.w; best = v; }
+  if (!best) return '#8a8f96';
+  return rgbToHex(best.r / best.w, best.g / best.w, best.b / best.w);
+}
+
+// On-device background removal. Photographers of clothing shoot against a plain
+// surface, so we estimate the backdrop colour from the four corners and
+// flood-fill inward from every border pixel, clearing anything close to it.
+// Only regions connected to the edge are removed, so same-coloured parts of the
+// garment in the interior are kept. Returns the fraction of pixels removed so
+// the caller can decide whether the cutout looks reasonable.
+function removeBackground(ctx, w, h) {
+  const imed = ctx.getImageData(0, 0, w, h);
+  const d = imed.data;
+  const corners = [[0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1]];
+  let br = 0, bg = 0, bb = 0, cn = 0;
+  for (const [cx, cy] of corners) {
+    for (let dy = 0; dy < 8; dy++) for (let dx = 0; dx < 8; dx++) {
+      const x = clamp(cx + (cx ? -dx : dx), 0, w - 1), y = clamp(cy + (cy ? -dy : dy), 0, h - 1);
+      const i = (y * w + x) * 4; br += d[i]; bg += d[i + 1]; bb += d[i + 2]; cn++;
+    }
+  }
+  br /= cn; bg /= cn; bb /= cn;
+  const TH = 46 * 46 * 3;             // squared distance threshold, fairly permissive
+  const visited = new Uint8Array(w * h);
+  const stack = [];
+  const pushBorder = (x, y) => { const p = y * w + x; if (!visited[p]) { visited[p] = 1; stack.push(p); } };
+  for (let x = 0; x < w; x++) { pushBorder(x, 0); pushBorder(x, h - 1); }
+  for (let y = 0; y < h; y++) { pushBorder(0, y); pushBorder(w - 1, y); }
+  const near = (i) => { const dr = d[i] - br, dg = d[i + 1] - bg, db = d[i + 2] - bb; return dr * dr + dg * dg + db * db < TH; };
+  let removed = 0;
+  while (stack.length) {
+    const p = stack.pop(); const i = p * 4;
+    if (!near(i)) continue;
+    d[i + 3] = 0; removed++;                     // clear alpha
+    const x = p % w, y = (p - x) / w;
+    if (x > 0 && !visited[p - 1]) { visited[p - 1] = 1; stack.push(p - 1); }
+    if (x < w - 1 && !visited[p + 1]) { visited[p + 1] = 1; stack.push(p + 1); }
+    if (y > 0 && !visited[p - w]) { visited[p - w] = 1; stack.push(p - w); }
+    if (y < h - 1 && !visited[p + w]) { visited[p + w] = 1; stack.push(p + w); }
+  }
+  // Soften the cut edge: pixels bordering a cleared pixel get reduced alpha.
+  const a0 = new Uint8ClampedArray(w * h);
+  for (let p = 0; p < w * h; p++) a0[p] = d[p * 4 + 3];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const p = y * w + x; if (a0[p] === 0) continue;
+    let edge = false;
+    if (x > 0 && a0[p - 1] === 0) edge = true;
+    else if (x < w - 1 && a0[p + 1] === 0) edge = true;
+    else if (y > 0 && a0[p - w] === 0) edge = true;
+    else if (y < h - 1 && a0[p + w] === 0) edge = true;
+    if (edge) d[p * 4 + 3] = 150;
+  }
+  ctx.putImageData(imed, 0, 0);
+  return removed / (w * h);
+}
+
 /* --------------------------- Image processing ----------------------------- */
-// Downscale an uploaded photo to a reasonable max dimension and return
-// {blob, hex}. Keeps storage small and gives us the dominant colour for tagging.
-function processImage(file, maxDim = 1000) {
+// Downscale an uploaded photo and return {blob, hex}. When removeBg is set we
+// cut out the background and emit a transparent PNG "sticker"; otherwise a JPEG.
+function processImage(file, opts = {}) {
+  const maxDim = opts.maxDim || 1000;
+  const removeBg = !!opts.removeBg;
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
       let { width: w, height: h } = img;
       const scale = Math.min(1, maxDim / Math.max(w, h));
-      w = Math.round(w * scale); h = Math.round(h * scale);
+      w = Math.max(1, Math.round(w * scale)); h = Math.max(1, Math.round(h * scale));
       const c = document.createElement('canvas'); c.width = w; c.height = h;
-      const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
-      const hex = dominantColor(img);
-      c.toBlob(b => { URL.revokeObjectURL(img.src); b ? resolve({ blob: b, hex }) : reject(new Error('encode failed')); }, 'image/jpeg', 0.82);
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(img.src);
+      let cutout = false;
+      if (removeBg) {
+        try { const frac = removeBackground(ctx, w, h); cutout = frac > 0.04 && frac < 0.97; } catch (e) { cutout = false; }
+      }
+      let hex; try { hex = dominantFromData(ctx.getImageData(0, 0, w, h).data); } catch (e) { hex = '#8a8f96'; }
+      const type = cutout ? 'image/png' : 'image/jpeg';
+      c.toBlob(b => { b ? resolve({ blob: b, hex, cutout }) : reject(new Error('encode failed')); }, type, 0.82);
     };
-    img.onerror = () => reject(new Error('bad image'));
+    img.onerror = () => { URL.revokeObjectURL(img.src); reject(new Error('bad image')); };
     img.src = URL.createObjectURL(file);
   });
 }
@@ -687,7 +813,8 @@ async function requestLocation() {
 const ROUTES = [
   { id: 'wardrobe', label: 'Wardrobe', icon: '🗄️' },
   { id: 'suggest', label: 'Outfits', icon: '✨' },
-  { id: 'style', label: 'Style', icon: '🎨' },
+  { id: 'studio', label: 'Studio', icon: '🎨' },
+  { id: 'plan', label: 'Plan', icon: '🗓️' },
   { id: 'more', label: 'More', icon: '☰' },
 ];
 let route = 'wardrobe';
@@ -710,6 +837,8 @@ function render() {
   scr.append(view);
   if (route === 'wardrobe') renderWardrobe(view);
   else if (route === 'suggest') renderSuggest(view);
+  else if (route === 'studio') renderStudio(view);
+  else if (route === 'plan') renderPlan(view);
   else if (route === 'style') renderStyle(view);
   else if (route === 'more') renderMore(view);
 }
@@ -785,8 +914,8 @@ function renderWardrobe(v) {
     if (!list.length) { gridWrap.append(emptyState('🔍', 'Nothing matches', 'Try a different filter or search term.')); return; }
     const grid = el('div', { class: 'grid' });
     for (const item of list) {
-      const tile = el('button', { class: 'tile', onclick: () => openItem(item.id) });
-      attachImg(tile, item);
+      const tile = el('button', { class: 'tile' + (item.cutout ? ' checker' : ''), onclick: () => openItem(item.id) });
+      attachImg(tile, item, item.cutout ? 'cut' : '');
       if (item.inWash) tile.append(el('div', { class: 'badge-wash', text: 'IN WASH' }));
       if (item.favorite) tile.append(el('div', { class: 'badge-fav', text: '★' }));
       tile.append(el('div', { class: 'tile-meta' }, [
@@ -808,11 +937,12 @@ function emptyState(ico, title, sub, action) {
 }
 
 /* ------------------------- Add / Edit item sheet -------------------------- */
-let pendingImage = null; // {blob, hex} awaiting form save
+let pendingImage = null; // {blob, hex, cutout} awaiting form save
+let pendingFile = null;  // raw File, kept so we can reprocess when the cutout toggle flips
 function openAddItem(presetCat) {
-  pendingImage = null;
+  pendingImage = null; pendingFile = null;
   const draft = { category: presetCat || 'upper', subtype: '', color: '#8a8f96', colorName: 'Grey',
-    pattern: 'Solid', fabric: 'Cotton', styles: ['Casual'], seasons: ['All-season'], notes: '', favorite: false };
+    pattern: 'Solid', fabric: 'Cotton', styles: ['Casual'], seasons: ['All-season'], notes: '', favorite: false, removeBg: true };
   showItemForm(draft, null);
 }
 function openItem(id) {
@@ -820,8 +950,8 @@ function openItem(id) {
   // Detail view first
   const body = $('#sheetBody'); body.innerHTML = '';
   $('#sheetTitle').textContent = item.subtype || 'Item';
-  const hero = el('div', { class: 'tile', style: 'aspect-ratio:4/3;border-radius:16px' });
-  attachImg(hero, item);
+  const hero = el('div', { class: 'tile' + (item.cutout ? ' checker' : ''), style: 'aspect-ratio:4/3;border-radius:16px' });
+  attachImg(hero, item, item.cutout ? 'cut' : '');
   body.append(hero);
   const meta = el('div', { style: 'margin-top:14px' }, [
     el('div', { class: 'row', style: 'margin-bottom:10px' }, [
@@ -851,15 +981,16 @@ function showItemForm(draft, editId) {
   const body = $('#sheetBody'); body.innerHTML = '';
   $('#sheetTitle').textContent = editId ? 'Edit item' : 'Add item';
 
+  if (editId) { const it0 = S.items.find(i => i.id === editId); if (it0) { draft.cutout = it0.cutout; draft.removeBg = !!it0.cutout; } }
   // Photo area with auto-detected colour
-  const photoBox = el('div', { class: 'tile', style: 'aspect-ratio:4/3;border-radius:16px;cursor:pointer', onclick: () => triggerPick() });
+  const photoBox = el('div', { class: 'tile checker', style: 'aspect-ratio:4/3;border-radius:16px;cursor:pointer', onclick: () => triggerPick() });
   const rebuildPhoto = () => {
     photoBox.innerHTML = '';
     if (pendingImage) {
-      photoBox.append(el('img', { src: URL.createObjectURL(pendingImage.blob) }));
+      photoBox.append(el('img', { src: URL.createObjectURL(pendingImage.blob), class: pendingImage.cutout ? 'cut' : '' }));
     } else if (editId) {
       const it = S.items.find(i => i.id === editId);
-      if (it && it.imageId) attachImg(photoBox, it);
+      if (it && it.imageId) attachImg(photoBox, it, it.cutout ? 'cut' : '');
       else photoBox.append(photoPlaceholder());
     } else photoBox.append(photoPlaceholder());
   };
@@ -888,18 +1019,34 @@ function showItemForm(draft, editId) {
   renderDetected();
   body.append(detected);
 
+  // Background-removal toggle — turns photos into clean "cutout" stickers that
+  // sit better in outfit collages and the Studio canvas.
+  const cutRow = el('div', { style: 'display:flex;align-items:center;gap:10px;margin-top:12px;padding:11px 13px;background:var(--surface-alt);border:1px solid var(--border);border-radius:12px' });
+  const cutSw = el('div', { class: 'switch' + (draft.removeBg ? ' on' : '') });
+  cutRow.append(
+    el('div', { style: 'font-size:19px', text: '✂️' }),
+    el('div', { style: 'flex:1' }, [ el('div', { style: 'font-weight:700;font-size:14px', text: 'Cut out background' }),
+      el('div', { class: 'muted', style: 'font-size:12px', text: 'On-device · best against a plain backdrop' }) ]),
+    cutSw);
+  cutRow.addEventListener('click', async () => {
+    draft.removeBg = !draft.removeBg; cutSw.classList.toggle('on', draft.removeBg);
+    if (pendingFile) await reprocess();
+  });
+  body.append(cutRow);
+
+  async function reprocess() {
+    photoBox.innerHTML = ''; photoBox.append(el('div', { class: 'center', style: 'width:100%;height:100%' }, el('div', { class: 'spin' })));
+    try {
+      const res = await processImage(pendingFile, { removeBg: draft.removeBg });
+      pendingImage = res; draft.cutout = res.cutout; draft.color = res.hex; draft.colorName = nearestName(res.hex);
+      rebuildPhoto(); renderDetected();
+      toast(res.cutout ? 'Background removed · ' + draft.colorName : 'Colour detected · ' + draft.colorName);
+    } catch (e) { rebuildPhoto(); toast('Could not read that image'); }
+  }
+
   function triggerPick() {
     const fp = $('#filePick'); fp.value = '';
-    fp.onchange = async () => {
-      const f = fp.files[0]; if (!f) return;
-      photoBox.innerHTML = ''; photoBox.append(el('div', { class: 'center', style: 'width:100%;height:100%' }, el('div', { class: 'spin' })));
-      try {
-        const res = await processImage(f);
-        pendingImage = res; draft.color = res.hex; draft.colorName = nearestName(res.hex);
-        rebuildPhoto(); renderDetected();
-        toast('Colour auto-detected · ' + draft.colorName);
-      } catch (e) { rebuildPhoto(); toast('Could not read that image'); }
-    };
+    fp.onchange = async () => { const f = fp.files[0]; if (!f) return; pendingFile = f; await reprocess(); };
     fp.click();
   }
 
@@ -990,13 +1137,13 @@ async function saveItem(draft, editId) {
   if (editId) {
     const it = S.items.find(i => i.id === editId);
     Object.assign(it, { category: draft.category, subtype: draft.subtype, color: draft.color, colorName: draft.colorName,
-      pattern: draft.pattern, fabric: draft.fabric, styles: draft.styles.slice(), seasons: draft.seasons.slice(), notes: draft.notes, imageId });
+      pattern: draft.pattern, fabric: draft.fabric, styles: draft.styles.slice(), seasons: draft.seasons.slice(), notes: draft.notes, imageId, cutout: !!(pendingImage ? pendingImage.cutout : it.cutout) });
   } else {
     S.items.push({ id: uid(), category: draft.category, subtype: draft.subtype, color: draft.color, colorName: draft.colorName,
       pattern: draft.pattern, fabric: draft.fabric, styles: draft.styles.slice(), seasons: draft.seasons.slice(),
-      notes: draft.notes, imageId, inWash: false, favorite: false, createdAt: Date.now() });
+      notes: draft.notes, imageId, cutout: !!(pendingImage && pendingImage.cutout), inWash: false, favorite: false, createdAt: Date.now() });
   }
-  pendingImage = null; save(); closeSheet(); render(); toast(editId ? 'Item updated' : 'Added to wardrobe ✓'); haptic();
+  pendingImage = null; pendingFile = null; save(); closeSheet(); render(); toast(editId ? 'Item updated' : 'Added to wardrobe ✓'); haptic();
 }
 function toggleWash(id) { const it = S.items.find(i => i.id === id); it.inWash = !it.inWash; save(); closeSheet(); render(); toast(it.inWash ? 'Moved to laundry' : 'Back in rotation'); }
 function toggleFav(id) { const it = S.items.find(i => i.id === id); it.favorite = !it.favorite; save(); openItem(id); render(); }
@@ -1095,9 +1242,9 @@ function outfitCard(o, idx, wx) {
   const collage = el('div', { class: 'collage' });
   const cells = [];
   const addCell = (item, label, tall) => {
-    const cell = el('div', { class: 'cell' + (tall ? ' tall' : '') });
+    const cell = el('div', { class: 'cell' + (tall ? ' tall' : '') + (item && item.cutout ? ' checker' : '') });
     if (item) {
-      attachImg(cell, item);
+      attachImg(cell, item, item.cutout ? 'cut' : '');
       cell.append(el('div', { class: 'lbl' }, [ el('span', { class: 'swatch', style: `background:${item.color}` }), label + ' · ' + item.subtype ]));
       cell.append(el('button', { class: 'swap', 'aria-label': 'Swap', onclick: (e) => { e.stopPropagation(); swapItem(o, item.category, idx); } }, '⇄'));
     } else {
@@ -1144,6 +1291,256 @@ function saveOutfit(o, worn) {
   save(); toast(worn ? 'Logged as worn today' : 'Saved to favorites ★'); haptic();
 }
 function wearOutfit(o) { saveOutfit(o, true); toast('Nice! Logged for today ✓'); }
+
+/* ============================== STUDIO ==================================== */
+/* A freeform outfit canvas: drag, scale and rotate clothing cutouts into a
+   flat-lay collage, save the "look", and plan it on a date. */
+function renderStudio(v) {
+  v.append(header('Style Studio', 'Compose a look by hand — drag your pieces onto the canvas.',
+    el('button', { class: 'icon-btn', onclick: () => openCanvas(), 'aria-label': 'New look' }, '＋')));
+  if (!S.items.length) {
+    v.append(emptyState('👗', 'Add items first', 'Digitize a few clothes, then arrange them into looks here.',
+      el('button', { class: 'btn btn-primary', onclick: () => go('wardrobe') }, 'Go to wardrobe')));
+    return;
+  }
+  if (!S.looks.length) {
+    v.append(emptyState('🎨', 'No looks yet', 'Drag clothes onto a blank canvas to build an outfit collage — like a flat-lay moodboard you style yourself.',
+      el('button', { class: 'btn btn-primary', onclick: () => openCanvas() }, '＋ Create a look')));
+    return;
+  }
+  const grid = el('div', { class: 'grid two', style: 'gap:10px' });
+  for (const look of S.looks.slice().sort((a, b) => b.createdAt - a.createdAt)) {
+    const card = el('button', { class: 'tile', style: 'aspect-ratio:3/4', onclick: () => openLookMenu(look.id) });
+    renderLookInto(card, look);
+    card.append(el('div', { class: 'tile-meta', text: look.name || 'Untitled look' }));
+    grid.append(card);
+  }
+  v.append(grid);
+}
+
+// Render a saved look's layers into a container (uses %-based placement so it
+// scales to any size without measuring the DOM).
+function renderLookInto(container, look) {
+  container.style.position = 'relative';
+  for (const l of (look.layers || []).slice().sort((a, b) => (a.z || 0) - (b.z || 0))) {
+    const it = S.items.find(i => i.id === l.itemId); if (!it) continue;
+    const wrap = el('div', { style: `position:absolute;left:${l.x * 100}%;top:${l.y * 100}%;width:${l.w * 100}%;transform:translate(-50%,-50%) rotate(${l.rot || 0}deg);z-index:${l.z || 0}` });
+    imgURL(it.imageId).then(u => { if (u) wrap.append(el('img', { src: u, style: 'width:100%;height:auto;display:block;filter:drop-shadow(0 3px 6px rgba(0,0,0,.25))' })); });
+    container.append(wrap);
+  }
+}
+
+function openCanvas(lookId, planDate) {
+  const existing = lookId ? S.looks.find(l => l.id === lookId) : null;
+  const layers = existing ? existing.layers.map(l => Object.assign({}, l)) : [];
+  let selIdx = -1;
+  const els = [];
+
+  const overlay = el('div', { class: 'studio-overlay' });
+  const nameInput = el('input', { value: existing ? (existing.name || '') : '', placeholder: 'Name this look', maxlength: '40' });
+  const stage = el('div', { class: 'stage' });
+  const top = el('div', { class: 'studio-top' }, [
+    el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: () => overlay.remove() }, '‹'),
+    nameInput,
+    el('button', { class: 'btn btn-sm btn-primary', onclick: saveLook }, 'Save'),
+  ]);
+  const stageWrap = el('div', { class: 'stage-wrap' }, stage);
+  const tray = buildTray();
+  overlay.append(top, stageWrap, tray);
+  document.body.append(overlay);
+  stage.addEventListener('pointerdown', (e) => { if (e.target === stage) { selIdx = -1; applySelection(); } });
+  buildStage();
+
+  function maxZ() { return layers.reduce((m, l) => Math.max(m, l.z || 0), 0); }
+  function place(node, l) {
+    node.style.left = (l.x * 100) + '%'; node.style.top = (l.y * 100) + '%';
+    node.style.width = (l.w * 100) + '%'; node.style.transform = `translate(-50%,-50%) rotate(${l.rot || 0}deg)`; node.style.zIndex = l.z || 0;
+  }
+  function buildStage() {
+    stage.querySelectorAll('.layer').forEach(n => n.remove());
+    els.length = 0;
+    let hint = stage.querySelector('.stage-empty');
+    if (!layers.length) { if (!hint) stage.append(el('div', { class: 'stage-empty', text: 'Tap items below to drop them here, then drag, scale ↘ and rotate ⟳.' })); }
+    else if (hint) hint.remove();
+    layers.forEach((l, idx) => {
+      const node = el('div', { class: 'layer' });
+      imgURL((S.items.find(i => i.id === l.itemId) || {}).imageId).then(u => { if (u) node.prepend(el('img', { src: u })); });
+      place(node, l);
+      node.addEventListener('pointerdown', (e) => {
+        if (e.target.classList.contains('handle')) return;
+        e.preventDefault(); select(idx);
+        const rect = stage.getBoundingClientRect(); const ox = l.x, oy = l.y, sx = e.clientX, sy = e.clientY;
+        node.setPointerCapture(e.pointerId);
+        const move = (ev) => { l.x = clamp(ox + (ev.clientX - sx) / rect.width, 0, 1); l.y = clamp(oy + (ev.clientY - sy) / rect.height, 0, 1); place(node, l); };
+        const up = () => { node.removeEventListener('pointermove', move); node.removeEventListener('pointerup', up); node.removeEventListener('pointercancel', up); };
+        node.addEventListener('pointermove', move); node.addEventListener('pointerup', up); node.addEventListener('pointercancel', up);
+      });
+      els.push(node); stage.append(node);
+    });
+    applySelection();
+  }
+  function select(idx) { selIdx = idx; const l = layers[idx]; if (l) l.z = maxZ() + 1; if (els[idx]) els[idx].style.zIndex = l.z; applySelection(); }
+  function applySelection() {
+    els.forEach((n, i) => {
+      n.classList.toggle('sel', i === selIdx);
+      n.querySelectorAll('.handle').forEach(h => h.remove());
+      if (i === selIdx) { n.append(mkHandle('del', '✕', delSel)); n.append(mkHandle('scale', '⤡', startScale)); n.append(mkHandle('rot', '⟳', startRot)); }
+    });
+  }
+  function mkHandle(cls, glyph, onDown) {
+    const h = el('div', { class: 'handle ' + cls, text: glyph });
+    if (cls === 'rot') h.style.cssText += 'top:-15px;right:-15px;';
+    h.addEventListener('pointerdown', onDown);
+    return h;
+  }
+  function delSel(e) { e.preventDefault(); e.stopPropagation(); if (selIdx < 0) return; layers.splice(selIdx, 1); selIdx = -1; buildStage(); }
+  function startScale(e) {
+    e.preventDefault(); e.stopPropagation(); const l = layers[selIdx]; if (!l) return;
+    const rect = stage.getBoundingClientRect(); const h = e.target; h.setPointerCapture(e.pointerId);
+    const move = (ev) => { const fx = (ev.clientX - rect.left) / rect.width; l.w = clamp(Math.abs(fx - l.x) * 2, 0.08, 1.7); place(els[selIdx], l); };
+    const up = () => { h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); };
+    h.addEventListener('pointermove', move); h.addEventListener('pointerup', up);
+  }
+  function startRot(e) {
+    e.preventDefault(); e.stopPropagation(); const l = layers[selIdx]; if (!l) return;
+    const rect = stage.getBoundingClientRect(); const cx = rect.left + l.x * rect.width, cy = rect.top + l.y * rect.height;
+    const h = e.target; h.setPointerCapture(e.pointerId);
+    const move = (ev) => { l.rot = Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI + 90; place(els[selIdx], l); };
+    const up = () => { h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); };
+    h.addEventListener('pointermove', move); h.addEventListener('pointerup', up);
+  }
+  function addLayer(itemId) { layers.push({ itemId, x: 0.5, y: 0.4 + Math.random() * 0.12, w: 0.42, rot: 0, z: maxZ() + 1 }); buildStage(); select(layers.length - 1); toast('Added — drag to arrange'); haptic(); }
+
+  function buildTray() {
+    const wrap = el('div', { class: 'studio-tray' });
+    const cats = el('div', { class: 'tray-cats' });
+    const items = el('div', { class: 'tray-items' });
+    let active = 'upper';
+    const fill = () => {
+      items.innerHTML = '';
+      const list = S.items.filter(i => i.category === active);
+      if (!list.length) { items.append(el('div', { class: 'muted', style: 'font-size:12px;padding:22px 6px', text: 'No ' + catById(active).label.toLowerCase() + ' yet' })); return; }
+      for (const it of list) { const t = el('button', { class: 'tray-item', onclick: () => addLayer(it.id) }); imgURL(it.imageId).then(u => { if (u) t.append(el('img', { src: u })); else t.append(el('div', { class: 'center', style: 'width:100%;height:100%;font-size:22px', text: catById(it.category).icon })); }); items.append(t); }
+    };
+    for (const c of CATEGORIES) { const b = el('button', { class: 'chip' + (c.id === active ? ' active' : ''), onclick: () => { active = c.id; [...cats.children].forEach(x => x.classList.toggle('active', x === b)); fill(); } }, `${c.icon} ${c.label}`); cats.append(b); }
+    wrap.append(cats, items); fill();
+    return wrap;
+  }
+
+  function saveLook() {
+    if (!layers.length) { toast('Add at least one item'); return; }
+    const name = (nameInput.value || '').trim() || 'Look ' + (S.looks.length + 1);
+    if (existing) { existing.name = name; existing.layers = layers.map(l => Object.assign({}, l)); }
+    else { const nl = { id: uid(), name, layers: layers.map(l => Object.assign({}, l)), createdAt: Date.now() }; S.looks.push(nl); lookId = nl.id; }
+    if (planDate) S.plan[planDate] = { lookId: existing ? existing.id : lookId };
+    save(); overlay.remove(); toast('Look saved ✓'); haptic();
+    if (planDate) go('plan'); else go('studio');
+  }
+}
+
+function openLookMenu(id) {
+  const look = S.looks.find(l => l.id === id); if (!look) return;
+  const body = $('#sheetBody'); body.innerHTML = ''; $('#sheetTitle').textContent = look.name || 'Look';
+  const preview = el('div', { class: 'tile', style: 'aspect-ratio:3/4;border-radius:16px' });
+  renderLookInto(preview, look); body.append(preview);
+  body.append(el('div', { style: 'display:flex;gap:8px;margin-top:14px' }, [
+    el('button', { class: 'btn btn-primary', style: 'flex:1', onclick: () => { closeSheet(); openCanvas(id); } }, '✏️ Edit look'),
+    el('button', { class: 'btn', style: 'flex:1', onclick: () => planLook(id) }, '🗓️ Plan a day'),
+  ]));
+  body.append(el('div', { style: 'display:flex;gap:8px;margin-top:8px' }, [
+    el('button', { class: 'btn btn-ghost', style: 'flex:1', onclick: () => { S.outfits.unshift({ id: uid(), occasion: '', itemIds: look.layers.map(l => l.itemId), date: todayISO(), worn: true, favorite: false, weather: null }); save(); toast('Logged as worn today ✓'); closeSheet(); } }, '✓ Wear today'),
+    el('button', { class: 'btn btn-danger', style: 'flex:1', onclick: () => { if (confirm('Delete this look?')) { S.looks = S.looks.filter(l => l.id !== id); Object.keys(S.plan).forEach(d => { if (S.plan[d].lookId === id) delete S.plan[d]; }); save(); closeSheet(); render(); toast('Look deleted'); } } }, '🗑 Delete'),
+  ]));
+  openSheet();
+}
+function planLook(id) {
+  const inp = el('input', { type: 'date', class: 'input', value: todayISO(), min: todayISO() });
+  const body = $('#sheetBody'); body.innerHTML = ''; $('#sheetTitle').textContent = 'Plan this look';
+  body.append(el('p', { class: 'muted', style: 'font-size:14px', text: 'Pick a date to wear this look.' }), inp,
+    el('button', { class: 'btn btn-primary btn-block', style: 'margin-top:14px', onclick: () => { if (!inp.value) return; S.plan[inp.value] = { lookId: id }; save(); closeSheet(); toast('Planned for ' + prettyDate(inp.value)); if (route === 'plan') render(); } }, 'Add to calendar'));
+}
+
+/* =============================== PLAN ===================================== */
+function renderPlan(v) {
+  const now = new Date();
+  if (!routeState.ym) routeState.ym = { y: now.getFullYear(), m: now.getMonth() };
+  const { y, m } = routeState.ym;
+  v.append(header('Plan', 'Plan outfits ahead — tap any day.'));
+
+  const monthName = new Date(y, m, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  v.append(el('div', { class: 'cal-head' }, [
+    el('button', { class: 'icon-btn', 'aria-label': 'Previous month', onclick: () => { routeState.ym = shiftMonth(y, m, -1); render(); } }, '‹'),
+    el('div', { style: 'font-weight:800;font-size:17px', text: monthName }),
+    el('button', { class: 'icon-btn', 'aria-label': 'Next month', onclick: () => { routeState.ym = shiftMonth(y, m, 1); render(); } }, '›'),
+  ]));
+
+  const grid = el('div', { class: 'cal-grid' });
+  ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(d => grid.append(el('div', { class: 'cal-dow', text: d })));
+  const first = new Date(y, m, 1).getDay();
+  const days = new Date(y, m + 1, 0).getDate();
+  for (let i = 0; i < first; i++) grid.append(el('div', { class: 'cal-day blank' }));
+  for (let d = 1; d <= days; d++) {
+    const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const isToday = iso === todayISO();
+    const cell = el('button', { class: 'cal-day' + (isToday ? ' today' : ''), onclick: () => openDayPlan(iso) }, el('span', { class: 'dnum', text: d }));
+    const plan = S.plan[iso];
+    if (plan) {
+      const pi = el('div', { class: 'planimg' });
+      if (plan.lookId) { const look = S.looks.find(l => l.id === plan.lookId); if (look) renderLookInto(pi, look); }
+      else if (plan.itemIds && plan.itemIds.length) { const it = S.items.find(i => i.id === plan.itemIds[0]); if (it) imgURL(it.imageId).then(u => { if (u) pi.append(el('img', { src: u })); }); }
+      cell.append(pi, el('div', { class: 'dot-plan' }));
+    }
+    grid.append(cell);
+  }
+  v.append(grid);
+
+  // Upcoming list
+  const upcoming = Object.keys(S.plan).filter(d => d >= todayISO()).sort().slice(0, 5);
+  if (upcoming.length) {
+    v.append(el('div', { class: 'sec-title', text: 'Upcoming' }));
+    const card = el('div', { class: 'card', style: 'padding:4px 14px' });
+    for (const d of upcoming) {
+      const plan = S.plan[d]; const look = plan.lookId ? S.looks.find(l => l.id === plan.lookId) : null;
+      const label = look ? look.name : (plan.itemIds ? plan.itemIds.length + '-piece outfit' : 'Planned');
+      card.append(el('button', { class: 'list-row', style: 'width:100%;background:none;border:none;border-bottom:1px solid var(--border);text-align:left;color:var(--text)', onclick: () => openDayPlan(d) }, [
+        el('div', { class: 'lr-ico', text: '🗓️' }),
+        el('div', { class: 'lr-main' }, [ el('div', { class: 'lr-t', text: prettyDate(d) }), el('div', { class: 'lr-s', text: label }) ]),
+        el('div', { style: 'color:var(--faint);font-size:20px', text: '›' }),
+      ]));
+    }
+    v.append(card);
+  }
+}
+function shiftMonth(y, m, d) { const nd = new Date(y, m + d, 1); return { y: nd.getFullYear(), m: nd.getMonth() }; }
+
+function openDayPlan(iso) {
+  const body = $('#sheetBody'); body.innerHTML = ''; $('#sheetTitle').textContent = prettyDate(iso) + ' · ' + new Date(iso).toLocaleDateString(undefined, { weekday: 'long' });
+  const plan = S.plan[iso];
+  if (plan) {
+    const prev = el('div', { class: 'tile', style: 'aspect-ratio:3/4;border-radius:14px;max-width:200px;margin:0 auto' });
+    if (plan.lookId) { const look = S.looks.find(l => l.id === plan.lookId); if (look) renderLookInto(prev, look); }
+    else if (plan.itemIds) { const g = el('div', { class: 'collage' }); plan.itemIds.slice(0, 4).forEach(id => { const it = S.items.find(i => i.id === id); if (!it) return; const c = el('div', { class: 'cell' }); attachImg(c, it, it.cutout ? 'cut' : ''); g.append(c); }); prev.append(g); }
+    body.append(prev);
+    body.append(el('button', { class: 'btn btn-danger btn-block', style: 'margin-top:12px', onclick: () => { delete S.plan[iso]; save(); closeSheet(); render(); toast('Plan cleared'); } }, 'Clear this day'));
+    body.append(el('div', { class: 'sec-title', text: 'Change to' }));
+  }
+  // Suggest & plan an auto outfit
+  body.append(el('button', { class: 'btn btn-primary btn-block', style: 'margin-bottom:8px', onclick: async () => {
+    const wx = await getWeather(); const res = buildOutfits(S.lastOccasion || 'casual', wx, 1);
+    if (!res.outfits.length) { toast('Add more items to auto-plan'); return; }
+    S.plan[iso] = { itemIds: res.outfits[0].ids.slice() }; save(); closeSheet(); render(); toast('Auto outfit planned ✓');
+  } }, '✨ Auto-suggest an outfit'));
+  // Pick a saved look
+  if (S.looks.length) {
+    body.append(el('div', { class: 'sec-title', style: 'margin-top:14px', text: 'Or pick a saved look' }));
+    const grid = el('div', { class: 'grid two', style: 'gap:8px' });
+    for (const look of S.looks) { const card = el('button', { class: 'tile', style: 'aspect-ratio:3/4', onclick: () => { S.plan[iso] = { lookId: look.id }; save(); closeSheet(); render(); toast('Planned ' + (look.name || 'look')); } }); renderLookInto(card, look); card.append(el('div', { class: 'tile-meta', text: look.name || 'Look' })); grid.append(card); }
+    body.append(grid);
+  } else {
+    body.append(el('button', { class: 'btn btn-ghost btn-block', style: 'margin-top:6px', onclick: () => { closeSheet(); openCanvas(null, iso); } }, '🎨 Style a look for this day'));
+  }
+  openSheet();
+}
 
 /* =============================== STYLE ==================================== */
 function renderStyle(v) {
@@ -1273,6 +1670,7 @@ function renderMore(v) {
 
   v.append(el('div', { class: 'sec-title', text: 'Tools' }));
   v.append(el('div', { class: 'card', style: 'padding:6px 16px' }, [
+    listRow('🎨', 'Style profile', S.profile ? `${S.profile.undertone} undertone` : 'Discover your colours', () => go('style')),
     listRow('🧳', 'Packing assistant', 'Trip outfits & a checklist', () => openPacking()),
     listRow('🧺', 'Laundry', inWash ? `${inWash} item${inWash === 1 ? '' : 's'} in wash` : 'Nothing in the wash', () => openLaundry()),
     listRow('🕑', 'Outfit history', `${S.outfits.length} logged`, () => openHistory()),
@@ -1442,7 +1840,8 @@ const ONB_STEPS = [
   { ic: '👔', h: 'Welcome to StyleMate', p: 'Your personal wardrobe, digitized. Snap your clothes once and get complete outfit ideas whenever you need them — built only from what you actually own.' },
   { ic: '📷', h: 'Digitize your wardrobe', p: 'Add a photo of each item. StyleMate auto-detects its colour and lets you tag category, style, fabric and season in seconds.' },
   { ic: '✨', h: 'Get outfit suggestions', p: 'Pick an occasion — office, date, wedding, gym — and get 2–3 full looks, tuned to the live weather and colour-matched. Shuffle or swap any piece.' },
-  { ic: '🎨', h: 'Know what suits you', p: 'An on-device selfie scan estimates your skin undertone to recommend flattering colours and smart purchases that fill gaps. Your photos never leave the phone.' },
+  { ic: '🎨', h: 'Style & plan your looks', p: 'Cut out clothing photos into clean stickers, arrange them into flat-lay collages in the Studio, and plan outfits ahead on the calendar.' },
+  { ic: '💡', h: 'Know what suits you', p: 'An on-device selfie scan estimates your skin undertone to recommend flattering colours and smart purchases that fill gaps. Your photos never leave the phone.' },
 ];
 function renderOnboarding() {
   let step = 0;
