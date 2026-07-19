@@ -3,82 +3,81 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="description" content="A personal, offline habit tracker that turns daily consistency into a real monthly money reward.">
-<meta name="theme-color" content="#151B23">
-<meta name="color-scheme" content="dark">
+<meta name="description" content="StyleMate — your AI-powered personal wardrobe. Digitize what you own and get complete outfit suggestions for any occasion.">
+<meta name="theme-color" content="#0B0F14">
+<meta name="color-scheme" content="dark light">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Reward Habits">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="StyleMate">
 <link rel="apple-touch-icon" href="./icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 <link rel="manifest" href="./manifest.webmanifest">
-<title>Reward Habits</title>
+<title>StyleMate</title>
 <style>
   :root {
     --bg: #0B0F14;
     --surface: #151B23;
     --surface-alt: #1C232D;
+    --surface-hi: #232C36;
     --border: #28313D;
     --track: #232C36;
     --text: #F2F5F8;
     --dim: #8A97A6;
     --faint: #5C6875;
-    --primary: #4CC38A;
-    --primary-dark: #2E9E6B;
-    --accent: #F5A623;
+    --primary: #7C6FF0;
+    --primary-dark: #5B4FD1;
+    --accent: #E0A34E;
     --green: #3FB77E;
     --yellow: #E7B008;
     --red: #E5484D;
-    --empty: #2A3441;
     --danger: #E5484D;
+    --on-primary: #ffffff;
+    --shadow: 0 10px 30px rgba(0,0,0,.45);
 
-    /* theme-dependent extras: dark text used on top of --primary fills, and
-       the tinted background of a completed task row */
-    --on-primary: #06210F;
-    --done-bg: #122019;
-
-    --cat-Health: #3FB77E;
-    --cat-Business: #4C8DFF;
-    --cat-Learning: #B57BFF;
-    --cat-Discipline: #F5A623;
-    --cat-Other: #8A97A6;
+    --cat-upper: #4C8DFF;
+    --cat-bottom: #B57BFF;
+    --cat-footwear: #E0A34E;
+    --cat-accessory: #3FB77E;
 
     --sys: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
+  :root[data-theme="light"] {
+    --bg: #F4F6F9;
+    --surface: #FFFFFF;
+    --surface-alt: #EEF1F5;
+    --surface-hi: #E6EAF0;
+    --border: #DCE2EA;
+    --track: #E6EAF0;
+    --text: #131A22;
+    --dim: #5C6875;
+    --faint: #93A0AD;
+    --primary: #5B4FD1;
+    --primary-dark: #4A3FB8;
+    --accent: #C7862F;
+    --on-primary: #ffffff;
+    --shadow: 0 10px 28px rgba(20,30,50,.14);
+  }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  /* IMPORTANT: body must NOT get height:100% — with top+bottom anchoring below,
-     an explicit height would win over bottom:0 and re-introduce the iOS gap
-     (height:100% resolves against a stale initial-containing-block at launch
-     in standalone mode; edge anchoring is resolved by the compositor against
-     the real screen and is always correct). */
   html { height: 100%; margin: 0; padding: 0; overflow: hidden; overscroll-behavior: none; background: var(--surface); }
   body { margin: 0; padding: 0; overflow: hidden; overscroll-behavior: none; }
   body {
     font-family: var(--sys); color: var(--text);
-    /* Matches the tab bar's colour, so any residual sliver on any device reads
-       as tab-bar padding rather than a black seam. */
     background: var(--surface);
     -webkit-font-smoothing: antialiased;
     position: fixed; top: 0; right: 0; bottom: 0; left: 0;
     touch-action: manipulation;
   }
-  /* Belt-and-suspenders: a strip pinned to the true bottom edge of the screen,
-     exactly as tall as the home-indicator safe area, always the tab bar's
-     colour. Independent of any height calculation elsewhere on the page. */
   .safe-bottom {
     position: fixed; left: 0; right: 0; bottom: 0;
     height: env(safe-area-inset-bottom); background: var(--surface);
     z-index: 50; pointer-events: none;
   }
-  button { font-family: var(--sys); touch-action: manipulation; }
+  button, input, select, textarea { font-family: var(--sys); }
+  button { touch-action: manipulation; cursor: pointer; }
   :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-  /* No height property at all: the app is anchored to all four screen edges
-     (top:0 + bottom:0), which the browser resolves against the real visible
-     screen. Height units (vh/dvh/100%) and JS measurements are all unreliable
-     at launch in iOS standalone mode — anchoring is the one thing that isn't. */
   .app {
     position: absolute; top: 0; right: 0; bottom: 0; left: 0;
     max-width: 520px; margin: 0 auto;
@@ -90,1126 +89,1404 @@
 
   .body {
     flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
-    padding: calc(env(safe-area-inset-top) + 12px) 18px 26px; scrollbar-width: none;
+    padding: calc(env(safe-area-inset-top) + 14px) 18px 30px; scrollbar-width: none;
   }
   .body::-webkit-scrollbar { display: none; }
-  .fade { animation: fade .25s ease; }
-  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .fade { animation: fade .28s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-  .h-title { font-size: 28px; font-weight: 800; letter-spacing: -.02em; margin: 4px 0 2px; }
-  .h-sub { color: var(--dim); font-size: 14px; margin: 0 0 14px; }
-  .head-row { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 14px; }
-  .head-row .h-title, .head-row .h-sub { margin: 0; }
+  /* Typography */
+  .h-title { font-size: 27px; font-weight: 800; letter-spacing: -.02em; margin: 2px 0 2px; }
+  .h-sub { color: var(--dim); font-size: 13.5px; margin: 0 0 16px; line-height: 1.4; }
+  .sec-title { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--dim); margin: 22px 2px 10px; }
+  .muted { color: var(--dim); }
+  .faint { color: var(--faint); }
 
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 16px; }
+  /* Top bar */
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+  .brand { display: flex; align-items: center; gap: 9px; }
+  .brand-mark { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: grid; place-items: center; color: #fff; font-weight: 900; font-size: 16px; box-shadow: var(--shadow); }
+  .brand-name { font-weight: 800; font-size: 18px; letter-spacing: -.01em; }
+
+  /* Buttons */
+  .btn { border: none; border-radius: 13px; padding: 13px 16px; font-size: 15px; font-weight: 700; background: var(--surface-alt); color: var(--text); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--primary); color: var(--on-primary); }
+  .btn-accent { background: var(--accent); color: #26160a; }
+  .btn-block { width: 100%; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); }
+  .btn-sm { padding: 9px 12px; font-size: 13px; border-radius: 10px; }
+  .btn-danger { background: rgba(229,72,77,.12); color: var(--red); }
+  .icon-btn { width: 40px; height: 40px; border-radius: 11px; background: var(--surface-alt); border: 1px solid var(--border); display: grid; place-items: center; color: var(--text); font-size: 18px; }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
   .card + .card { margin-top: 12px; }
 
-  .hero { border-color: var(--primary-dark); text-align: center; padding: 22px 16px; }
-  .hero .lbl { font-size: 11px; letter-spacing: .12em; color: var(--dim); font-weight: 800; }
-  .reward { font-size: 46px; font-weight: 900; color: var(--primary); margin: 4px 0 2px;
-    font-variant-numeric: tabular-nums; letter-spacing: -.01em; transition: transform .18s ease; }
-  .reward.bump { transform: scale(1.06); }
-  .hero .meta { color: var(--dim); font-size: 13px; }
-  .hero .meta b { color: var(--text); font-weight: 700; }
-  .bartrack { height: 14px; border-radius: 999px; background: var(--track); overflow: hidden; margin-top: 14px; }
-  .barfill { height: 100%; border-radius: 999px; background: var(--primary); transition: width .35s cubic-bezier(.4,0,.2,1); }
-  .range { display: flex; justify-content: space-between; margin-top: 6px; color: var(--faint); font-size: 11px; }
-  .forecast { margin-top: 14px; background: var(--surface-alt); border-radius: 12px; padding: 9px 12px; color: var(--dim); font-size: 13px; }
-  .forecast b { color: var(--accent); font-weight: 800; }
+  /* Chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { border: 1px solid var(--border); background: var(--surface); color: var(--dim); border-radius: 999px; padding: 8px 13px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .chip.active { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+  .chip.accent.active { background: var(--accent); color: #26160a; border-color: var(--accent); }
 
-  .mini-row { display: flex; gap: 8px; margin-top: 12px; }
-  .mini { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 6px; text-align: center; }
-  .mini .v { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
-  .mini .v .d { color: var(--faint); font-size: 15px; }
-  .mini .l { color: var(--dim); font-size: 11px; margin-top: 2px; }
+  /* Grid of items */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .grid.two { grid-template-columns: repeat(2, 1fr); }
+  .tile { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; aspect-ratio: 1/1; }
+  .tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tile .tile-meta { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 8px 7px; background: linear-gradient(transparent, rgba(0,0,0,.72)); color: #fff; font-size: 11px; font-weight: 700; }
+  .tile .badge-wash { position: absolute; top: 6px; left: 6px; background: rgba(11,15,20,.82); color: #7fd0ff; font-size: 10px; font-weight: 800; padding: 3px 7px; border-radius: 999px; letter-spacing: .03em; }
+  .tile .badge-fav { position: absolute; top: 6px; right: 6px; font-size: 14px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+  .swatch { display: inline-block; width: 11px; height: 11px; border-radius: 3px; border: 1px solid rgba(255,255,255,.35); vertical-align: -1px; margin-right: 4px; }
 
-  .prio { margin-top: 12px; background: var(--surface); border: 1px solid var(--border);
-    border-left: 4px solid var(--cat-Health); border-radius: 16px; padding: 16px; cursor: pointer; }
-  .prio .lbl { font-size: 11px; letter-spacing: .12em; color: var(--dim); font-weight: 800; }
-  .prio .val { font-size: 19px; font-weight: 800; margin: 2px 0; }
-  .prio .sub { color: var(--faint); font-size: 12px; }
+  /* Empty state */
+  .empty { text-align: center; padding: 42px 20px; color: var(--dim); }
+  .empty .em-ico { font-size: 42px; margin-bottom: 12px; }
 
-  .section { display: flex; align-items: center; justify-content: space-between; margin: 22px 2px 10px; }
-  .section .t { color: var(--dim); font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
-  .section .pending { color: var(--dim); font-size: 13px; font-weight: 600; }
+  /* Inputs */
+  label.fld { display: block; margin: 14px 0 0; }
+  label.fld > span { display: block; font-size: 12.5px; font-weight: 700; color: var(--dim); margin-bottom: 7px; letter-spacing: .02em; }
+  .input, textarea.input, select.input { width: 100%; background: var(--surface-alt); border: 1px solid var(--border); border-radius: 12px; color: var(--text); padding: 12px 13px; font-size: 15px; }
+  textarea.input { resize: vertical; min-height: 64px; }
+  .seg { display: flex; background: var(--surface-alt); border: 1px solid var(--border); border-radius: 12px; padding: 4px; gap: 4px; }
+  .seg button { flex: 1; border: none; background: transparent; color: var(--dim); border-radius: 9px; padding: 9px 6px; font-weight: 700; font-size: 13px; }
+  .seg button.active { background: var(--primary); color: var(--on-primary); }
 
-  .task { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 13px; margin-bottom: 10px; cursor: pointer; user-select: none; touch-action: manipulation;
-    transition: transform .12s ease, background .2s ease, border-color .2s ease; width: 100%; text-align: left; }
-  .task:active { transform: scale(.985); }
-  .task.done { background: var(--done-bg); border-color: var(--primary-dark); }
-  .box { width: 34px; height: 34px; border-radius: 9px; border: 2px solid var(--faint);
-    display: flex; align-items: center; justify-content: center; flex: none; transition: background .18s, border-color .18s; }
-  .box svg { width: 20px; height: 20px; stroke: var(--on-primary); stroke-width: 3.4; fill: none; stroke-linecap: round; stroke-linejoin: round;
-    stroke-dasharray: 26; stroke-dashoffset: 26; transition: stroke-dashoffset .22s ease .02s; }
-  .task.done .box { background: var(--primary); border-color: var(--primary); }
-  .task.done .box svg { stroke-dashoffset: 0; }
-  .task .mid { flex: 1; min-width: 0; }
-  .task .ti { font-size: 15px; font-weight: 700; }
-  .task.done .ti { color: var(--dim); text-decoration: line-through; }
-  .task .cat { display: flex; align-items: center; gap: 6px; margin-top: 3px; color: var(--dim); font-size: 12px; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
-  .task .pts { text-align: center; flex: none; min-width: 42px; }
-  .task .pts .n { font-size: 19px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
-  .task.done .pts .n { color: var(--primary); }
-  .task .pts .u { font-size: 11px; color: var(--faint); }
-
-  .empty-hint { color: var(--dim); font-size: 14px; line-height: 1.5; }
-
-  .calnav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .calnav .m { font-size: 18px; font-weight: 800; }
-  .calnav button { width: 38px; height: 38px; border-radius: 9px; border: none; background: var(--surface-alt); color: var(--text); font-size: 22px; cursor: pointer; }
-  .calnav button:disabled { opacity: .3; }
-  .week, .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-  .week span { text-align: center; color: var(--faint); font-size: 11px; font-weight: 700; }
-  .grid { margin-top: 5px; }
-  .cell { aspect-ratio: 1; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--dim); }
-  .cell.blank { background: transparent; }
-  .cell.future { border: 1px solid var(--border); }
-  .cell.today { outline: 2px solid var(--text); outline-offset: -2px; }
-  .cell.green { background: var(--green); color: #0B0F14; }
-  .cell.yellow { background: var(--yellow); color: #0B0F14; }
-  .cell.red { background: var(--red); color: #0B0F14; }
-  .cell.empty { background: var(--empty); }
-  .legend { display: flex; justify-content: center; gap: 18px; margin-top: 16px; }
-  .legend div { display: flex; align-items: center; gap: 6px; color: var(--dim); font-size: 12px; }
-  .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
-  .sum-row { display: flex; gap: 8px; margin-top: 12px; }
-  .sum { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 13px 6px; text-align: center; }
-  .sum .v { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
-  .sum .l { color: var(--dim); font-size: 11px; margin-top: 2px; }
-
-  .chart { display: flex; align-items: flex-end; gap: 6px; height: 132px; }
-  .chart .col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
-  .chart .col .v { font-size: 10px; color: var(--dim); margin-bottom: 3px; font-variant-numeric: tabular-nums; }
-  .chart .col .bar { width: 62%; min-width: 8px; border-radius: 7px; transition: height .4s cubic-bezier(.4,0,.2,1); }
-  .chart-x { display: flex; gap: 6px; margin-top: 6px; }
-  .chart-x span { flex: 1; text-align: center; color: var(--faint); font-size: 11px; }
-  .cat { margin-bottom: 12px; }
-  .cat .top { display: flex; justify-content: space-between; margin-bottom: 6px; }
-  .cat .top .n { font-size: 13px; font-weight: 700; }
-  .cat .top .p { font-size: 13px; font-weight: 700; color: var(--dim); font-variant-numeric: tabular-nums; }
-  .cat .tr { height: 10px; background: var(--track); border-radius: 999px; overflow: hidden; }
-  .cat .fl { height: 100%; border-radius: 999px; transition: width .4s ease; }
-  .topstat { display: flex; gap: 8px; margin: 6px 0 4px; }
-  .topstat .t { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
-  .topstat .t .v { font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; }
-  .topstat .t .l { color: var(--dim); font-size: 11px; margin-top: 2px; }
-
-  .tabs { flex: none; display: flex; padding: 8px 4px calc(env(safe-area-inset-bottom) + 12px);
-    background: var(--surface); border-top: 1px solid var(--border); }
-  .tab { flex: 1; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--faint); }
-  .tab .ic { font-size: 21px; filter: grayscale(1); opacity: .55; transition: .2s; }
-  .tab .tl { font-size: 10px; font-weight: 700; }
+  /* Tabbar */
+  .tabbar {
+    display: flex; border-top: 1px solid var(--border); background: var(--surface);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tab { flex: 1; border: none; background: transparent; color: var(--faint); padding: 9px 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 700; }
+  .tab .ti { font-size: 21px; line-height: 1; }
   .tab.active { color: var(--primary); }
-  .tab.active .ic { filter: none; opacity: 1; }
 
-  .toast { position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 88px); transform: translateX(-50%) translateY(12px);
-    background: var(--primary); color: var(--on-primary); font-weight: 800; font-size: 13px; padding: 9px 16px; border-radius: 999px;
-    opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 40; box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--primary) 55%, transparent); }
+  /* Sheet / modal */
+  .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 100; opacity: 0; pointer-events: none; transition: opacity .22s ease; }
+  .scrim.show { opacity: 1; pointer-events: auto; }
+  .sheet {
+    position: fixed; left: 50%; transform: translateX(-50%) translateY(100%);
+    bottom: 0; width: 100%; max-width: 520px; z-index: 101;
+    background: var(--surface); border-radius: 20px 20px 0 0; border: 1px solid var(--border); border-bottom: none;
+    max-height: 92vh; display: flex; flex-direction: column; transition: transform .28s cubic-bezier(.2,.8,.2,1);
+    box-shadow: var(--shadow);
+  }
+  .sheet.show { transform: translateX(-50%) translateY(0); }
+  .sheet-grip { width: 40px; height: 4px; border-radius: 999px; background: var(--border); margin: 10px auto 2px; flex: none; }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 18px 10px; flex: none; }
+  .sheet-title { font-size: 18px; font-weight: 800; }
+  .sheet-body { overflow-y: auto; padding: 4px 18px calc(env(safe-area-inset-bottom) + 20px); scrollbar-width: none; }
+  .sheet-body::-webkit-scrollbar { display: none; }
+
+  /* Toast */
+  .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 78px); transform: translateX(-50%) translateY(20px); background: var(--text); color: var(--bg); padding: 11px 18px; border-radius: 999px; font-size: 13.5px; font-weight: 700; z-index: 200; opacity: 0; pointer-events: none; transition: all .25s ease; box-shadow: var(--shadow); max-width: 90%; text-align: center; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  .btn-secondary, .btn-primary, .btn-danger {
-    width: 100%; min-height: 52px; border-radius: 13px; border: 1px solid var(--border);
-    background: var(--surface-alt); color: var(--text); font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 14px; }
-  .btn-secondary:active, .btn-primary:active { transform: scale(.99); }
-  .btn-primary { background: var(--primary); color: var(--on-primary); border-color: var(--primary); font-weight: 800; }
-  .btn-danger { background: transparent; border-color: var(--danger); color: var(--danger); }
-  .btn-primary:disabled { opacity: .45; }
-  .btn-row { display: flex; gap: 10px; }
-  .btn-row > * { flex: 1; }
+  /* Onboarding */
+  .onb { position: fixed; inset: 0; z-index: 300; background: var(--bg); display: flex; flex-direction: column; }
+  .onb-body { flex: 1; overflow-y: auto; padding: calc(env(safe-area-inset-top) + 30px) 26px 20px; display: flex; flex-direction: column; }
+  .onb-foot { padding: 14px 22px calc(env(safe-area-inset-bottom) + 18px); border-top: 1px solid var(--border); background: var(--surface); }
+  .onb-illus { font-size: 64px; margin: 8px 0 22px; }
+  .onb-h { font-size: 27px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 10px; }
+  .onb-p { color: var(--dim); font-size: 15px; line-height: 1.55; margin: 0 0 8px; }
+  .dots { display: flex; gap: 7px; justify-content: center; margin-bottom: 14px; }
+  .dot { width: 7px; height: 7px; border-radius: 999px; background: var(--border); }
+  .dot.on { background: var(--primary); width: 22px; }
 
-  .mtask { display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 13px; overflow: hidden; margin-bottom: 10px; }
-  .mtask .stripe { width: 5px; align-self: stretch; }
-  .mtask .mid { flex: 1; padding: 12px 14px; cursor: pointer; }
-  .mtask .ti { font-size: 15px; font-weight: 700; }
-  .mtask .sub { color: var(--dim); font-size: 12px; margin-top: 3px; }
-  .mtask .sched { color: var(--faint); font-size: 12px; margin-top: 2px; }
-  .mtask .right { text-align: right; padding: 0 14px; }
-  .mtask .n { color: var(--accent); font-weight: 800; font-variant-numeric: tabular-nums; }
-  .mtask .del { color: var(--danger); font-size: 12px; font-weight: 700; margin-top: 4px; background: none; border: none; cursor: pointer; padding: 2px 0; }
+  /* Outfit collage */
+  .outfit { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+  .outfit-head { display: flex; align-items: center; justify-content: space-between; padding: 13px 15px 10px; }
+  .outfit-title { font-weight: 800; font-size: 15px; }
+  .collage { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--border); }
+  .collage .cell { position: relative; background: var(--surface-alt); aspect-ratio: 1/1; overflow: hidden; }
+  .collage .cell.tall { grid-row: span 2; aspect-ratio: auto; }
+  .collage .cell img { width: 100%; height: 100%; object-fit: cover; }
+  .collage .cell .lbl { position: absolute; left: 0; bottom: 0; right: 0; padding: 12px 8px 5px; background: linear-gradient(transparent, rgba(0,0,0,.68)); color: #fff; font-size: 10px; font-weight: 700; }
+  .collage .cell .swap { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 8px; background: rgba(11,15,20,.72); color: #fff; border: none; display: grid; place-items: center; font-size: 13px; }
+  .collage .cell.empty-cell { display: grid; place-items: center; color: var(--faint); font-size: 11px; text-align: center; padding: 8px; }
+  .outfit-actions { display: flex; gap: 8px; padding: 12px 14px 14px; }
 
-  .set-label { color: var(--dim); font-size: 12px; font-weight: 700; margin-bottom: 8px; }
-  .input { width: 100%; background: var(--surface-alt); border: 1px solid var(--border); border-radius: 12px;
-    color: var(--text); font-size: 16px; padding: 13px; font-family: var(--sys); }
-  .input::placeholder { color: var(--faint); }
-  .set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .set-title { font-size: 15px; font-weight: 700; }
-  .set-sub { color: var(--dim); font-size: 13px; margin-top: 2px; line-height: 1.4; }
-  .chip { background: var(--surface-alt); border: 1px solid var(--border); color: var(--dim);
-    font-size: 13px; font-weight: 700; padding: 9px 14px; border-radius: 999px; cursor: pointer; touch-action: manipulation; }
-  .chip.sel { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .switch { width: 46px; height: 28px; border-radius: 999px; background: var(--border); position: relative; cursor: pointer; transition: background .2s; flex: none; }
-  .switch i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--faint); transition: left .2s, background .2s; }
-  .switch.on { background: var(--primary-dark); }
-  .switch.on i { left: 21px; background: var(--primary); }
-  .help { color: var(--dim); font-size: 13px; line-height: 1.55; margin: 0; }
-  .help b { color: var(--text); }
-  .total-paid { color: var(--primary); font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; }
-  .ledger-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
-  .ledger-row:last-child { border-bottom: none; }
-  .ledger-m { font-size: 14px; font-weight: 700; }
-  .ledger-s { color: var(--dim); font-size: 12px; margin-top: 2px; }
-  .ledger-a { color: var(--primary); font-size: 15px; font-weight: 800; }
+  /* Weather strip */
+  .weather { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; }
+  .weather .wx-ico { font-size: 28px; }
+  .weather .wx-t { font-size: 20px; font-weight: 800; }
+  .weather .wx-d { font-size: 12px; color: var(--dim); }
 
-  /* time steppers */
-  .stepper-row { display: flex; align-items: center; justify-content: center; margin-top: 16px; }
-  .stepcol { display: flex; flex-direction: column; align-items: center; }
-  .stepbtn { background: none; border: none; color: var(--primary); font-size: 20px; font-weight: 800; cursor: pointer; padding: 6px 14px; }
-  .stepval { font-size: 32px; font-weight: 900; width: 68px; text-align: center; font-variant-numeric: tabular-nums; }
-  .steplbl { color: var(--faint); font-size: 11px; }
-  .colon { font-size: 30px; font-weight: 900; margin: 0 8px 18px; }
+  /* Palette swatches */
+  .pal { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pal .p { width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,.2); position: relative; }
+  .pal .p span { position: absolute; inset: auto 0 -17px; font-size: 9px; text-align: center; color: var(--dim); }
 
-  /* overlays */
-  .overlay { position: absolute; inset: 0; background: var(--bg); z-index: 30; display: none; flex-direction: column; }
-  .overlay.show { display: flex; }
-  .ov-top { display: flex; align-items: center; justify-content: space-between; padding: calc(env(safe-area-inset-top) + 10px) 10px 10px; border-bottom: 1px solid var(--border); }
-  .ov-top .tt { font-size: 16px; font-weight: 800; }
-  .ov-top button { background: none; border: none; color: var(--primary); font-size: 15px; font-weight: 700; cursor: pointer; padding: 8px 12px; min-width: 76px; }
-  .ov-top .spacer { min-width: 76px; }
-  .ov-scroll { flex: 1; overflow-y: auto; padding: 18px; scrollbar-width: none; }
-  .ov-scroll::-webkit-scrollbar { display: none; }
-  .ov-foot { padding: 14px 18px calc(env(safe-area-inset-bottom) + 16px); border-top: 1px solid var(--border); }
-  .field-label { color: var(--text); font-size: 14px; font-weight: 700; margin: 20px 0 9px; }
-  .field-label:first-child { margin-top: 4px; }
-  .wd-row { display: flex; justify-content: space-between; margin-top: 10px; }
-  .wd { width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-alt);
-    color: var(--dim); font-size: 14px; font-weight: 700; cursor: pointer; }
-  .wd.on { background: var(--primary); border-color: var(--primary); color: var(--on-primary); font-weight: 800; }
-  .hint { color: var(--faint); font-size: 12px; margin-top: 10px; line-height: 1.5; }
-  .lock-banner { background: var(--surface-alt); border: 1px solid var(--accent); border-radius: 12px; padding: 13px; margin-bottom: 6px; }
-  .lock-banner .lt { color: var(--text); font-size: 12px; line-height: 1.5; }
-  .preview-pts { margin-top: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; text-align: center; }
-  .preview-pts .pl { color: var(--dim); font-size: 11px; font-weight: 700; letter-spacing: .1em; }
-  .preview-pts .pv { color: var(--accent); font-size: 32px; font-weight: 900; margin-top: 4px; }
-  .preview-pts .pn { color: var(--faint); font-size: 12px; margin-top: 6px; }
-  .disabled { opacity: .45; pointer-events: none; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .list-row { display: flex; align-items: center; gap: 12px; padding: 13px 2px; border-bottom: 1px solid var(--border); }
+  .list-row:last-child { border-bottom: none; }
+  .list-row .lr-ico { font-size: 20px; width: 26px; text-align: center; }
+  .list-row .lr-main { flex: 1; }
+  .list-row .lr-t { font-weight: 700; font-size: 15px; }
+  .list-row .lr-s { color: var(--dim); font-size: 12.5px; }
+  .switch { width: 46px; height: 28px; border-radius: 999px; background: var(--track); border: 1px solid var(--border); position: relative; flex: none; transition: background .18s; }
+  .switch.on { background: var(--primary); border-color: var(--primary); }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; border-radius: 999px; background: #fff; transition: transform .18s; }
+  .switch.on::after { transform: translateX(18px); }
 
-  /* onboarding */
-  .ob-dots { display: flex; justify-content: center; gap: 6px; margin: 6px 0 24px; }
-  .ob-dots i { width: 8px; height: 8px; border-radius: 4px; background: var(--border); transition: .3s; }
-  .ob-dots i.on { background: var(--primary); width: 22px; }
-  .ob-emoji { font-size: 46px; }
-  .ob-h1 { font-size: 28px; font-weight: 900; margin: 10px 0 6px; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--surface-alt); color: var(--dim); border: 1px solid var(--border); }
+  .stat { display: flex; gap: 10px; }
+  .stat .s { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 13px; text-align: center; }
+  .stat .s .n { font-size: 22px; font-weight: 800; }
+  .stat .s .l { font-size: 11px; color: var(--dim); font-weight: 600; margin-top: 2px; }
 
-  /* month complete */
-  .mc-emoji { font-size: 50px; text-align: center; }
-  .mc-h1 { font-size: 28px; font-weight: 900; text-align: center; margin: 8px 0 2px; }
-  .mc-month { color: var(--dim); text-align: center; margin-bottom: 16px; }
-  .paid-badge { margin-top: 16px; background: var(--done-bg); border: 1px solid var(--primary-dark); border-radius: 13px; padding: 14px; text-align: center; }
-  .paid-badge .pt { color: var(--primary); font-weight: 800; }
-  .paid-badge .undo { color: var(--dim); font-size: 12px; text-decoration: underline; background: none; border: none; cursor: pointer; margin-top: 4px; }
-  .ov-grid { display: flex; gap: 8px; width: 100%; margin-top: 10px; }
-  .ov-tile { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; }
-  .ov-tile .v { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
-  .ov-tile .l { color: var(--dim); font-size: 11px; margin-top: 2px; }
-
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  .hidden { display: none !important; }
+  .spin { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 999px; animation: sp .7s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  .center { display: grid; place-items: center; }
 </style>
 </head>
 <body>
 <div class="app">
   <div class="body" id="screen"></div>
-  <nav class="tabs" id="tabbar">
-    <button class="tab" data-tab="home"><span class="ic">🏠</span><span class="tl">Home</span></button>
-    <button class="tab" data-tab="tasks"><span class="ic">📝</span><span class="tl">Tasks</span></button>
-    <button class="tab" data-tab="history"><span class="ic">📅</span><span class="tl">History</span></button>
-    <button class="tab" data-tab="stats"><span class="ic">📊</span><span class="tl">Stats</span></button>
-    <button class="tab" data-tab="settings"><span class="ic">⚙️</span><span class="tl">Settings</span></button>
-  </nav>
-  <div class="toast" id="toast"></div>
-  <div class="overlay" id="overlay"></div>
-  <input type="file" id="importFile" accept="application/json,.json" style="display:none">
+  <nav class="tabbar" id="tabbar"></nav>
 </div>
 <div class="safe-bottom"></div>
 
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-grip"></div>
+  <div class="sheet-head"><div class="sheet-title" id="sheetTitle"></div><button class="icon-btn" id="sheetClose" aria-label="Close">✕</button></div>
+  <div class="sheet-body" id="sheetBody"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- hidden file inputs -->
+<input type="file" id="filePick" accept="image/*" capture="environment" class="hidden">
+<input type="file" id="fileSelfie" accept="image/*" class="hidden">
+
 <script>
-(function () {
-  'use strict';
+"use strict";
+/* ============================================================================
+   StyleMate — AI-powered personal wardrobe & outfit assistant.
+   A self-contained, offline-first PWA. All data (including photos) lives on the
+   device in IndexedDB and localStorage; nothing is ever uploaded to a server.
+   The only network calls are to the free Open-Meteo weather API when the user
+   opts to share location for weather-aware suggestions.
+   ========================================================================== */
 
-  // ---------------- themes ----------------
-  // 'classic' uses the stylesheet defaults; other themes override the same
-  // custom properties inline on <html>, so every component re-colours itself.
-  const THEMES = {
-    classic: { name: 'Classic Green', vars: {} },
-    ocean: {
-      name: 'Ocean Blue',
-      vars: {
-        '--bg': '#060D18', '--surface': '#0E1A2C', '--surface-alt': '#152539',
-        '--border': '#22385A', '--track': '#16283F',
-        '--text': '#F0F5FC', '--dim': '#8CA3C4', '--faint': '#5A7195',
-        '--primary': '#4C9DFF', '--primary-dark': '#2D6FCC', '--accent': '#FFC53D',
-        '--empty': '#1B2C47', '--done-bg': '#0C2038', '--on-primary': '#04122A',
-      },
-    },
-  };
-  const ALL_THEME_VARS = Object.keys(THEMES.ocean.vars);
-  function applyTheme(key) {
-    const t = THEMES[key] || THEMES.classic;
-    const root = document.documentElement;
-    for (const k of ALL_THEME_VARS) root.style.removeProperty(k);
-    for (const [k, v] of Object.entries(t.vars)) root.style.setProperty(k, v);
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = getComputedStyle(root).getPropertyValue('--surface').trim();
+/* ------------------------------- Utilities -------------------------------- */
+const $ = (s, r = document) => r.querySelector(s);
+const el = (tag, attrs = {}, kids = []) => {
+  const n = document.createElement(tag);
+  for (const k in attrs) {
+    if (k === 'class') n.className = attrs[k];
+    else if (k === 'html') n.innerHTML = attrs[k];
+    else if (k === 'text') n.textContent = attrs[k];
+    else if (k.startsWith('on') && typeof attrs[k] === 'function') n.addEventListener(k.slice(2), attrs[k]);
+    else if (attrs[k] != null) n.setAttribute(k, attrs[k]);
   }
+  (Array.isArray(kids) ? kids : [kids]).forEach(c => { if (c != null) n.append(c.nodeType ? c : document.createTextNode(c)); });
+  return n;
+};
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const daysBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const sample = (arr) => arr[Math.floor(Math.random() * arr.length)];
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-  // ---------------- constants ----------------
-  const IMPORTANCE = { High: 30, Medium: 20, Low: 10 };
-  const CATS = ['Health', 'Business', 'Learning', 'Discipline', 'Other'];
-  const IMPS = ['High', 'Medium', 'Low'];
-  const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const WEEKDAYS_ONLY = '1,2,3,4,5';
-  const KEY = 'rewardHabits.v1';
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+function haptic() { try { navigator.vibrate && navigator.vibrate(8); } catch (e) {} }
 
-  // ---------------- date helpers (local time) ----------------
-  const pad = n => (n < 10 ? '0' + n : '' + n);
-  const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  const todayStr = () => ymd(new Date());
-  const monthOf = s => s.slice(0, 7);
-  const curMonth = () => monthOf(todayStr());
-  function parse(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
-  function addDays(s, n) { const d = parse(s); d.setDate(d.getDate() + n); return ymd(d); }
-  function weekdayOf(s) { return parse(s).getDay(); }
-  function daysInMonth(mk) { const [y, m] = mk.split('-').map(Number); return new Date(y, m, 0).getDate(); }
-  function datesInMonth(mk) { const out = []; const n = daysInMonth(mk); for (let i = 1; i <= n; i++) out.push(`${mk}-${pad(i)}`); return out; }
-  function firstWeekday(mk) { const [y, m] = mk.split('-').map(Number); return new Date(y, m - 1, 1).getDay(); }
-  function shiftMonth(mk, delta) { const [y, m] = mk.split('-').map(Number); const d = new Date(y, m - 1 + delta, 1); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; }
-  function fmtMonth(mk) { const [y, m] = mk.split('-').map(Number); return `${MONTHS[m - 1]} ${y}`; }
-  function fmtLong(d) { return `${['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`; }
-  const shortWeekday = s => WD[weekdayOf(s)];
-
-  // ---------------- format ----------------
-  function rupee(n) {
-    n = Math.round(n || 0); const s = String(n);
-    if (s.length <= 3) return '₹' + s;
-    const last3 = s.slice(-3); let rest = s.slice(0, -3).replace(/\B(?=(\d{2})+(?!\d))/g, ',');
-    return '₹' + rest + ',' + last3;
-  }
-  const pctStr = r => Math.round(r * 100) + '%';
-  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const catColor = c => `var(--cat-${c})`;
-
-  // ---------------- category auto-detection ----------------
-  // Simple keyword match so a new task guesses its own category from the title.
-  // Checked in this order so specific "no X" discipline habits win over the
-  // generic Health word they contain (e.g. "no sugar" -> Discipline, not Health).
-  const CATEGORY_KEYWORDS = {
-    Discipline: ['no sugar', 'no junk', 'no smoking', 'no alcohol', 'no phone', 'screen time',
-      'wake up', 'wake early', 'early rise', 'budget', 'save money', 'saving', 'clean', 'tidy',
-      'declutter', 'plan my', 'planning', 'routine', 'journal my', 'digital detox', 'quit'],
-    Health: ['workout', 'gym', 'exercise', 'run', 'jog', 'walk', 'yoga', 'meditate', 'meditation',
-      'sleep', 'water', 'diet', 'stretch', 'cardio', 'fitness', 'swim', 'cycle', 'cycling',
-      'steps', 'protein', 'vitamins', 'skincare', 'push up', 'pushup', 'squat'],
-    Learning: ['read', 'book', 'study', 'course', 'learn', 'practice', 'skill', 'language',
-      'write', 'writing', 'journal', 'research', 'homework', 'exam', 'quiz', 'coding', 'code'],
-    Business: ['work', 'meeting', 'client', 'sales', 'email', 'invoice', 'marketing', 'project',
-      'deadline', 'call', 'pitch', 'revenue', 'startup', 'business', 'office', 'networking',
-      'linkedin', 'resume', 'job'],
-  };
-  function guessCategory(title) {
-    const t = String(title || '').toLowerCase().trim();
-    if (!t) return null;
-    for (const cat of ['Discipline', 'Health', 'Learning', 'Business']) {
-      for (const w of CATEGORY_KEYWORDS[cat]) {
-        if (t.includes(w)) return cat;
-      }
-    }
-    return null;
-  }
-
-  // ---------------- state ----------------
-  function defaultState() {
-    return {
-      settings: { name: '', onboarded: false, reminderEnabled: true, reminderHour: 20, reminderMinute: 0, rewardMin: 10000, rewardMax: 20000, theme: 'classic' },
-      tasks: [], completions: [], priorities: {}, payouts: {}, nextId: 1,
-    };
-  }
-  const rewardMin = () => (S.settings.rewardMin != null ? S.settings.rewardMin : 10000);
-  const rewardMax = () => (S.settings.rewardMax != null ? S.settings.rewardMax : 20000);
-  const rupee2 = n => '₹' + Number(n).toFixed(2);
-  let S;
-  try { S = JSON.parse(localStorage.getItem(KEY)) || defaultState(); }
-  catch (e) { S = defaultState(); }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
-
-  // ---------------- domain logic (mirrors src/logic) ----------------
-  // Monthly priority supports multiple categories. Normalizes older
-  // single-category records ({category: 'X'}) into the {categories: [...]} shape.
-  function normalizePriority(p) {
-    if (!p) return { categories: [], label: '' };
-    if (Array.isArray(p.categories)) return { categories: p.categories, label: p.label || '' };
-    if (p.category) return { categories: [p.category], label: p.label || '' };
-    return { categories: [], label: p.label || '' };
-  }
-  function priorityCategories() { return normalizePriority(S.priorities[curMonth()]).categories; }
-  function taskPoints(t, cats) {
-    const base = IMPORTANCE[t.importance] || 10;
-    const list = Array.isArray(cats) ? cats : (cats ? [cats] : []);
-    return list.includes(t.category) ? base * 2 : base;
-  }
-  function isScheduled(t, date) {
-    if (!t.days || t.days === 'all') return true;
-    return String(t.days).split(',').map(Number).includes(weekdayOf(date));
-  }
-  function isActive(t, date) {
-    if (t.createdDate && t.createdDate > date) return false;
-    if (t.archived && t.archivedDate && t.archivedDate <= date) return false;
-    return isScheduled(t, date);
-  }
-  function activeOn(date) { return S.tasks.filter(t => isActive(t, date)); }
-  function indexCompletions() {
-    const by = {};
-    for (const c of S.completions) {
-      let e = by[c.date]; if (!e) { e = by[c.date] = { done: new Set(), earned: 0 }; }
-      e.done.add(c.taskId); e.earned += c.points || 0;
-    }
-    return by;
-  }
-  function dayStatus(date, by, pc) {
-    const active = activeOn(date); const total = active.length;
-    if (total === 0) return { status: 'empty', total: 0, done: 0, possible: 0, earned: 0 };
-    const done = by[date] ? by[date].done : new Set();
-    let d = 0, earned = 0, possible = 0;
-    for (const t of active) { const p = taskPoints(t, pc); possible += p; if (done.has(t.id)) { d++; earned += p; } }
-    return { status: d === total ? 'green' : d > 0 ? 'yellow' : 'red', total, done: d, possible, earned };
-  }
-  function earliest() {
-    let e = null; for (const t of S.tasks) if (t.createdDate && (!e || t.createdDate < e)) e = t.createdDate;
-    return e || todayStr();
-  }
-  function currentStreak(by, pc) {
-    const today = todayStr(); const floor = earliest(); let d = today, streak = 0;
-    while (d >= floor) {
-      const st = dayStatus(d, by, pc).status;
-      if (st === 'green') streak++;
-      else if (st === 'empty') { /* skip */ }
-      else if (d === today) { /* in progress */ }
-      else break;
-      d = addDays(d, -1);
-    }
-    return streak;
-  }
-  function bestStreak(by, pc) {
-    const today = todayStr(); let d = earliest(), best = 0, run = 0;
-    while (d <= today) {
-      const st = dayStatus(d, by, pc).status;
-      if (st === 'green') { run++; if (run > best) best = run; }
-      else if (st === 'empty') { /* skip */ }
-      else run = 0;
-      d = addDays(d, 1);
-    }
-    return best;
-  }
-  function monthBonus(mk, by, pc) {
-    const today = todayStr(); const last = `${mk}-${pad(daysInMonth(mk))}`;
-    const end = today < last ? today : last; let d = `${mk}-01`, run = 0, bonus = 0;
-    while (d <= end) {
-      const st = dayStatus(d, by, pc).status;
-      if (st === 'green') run++;
-      else if (st === 'empty') { /* skip */ }
-      else { bonus += Math.floor(run / 7) * 50; run = 0; }
-      d = addDays(d, 1);
-    }
-    return bonus + Math.floor(run / 7) * 50;
-  }
-  function ratio(earned, possible) { if (!possible || possible <= 0) return 0; return Math.max(0, Math.min(1, earned / possible)); }
-  function rewardFor(r) { return Math.round(Math.min(20000, Math.max(10000, 10000 + r * 10000))); }
-  function isLocked(id) { const mk = curMonth(); return S.completions.some(c => c.taskId === id && monthOf(c.date) === mk); }
-
-  function summary() {
-    const today = todayStr(); const mk = monthOf(today); const pc = priorityCategories();
-    const by = indexCompletions();
-    const todays = activeOn(today).map(t => ({ ...t, pts: taskPoints(t, pc), done: by[today] ? by[today].done.has(t.id) : false }));
-    const todayPossible = todays.reduce((s, t) => s + t.pts, 0);
-    const todayEarned = todays.reduce((s, t) => s + (t.done ? t.pts : 0), 0);
-    const todayDone = todays.filter(t => t.done).length;
-    // Per-day accrual model: each day is worth an equal slice of the reward
-    // range, (max - min) / daysInMonth. A day contributes (earned/possible) of
-    // its slice. Missed days simply add nothing — they never subtract what you
-    // already banked. Complete everything every day of the month to reach max.
-    const N = daysInMonth(mk);
-    const min = rewardMin(), max = rewardMax();
-    const perDay = N > 0 ? (max - min) / N : 0;
-    let monthPossible = 0, monthEarned = 0, accrued = 0, d = `${mk}-01`;
-    while (d <= today) {
-      const st = dayStatus(d, by, pc);
-      monthPossible += st.possible; monthEarned += st.earned;
-      if (st.possible > 0) accrued += (st.earned / st.possible) * perDay;
-      d = addDays(d, 1);
-    }
-    const bonus = monthBonus(mk, by, pc);
-    const reward = Math.round(Math.max(min, Math.min(max, min + accrued)));
-    const cons = ratio(monthEarned, monthPossible);            // avg daily completion
-    const prog = (max - min) > 0 ? (reward - min) / (max - min) : 0; // bar: money banked
-    // forecast: finish today, then every remaining day of the month
-    const last = `${mk}-${pad(N)}`;
-    const remainToday = todayPossible > 0 ? (1 - todayEarned / todayPossible) * perDay : 0;
-    let futureAccrual = 0, fd = addDays(today, 1);
-    while (fd <= last) { if (activeOn(fd).length > 0) futureAccrual += perDay; fd = addDays(fd, 1); }
-    const projReward = Math.round(Math.max(min, Math.min(max, reward + remainToday + futureAccrual)));
-    return {
-      today, mk, todays, todayPossible, todayEarned, todayDone, todayCount: todays.length,
-      monthPossible, monthEarned, bonus, totalPoints: monthEarned + bonus,
-      cons, prog, reward, perDay, rewardMin: min, rewardMax: max, daysInMonth: N,
-      currentStreak: currentStreak(by, pc), bestStreak: bestStreak(by, pc), projReward, by, pc,
-    };
-  }
-
-  // ---------------- mutations ----------------
-  function newId() { return S.nextId++; }
-  function toggleTask(id) {
-    const today = todayStr();
-    const i = S.completions.findIndex(c => c.taskId === id && c.date === today);
-    if (i >= 0) { S.completions.splice(i, 1); return false; }
-    const t = S.tasks.find(x => x.id === id); if (!t) return false;
-    S.completions.push({ taskId: id, date: today, points: taskPoints(t, priorityCategories()) });
-    return true;
-  }
-  function addTask(data) {
-    S.tasks.push({ id: newId(), title: data.title.trim(), category: data.category, importance: data.importance,
-      days: data.days || 'all', createdDate: todayStr(), archived: false, archivedDate: null });
-  }
-  function updateTask(id, data) {
-    const t = S.tasks.find(x => x.id === id); if (!t) return;
-    if (isLocked(id)) { t.title = data.title.trim(); }
-    else { t.title = data.title.trim(); t.category = data.category; t.importance = data.importance; t.days = data.days || 'all'; }
-  }
-  function deleteTask(id) {
-    if (isLocked(id)) return { locked: true };
-    const hasHistory = S.completions.some(c => c.taskId === id);
-    const t = S.tasks.find(x => x.id === id);
-    if (hasHistory) { t.archived = true; t.archivedDate = todayStr(); }
-    else { S.tasks = S.tasks.filter(x => x.id !== id); }
-    return { locked: false };
-  }
-  function setPriority(categories, label) {
-    const cats = Array.isArray(categories) ? categories : (categories ? [categories] : []);
-    S.priorities[curMonth()] = { categories: cats, label: label || cats.join(', ') };
-  }
-  function totalPaid() { return Object.values(S.payouts).reduce((s, p) => s + (p.paid ? p.amount : 0), 0); }
-
-  // ---------------- UI shell ----------------
-  const screen = document.getElementById('screen');
-  const overlay = document.getElementById('overlay');
-  const toastEl = document.getElementById('toast');
-  const tabbar = document.getElementById('tabbar');
-  const importFile = document.getElementById('importFile');
-  let ui = { tab: 'home', month: curMonth(), editor: null, ob: null };
-
-  let toastT;
-  function toast(msg) { toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 1200); }
-  function vibrate(ms) { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) {} } }
-
-  function setTab(tab) { ui.tab = tab; renderTab(); screen.scrollTop = 0; syncTabbar(); }
-  function syncTabbar() {
-    [...tabbar.children].forEach(b => b.classList.toggle('active', b.dataset.tab === ui.tab));
-  }
-
-  // ---------------- screens ----------------
-  // Re-renders the current tab in place. Preserves scroll position so ticking a
-  // task, adding/deleting, or toggling a setting doesn't jump you back to the
-  // top — only an explicit tab switch (setTab) resets scroll.
-  function renderTab() {
-    const prevScroll = screen.scrollTop;
-    const map = { home: renderHome, tasks: renderTasks, history: renderHistory, stats: renderStats, settings: renderSettings };
-    screen.innerHTML = (map[ui.tab] || renderHome)();
-    screen.scrollTop = prevScroll;
-    screen.firstElementChild && screen.firstElementChild.classList.add('fade');
-  }
-
-  function renderHome() {
-    const s = summary();
-    const p = S.priorities[curMonth()];
-    const pending = s.todayCount - s.todayDone;
-    const greeting = S.settings.name ? `Hi ${esc(S.settings.name)}` : 'Today';
-    let html = `<div class="h-title">${greeting}</div><p class="h-sub">${fmtLong(new Date())}</p>`;
-    html += `<div class="card hero">
-      <div class="lbl">CURRENT REWARD</div>
-      <div class="reward" id="rewardNum">${rupee(s.reward)}</div>
-      <div class="meta">${rupee2(s.perDay)}/day · ${pctStr(s.cons)} of tasks done · <b>${s.totalPoints}</b> pts</div>
-      <div class="bartrack"><div class="barfill" style="width:${s.prog * 100}%"></div></div>
-      <div class="range"><span>${rupee(s.rewardMin)}</span><span>${rupee(s.rewardMax)}</span></div>
-      ${s.projReward > s.reward ? `<div class="forecast">🎯 Finish every day this month → on pace for <b>${rupee(s.projReward)}</b></div>` : ''}
-    </div>`;
-    html += `<div class="mini-row">
-      <div class="mini"><div class="v">${s.todayEarned}<span class="d">/${s.todayPossible}</span></div><div class="l">Today's points</div></div>
-      <div class="mini"><div class="v" style="color:var(--accent)">🔥 ${s.currentStreak}</div><div class="l">Day streak</div></div>
-      <div class="mini"><div class="v">${s.bestStreak}</div><div class="l">Best streak</div></div>
-    </div>`;
-    if (p) {
-      const norm = normalizePriority(p);
-      const cats = norm.categories;
-      const accent = cats.length ? catColor(cats[0]) : 'var(--border)';
-      html += `<div class="prio" data-act="setprio" style="border-left-color:${accent}">
-        <div class="lbl">THIS MONTH'S PRIORITY</div>
-        <div class="val">${esc(norm.label || cats.join(' + ') || 'Priority')}</div>
-        <div class="sub">${cats.length ? cats.join(' + ') + ' tasks earn 2× points' : 'No 2× category selected'} · tap to change</div>
-      </div>`;
-    } else {
-      html += `<div class="card" style="margin-top:12px">
-        <p class="empty-hint">Set this month's priority to start earning double points.</p>
-        <button class="btn-primary" data-act="setprio">Set priority</button>
-      </div>`;
-    }
-    html += `<button class="btn-secondary" data-act="month">🏁 View month summary</button>`;
-    html += `<div class="section"><span class="t">Today's tasks</span><span class="pending">${pending > 0 ? pending + ' pending' : 'All done 🎉'}</span></div>`;
-    if (s.todays.length === 0) {
-      html += `<div class="card"><p class="empty-hint">No tasks scheduled today. Add daily habits from the Tasks tab.</p>
-        <button class="btn-primary" data-act="add">Add a task</button></div>`;
-    } else {
-      html += s.todays.map(t => taskRow(t)).join('');
-    }
-    return html;
-  }
-  function taskRow(t) {
-    return `<button class="task ${t.done ? 'done' : ''}" data-act="toggle" data-id="${t.id}">
-      <span class="box"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6"/></svg></span>
-      <span class="mid">
-        <span class="ti">${esc(t.title)}</span>
-        <span class="cat"><span class="dot" style="background:${catColor(t.category)}"></span>${t.category} · ${t.importance}</span>
-      </span>
-      <span class="pts"><span class="n">+${t.pts}</span><span class="u">pts</span></span>
-    </button>`;
-  }
-
-  function renderTasks() {
-    const active = S.tasks.filter(t => !t.archived);
-    const pc = priorityCategories();
-    let html = `<div class="head-row"><div><div class="h-title">My tasks</div><div class="h-sub">${active.length} daily habit${active.length === 1 ? '' : 's'}</div></div></div>`;
-    if (active.length === 0) {
-      html += `<div class="card"><p class="empty-hint">No tasks yet. Tap “Add a task” to create your first daily habit.</p></div>`;
-    } else {
-      html += active.map(t => {
-        const locked = isLocked(t.id);
-        return `<div class="mtask">
-          <div class="stripe" style="background:${catColor(t.category)}"></div>
-          <div class="mid" data-act="edit" data-id="${t.id}">
-            <div class="ti">${locked ? '🔒 ' : ''}${esc(t.title)}</div>
-            <div class="sub">${t.category} · ${t.importance}${pc.includes(t.category) ? '  ⭐ 2×' : ''}</div>
-            <div class="sched">${scheduleLabel(t.days)}</div>
-          </div>
-          <div class="right"><div class="n">+${taskPoints(t, pc)}</div><button class="del" data-act="del" data-id="${t.id}">Delete</button></div>
-        </div>`;
-      }).join('');
-    }
-    html += `<button class="btn-primary" data-act="add">＋  Add a task</button>`;
-    return html;
-  }
-  function scheduleLabel(days) {
-    if (!days || days === 'all') return 'Every day';
-    if (days === WEEKDAYS_ONLY) return 'Weekdays';
-    const idx = String(days).split(',').map(Number).sort((a, b) => a - b);
-    if (idx.length === 2 && idx.includes(0) && idx.includes(6)) return 'Weekends';
-    return idx.map(i => WD[i]).join(', ');
-  }
-
-  function renderHistory() {
-    const pc = priorityCategories(); const by = indexCompletions(); const today = todayStr();
-    const mk = ui.month;
-    const statusFor = d => d > today ? 'future' : dayStatus(d, by, pc).status;
-    const counts = { green: 0, yellow: 0, red: 0 };
-    for (const d of datesInMonth(mk)) { if (d > today) continue; const st = dayStatus(d, by, pc).status; if (counts[st] != null) counts[st]++; }
-    const canNext = mk < curMonth();
-    let cells = '';
-    for (let i = 0; i < firstWeekday(mk); i++) cells += `<div class="cell blank"></div>`;
-    for (const d of datesInMonth(mk)) {
-      const st = statusFor(d); const num = Number(d.slice(-2));
-      cells += `<div class="cell ${st}${d === today ? ' today' : ''}">${num}</div>`;
-    }
-    return `<div class="h-title">History</div><p class="h-sub">Your daily consistency</p>
-      <div class="card">
-        <div class="calnav">
-          <button data-act="prevmonth">‹</button>
-          <div class="m">${fmtMonth(mk)}</div>
-          <button data-act="nextmonth" ${canNext ? '' : 'disabled'}>›</button>
-        </div>
-        <div class="week">${WD.map(w => `<span>${w[0]}</span>`).join('')}</div>
-        <div class="grid">${cells}</div>
-        <div class="legend">
-          <div><i style="background:var(--green)"></i>All done</div>
-          <div><i style="background:var(--yellow)"></i>Partial</div>
-          <div><i style="background:var(--red)"></i>Missed</div>
-        </div>
-      </div>
-      <div class="sum-row">
-        <div class="sum"><div class="v" style="color:var(--green)">${counts.green}</div><div class="l">Perfect days</div></div>
-        <div class="sum"><div class="v" style="color:var(--yellow)">${counts.yellow}</div><div class="l">Partial days</div></div>
-        <div class="sum"><div class="v" style="color:var(--red)">${counts.red}</div><div class="l">Missed days</div></div>
-      </div>`;
-  }
-
-  function renderStats() {
-    const s = summary(); const today = todayStr(); const mk = curMonth();
-    // last 7 days
-    const byDate = {}; for (const c of S.completions) byDate[c.date] = (byDate[c.date] || 0) + c.points;
-    let week = []; for (let i = 6; i >= 0; i--) { const d = addDays(today, -i); week.push({ l: shortWeekday(d), v: byDate[d] || 0 }); }
-    // last 6 months
-    const byMonth = {}; for (const c of S.completions) { const m = monthOf(c.date); byMonth[m] = (byMonth[m] || 0) + c.points; }
-    let months = []; for (let i = 5; i >= 0; i--) { const m = shiftMonth(mk, -i); months.push({ l: MONTHS[Number(m.slice(5)) - 1].slice(0, 3), v: byMonth[m] || 0 }); }
-    // category breakdown this month
-    const catOf = {}; for (const t of S.tasks) catOf[t.id] = t.category;
-    const totals = {}; CATS.forEach(c => totals[c] = 0);
-    for (const c of S.completions) { if (monthOf(c.date) !== mk) continue; totals[catOf[c.taskId] || 'Other'] += c.points; }
-    const lifetime = S.completions.reduce((a, c) => a + c.points, 0);
-    const catMax = Math.max(1, ...CATS.map(c => totals[c]));
-    const allZero = CATS.every(c => totals[c] === 0);
-
-    return `<div class="h-title">Stats</div><p class="h-sub">Points &amp; consistency</p>
-      <div class="topstat">
-        <div class="t"><div class="v" style="color:var(--primary)">${s.totalPoints}</div><div class="l">Points this month</div></div>
-        <div class="t"><div class="v" style="color:var(--accent)">${lifetime.toLocaleString('en-IN')}</div><div class="l">Points all-time</div></div>
-      </div>
-      <div class="section"><span class="t">Last 7 days</span></div>
-      <div class="card">${barChart(week, 'var(--primary)')}</div>
-      <div class="section"><span class="t">Last 6 months</span></div>
-      <div class="card">${barChart(months, 'var(--accent)')}</div>
-      <div class="section"><span class="t">This month by category</span></div>
-      <div class="card">${allZero ? `<p class="empty-hint">No points earned yet this month.</p>` :
-        CATS.map(c => `<div class="cat"><div class="top"><span class="n">${c}</span><span class="p">${totals[c]} pts</span></div>
-          <div class="tr"><div class="fl" style="width:${(totals[c] / catMax) * 100}%;background:${catColor(c)}"></div></div></div>`).join('')}</div>
-      ${s.bonus > 0 ? `<div class="card" style="margin-top:12px"><p class="help">🔥 Streak bonus this month: <b style="color:var(--accent)">+${s.bonus} pts</b></p></div>` : ''}`;
-  }
-  function barChart(data, color) {
-    const max = Math.max(1, ...data.map(d => d.v));
-    const cols = data.map((d, i) => {
-      const h = Math.max(3, (d.v / max) * 108);
-      const c = i === data.length - 1 ? color : `color-mix(in srgb, ${color} 55%, var(--bg))`;
-      return `<div class="col"><div class="v">${d.v || ''}</div><div class="bar" style="height:${h}px;background:${c}"></div></div>`;
-    }).join('');
-    return `<div class="chart">${cols}</div><div class="chart-x">${data.map(d => `<span>${d.l}</span>`).join('')}</div>`;
-  }
-
-  function renderSettings() {
-    const p = S.priorities[curMonth()];
-    const st = S.settings;
-    const payouts = Object.keys(S.payouts).sort().reverse().map(m => ({ month: m, ...S.payouts[m] }));
-    return `<div class="h-title">Settings</div>
-      <div class="section"><span class="t">Profile</span></div>
-      <div class="card">
-        <div class="set-label">Your name</div>
-        <input class="input" id="nameInput" value="${esc(st.name)}" placeholder="Your name">
-        <button class="btn-secondary" data-act="savename">Save name</button>
-      </div>
-      <div class="section"><span class="t">Theme</span></div>
-      <div class="card">
-        <div class="chips">${Object.entries(THEMES).map(([k, t]) =>
-          `<button class="chip ${(st.theme || 'classic') === k ? 'sel' : ''}" data-act="theme" data-v="${k}">${t.name}</button>`).join('')}</div>
-      </div>
-      <div class="section"><span class="t">Monthly priority</span></div>
-      <div class="card set-row">
-        <div><div class="set-title">${p ? esc(normalizePriority(p).label || normalizePriority(p).categories.join(' + ') || 'Priority') : 'Not set'}</div>
-          <div class="set-sub">${p && normalizePriority(p).categories.length ? normalizePriority(p).categories.join(' + ') + ' · 2× points' : 'Set a focus for this month'}</div></div>
-        <button class="chip" data-act="setprio">Change</button>
-      </div>
-      <div class="section"><span class="t">Rewards paid to yourself</span></div>
-      <div class="card">
-        <div class="total-paid">${rupee(totalPaid())}</div>
-        <div class="set-sub">Total you've paid yourself so far</div>
-        ${payouts.length === 0 ? `<p class="hint">No rewards logged yet. Finish a month and tap “Mark as paid”.</p>` :
-          `<div style="margin-top:12px;border-top:1px solid var(--border)">${payouts.slice(0, 8).map(p => `
-            <div class="ledger-row"><div><div class="ledger-m">${fmtMonth(p.month)}</div>
-            <div class="ledger-s">${pctStr(p.consistency)} · ${p.points} pts</div></div>
-            <div class="ledger-a">${rupee(p.amount)}</div></div>`).join('')}</div>`}
-      </div>
-      <div class="section"><span class="t">Backup &amp; restore</span></div>
-      <div class="card">
-        <p class="help">Your data is saved on this device. Export a file to keep it safe or move it to another device.</p>
-        <div class="btn-row"><button class="btn-secondary" data-act="export">Export</button>
-          <button class="btn-secondary" data-act="import">Restore</button></div>
-      </div>
-      <div class="section"><span class="t">Daily reminder</span></div>
-      <div class="card">
-        <div class="set-row">
-          <div><div class="set-title">Remind me daily</div>
-            <div class="set-sub">${st.reminderEnabled ? `Every day at ${pad(st.reminderHour)}:${pad(st.reminderMinute)}` : 'Reminders off'}</div></div>
-          <div class="switch ${st.reminderEnabled ? 'on' : ''}" data-act="togglereminder"><i></i></div>
-        </div>
-        ${st.reminderEnabled ? `<div class="stepper-row">
-          <div class="stepcol"><button class="stepbtn" data-act="hourup">▲</button><div class="stepval">${pad(st.reminderHour)}</div><button class="stepbtn" data-act="hourdn">▼</button><div class="steplbl">Hour</div></div>
-          <div class="colon">:</div>
-          <div class="stepcol"><button class="stepbtn" data-act="minup">▲</button><div class="stepval">${pad(st.reminderMinute)}</div><button class="stepbtn" data-act="mindn">▼</button><div class="steplbl">Minute</div></div>
-        </div>` : ''}
-      </div>
-      <div class="section"><span class="t">Reward range</span></div>
-      <div class="card">
-        <p class="help">Set the money you pay yourself. The minimum is guaranteed; the maximum is for a perfect month.</p>
-        <div class="set-label" style="margin-top:14px">Minimum (₹)</div>
-        <input class="input" id="rewardMinInput" type="number" inputmode="numeric" value="${rewardMin()}">
-        <div class="set-label" style="margin-top:14px">Maximum (₹)</div>
-        <input class="input" id="rewardMaxInput" type="number" inputmode="numeric" value="${rewardMax()}">
-        <button class="btn-secondary" data-act="saverange">Save range</button>
-        <p class="hint">Each fully-completed day is worth ${rupee2((rewardMax() - rewardMin()) / daysInMonth(curMonth()))} this month (${rupee(rewardMax() - rewardMin())} ÷ ${daysInMonth(curMonth())} days).</p>
-      </div>
-      <div class="section"><span class="t">How rewards work</span></div>
-      <div class="card"><p class="help">Each day you complete <b>all</b> your tasks, you bank one day's slice: <b>(max − min) ÷ days in the month</b>. Do everything every day to reach the maximum. A partial day banks part of its slice; a missed day banks nothing but never takes money away. Everything resets on the 1st; your tasks carry over.</p></div>
-      <button class="btn-danger" data-act="reset">Reset all data</button>
-      <p class="hint" style="text-align:center">${diagLine()}</p>
-      <div style="height:16px"></div>`;
-  }
-
-  // One-line device diagnostics shown at the bottom of Settings, so a single
-  // screenshot reveals whether a layout gap is inside the page (appBottom
-  // shorter than the window) or the OS gave us a short window (inner/vv
-  // shorter than screen) — an iOS standalone-mode system bug.
-  function diagLine() {
-    let sab = '?';
-    try {
-      const p = document.createElement('div');
-      p.style.cssText = 'position:fixed;left:-99px;height:env(safe-area-inset-bottom);width:1px;';
-      document.body.appendChild(p);
-      sab = Math.round(p.getBoundingClientRect().height);
-      p.remove();
-    } catch (err) { /* probe is best-effort */ }
-    const vv = window.visualViewport ? Math.round(window.visualViewport.height) : '-';
-    const appEl = document.querySelector('.app');
-    const ab = appEl ? Math.round(appEl.getBoundingClientRect().bottom) : '-';
-    return `v7 · inner ${window.innerHeight} · vv ${vv} · screen ${screen.height} · app ${ab} · safeB ${sab} · standalone ${!!navigator.standalone}`;
-  }
-
-  // ---------------- overlays ----------------
-  function openOverlay(html) { overlay.innerHTML = html; overlay.classList.add('show'); }
-  function closeOverlay() { overlay.classList.remove('show'); overlay.innerHTML = ''; }
-
-  // task editor
-  function openEditor(id) {
-    const t = id ? S.tasks.find(x => x.id === id) : null;
-    // categoryAuto: while true, typing the title keeps re-guessing the category.
-    // It turns off the moment the user taps a category chip themselves, or
-    // immediately for an existing task (never override a category you already set).
-    ui.editor = t ? { id, title: t.title, category: t.category, importance: t.importance, days: t.days || 'all', categoryAuto: false }
-                   : { id: null, title: '', category: 'Health', importance: 'Medium', days: 'all', categoryAuto: true };
-    renderEditor(true);
-  }
-  function syncEditorTitle() { const el = document.getElementById('edTitle'); if (el) ui.editor.title = el.value; }
-  // Updates the category chip highlight + points preview in place, without a
-  // full re-render, so the title input keeps focus and the cursor position
-  // while the user is still typing.
-  function refreshEditorCategoryUI() {
-    const chips = overlay.querySelectorAll('[data-act="edcat"]');
-    chips.forEach(b => b.classList.toggle('sel', b.dataset.v === ui.editor.category));
-    const pc = priorityCategories();
-    const pts = taskPoints({ category: ui.editor.category, importance: ui.editor.importance }, pc);
-    const pv = overlay.querySelector('.preview-pts .pv');
-    const pn = overlay.querySelector('.preview-pts .pn');
-    if (pv) pv.textContent = '+' + pts + ' pts';
-    if (pn) pn.textContent = pc.includes(ui.editor.category) ? '⭐ Doubled — matches the monthly priority' : 'Match the monthly priority category for 2×.';
-  }
-  function renderEditor(focus) {
-    const e = ui.editor; const pc = priorityCategories();
-    const locked = e.id != null && isLocked(e.id);
-    const preset = e.days === 'all' ? 'all' : e.days === WEEKDAYS_ONLY ? 'weekdays' : 'custom';
-    const sel = (e.days && e.days !== 'all') ? String(e.days).split(',').map(Number) : [0,1,2,3,4,5,6];
-    const pts = taskPoints({ category: e.category, importance: e.importance }, pc);
-    openOverlay(`
-      <div class="ov-top">
-        <button data-act="closeov">Cancel</button>
-        <div class="tt">${e.id ? 'Edit task' : 'New task'}</div>
-        <div class="spacer"></div>
-      </div>
-      <div class="ov-scroll">
-        ${locked ? `<div class="lock-banner"><div class="lt">🔒 Locked this month — you've earned points from this task, so its points &amp; schedule are frozen to keep your reward honest. You can still fix the name.</div></div>` : ''}
-        <div class="field-label">Task</div>
-        <input class="input" id="edTitle" value="${esc(e.title)}" placeholder="e.g. Read 20 pages">
-        <div class="field-label">Category</div>
-        <div class="chips ${locked ? 'disabled' : ''}">${CATS.map(c => `<button class="chip ${e.category === c ? 'sel' : ''}" data-act="edcat" data-v="${c}">${c}</button>`).join('')}</div>
-        ${e.categoryAuto && !locked ? `<div class="hint" style="margin-top:6px">✨ Auto-detected from the task name — tap a category to override.</div>` : ''}
-        <div class="field-label">Importance</div>
-        <div class="chips ${locked ? 'disabled' : ''}">${IMPS.map(i => `<button class="chip ${e.importance === i ? 'sel' : ''}" data-act="edimp" data-v="${i}">${i} (${IMPORTANCE[i]})</button>`).join('')}</div>
-        <div class="field-label">Repeat</div>
-        <div class="chips ${locked ? 'disabled' : ''}">
-          <button class="chip ${preset === 'all' ? 'sel' : ''}" data-act="edpreset" data-v="all">Every day</button>
-          <button class="chip ${preset === 'weekdays' ? 'sel' : ''}" data-act="edpreset" data-v="weekdays">Weekdays</button>
-          <button class="chip ${preset === 'custom' ? 'sel' : ''}" data-act="edpreset" data-v="custom">Custom</button>
-        </div>
-        ${preset === 'custom' ? `<div class="wd-row ${locked ? 'disabled' : ''}">${WD.map((w, i) => `<button class="wd ${sel.includes(i) ? 'on' : ''}" data-act="edday" data-v="${i}">${w[0]}</button>`).join('')}</div>` : ''}
-        <div class="hint">Days with no task become rest days — they never break your streak.</div>
-        <div class="preview-pts"><div class="pl">WORTH PER DAY</div><div class="pv">+${pts} pts</div>
-          <div class="pn">${pc.includes(e.category) ? '⭐ Doubled — matches the monthly priority' : 'Match the monthly priority category for 2×.'}</div></div>
-      </div>
-      <div class="ov-foot"><button class="btn-primary" data-act="savetask" ${e.title.trim() ? '' : 'disabled'}>${e.id ? 'Save changes' : 'Add task'}</button></div>
-    `);
-    if (focus) { const el = document.getElementById('edTitle'); if (el && !e.id) el.focus(); }
-  }
-
-  // set priority (multi-select: any number of categories can earn 2×)
-  function openPriority() {
-    const norm = normalizePriority(S.priorities[curMonth()]);
-    ui.prio = { categories: norm.categories.length ? [...norm.categories] : ['Health'], label: norm.label };
-    renderPriority();
-  }
-  function syncPrioLabel() { const el = document.getElementById('prioLabel'); if (el) ui.prio.label = el.value; }
-  function renderPriority() {
-    const pr = ui.prio;
-    openOverlay(`
-      <div class="ov-top"><button data-act="closeov">Cancel</button><div class="tt">Monthly priority</div><div class="spacer"></div></div>
-      <div class="ov-scroll">
-        <div style="color:var(--primary);font-weight:800;font-size:18px">${fmtMonth(curMonth())}</div>
-        <p class="help" style="margin-top:8px">Choose one or more focuses for this month. Tasks tagged with any selected category earn double points.</p>
-        <div class="field-label">Goal name</div>
-        <input class="input" id="prioLabel" value="${esc(pr.label)}" placeholder="e.g. Weight Loss, Business Growth">
-        <div class="field-label">Categories (for 2× matching) — tap to select multiple</div>
-        <div class="chips">${CATS.map(c => `<button class="chip ${pr.categories.includes(c) ? 'sel' : ''}" data-act="priocat" data-v="${c}">${c}</button>`).join('')}</div>
-        ${pr.categories.length === 0 ? `<p class="hint">Pick at least one category to enable 2× points.</p>` : ''}
-      </div>
-      <div class="ov-foot"><button class="btn-primary" data-act="saveprio">Save priority</button></div>
-    `);
-  }
-
-  // month complete
-  function openMonth() {
-    const s = summary(); const payout = S.payouts[s.mk]; const paid = payout && payout.paid;
-    openOverlay(`
-      <div class="ov-top"><div class="spacer"></div><div class="tt">Month summary</div><button data-act="closeov">Done</button></div>
-      <div class="ov-scroll">
-        <div class="mc-emoji">🏁</div><div class="mc-h1">Month Complete</div><div class="mc-month">${fmtMonth(s.mk)}</div>
-        <div class="card hero">
-          <div class="lbl">YOUR REWARD</div><div class="reward">${rupee(s.reward)}</div>
-          <div class="meta">Pay this to yourself 🎉</div>
-          <div class="bartrack"><div class="barfill" style="width:${s.prog * 100}%"></div></div>
-          <div class="range"><span>${rupee(s.rewardMin)}</span><span>${rupee(s.rewardMax)}</span></div>
-        </div>
-        <div class="ov-grid"><div class="ov-tile"><div class="v" style="color:var(--primary)">${pctStr(s.cons)}</div><div class="l">Consistency</div></div>
-          <div class="ov-tile"><div class="v" style="color:var(--accent)">${s.totalPoints}</div><div class="l">Total points</div></div></div>
-        <div class="ov-grid"><div class="ov-tile"><div class="v">${s.bestStreak}d</div><div class="l">Best streak</div></div>
-          <div class="ov-tile"><div class="v" style="color:var(--accent)">+${s.bonus}</div><div class="l">Streak bonus</div></div></div>
-        ${paid ? `<div class="paid-badge"><div class="pt">✓ Paid to yourself — ${rupee(payout.amount)}</div><button class="undo" data-act="unpay">Undo</button></div>`
-               : `<button class="btn-primary" data-act="pay">✓ Mark as paid to myself</button>`}
-        <p class="hint" style="text-align:center;margin-top:16px">A new month starts fresh — points reset to zero and you can set a new priority. Your tasks carry over.</p>
-      </div>`);
-  }
-
-  // onboarding
-  function openOnboarding() {
-    ui.ob = { step: 0, name: '', label: '', categories: ['Health'],
-      tasks: [{ title: '', category: 'Health', importance: 'Medium' }, { title: '', category: 'Discipline', importance: 'Medium' }, { title: '', category: 'Learning', importance: 'Medium' }] };
-    renderOnboarding(true);
-  }
-  function syncOb() {
-    const ob = ui.ob;
-    if (ob.step === 0) { const el = document.getElementById('obName'); if (el) ob.name = el.value; }
-    if (ob.step === 1) { const el = document.getElementById('obLabel'); if (el) ob.label = el.value; }
-    if (ob.step === 2) { ob.tasks.forEach((t, i) => { const el = document.getElementById('obTask' + i); if (el) t.title = el.value; }); }
-  }
-  function renderOnboarding(focus) {
-    const ob = ui.ob;
-    let body = '';
-    if (ob.step === 0) {
-      body = `<div class="ob-emoji">👋</div><div class="ob-h1">Welcome</div>
-        <p class="help">Build daily habits, earn points, and pay yourself a real reward every month — from ₹10,000 up to ₹20,000.</p>
-        <div class="field-label">What should we call you?</div>
-        <input class="input" id="obName" value="${esc(ob.name)}" placeholder="Your name">`;
-    } else if (ob.step === 1) {
-      body = `<div class="ob-emoji">🎯</div><div class="ob-h1">This month's priority</div>
-        <p class="help">Pick one focus. Tasks in this category earn double points, so you stay pulled toward what matters.</p>
-        <div class="field-label">Name your goal</div>
-        <input class="input" id="obLabel" value="${esc(ob.label)}" placeholder="e.g. Weight Loss, Learning">
-        <div class="field-label">Categories (2× matching) — tap to select multiple</div>
-        <div class="chips">${CATS.map(c => `<button class="chip ${ob.categories.includes(c) ? 'sel' : ''}" data-act="obcat" data-v="${c}">${c}</button>`).join('')}</div>`;
-    } else {
-      body = `<div class="ob-emoji">✅</div><div class="ob-h1">Your first tasks</div>
-        <p class="help">Add up to three daily tasks to start. You can change these anytime.</p>
-        ${ob.tasks.map((t, i) => `<input class="input" id="obTask${i}" value="${esc(t.title)}" placeholder="Task ${i + 1} (e.g. Workout 30 min)" style="margin-top:10px">`).join('')}`;
-    }
-    const lastStep = ob.step === 2;
-    const canNext = ob.step === 0 ? ob.name.trim().length > 0 : true;
-    openOverlay(`
-      <div class="ov-scroll" style="padding-top:calc(env(safe-area-inset-top) + 24px)">
-        <div class="ob-dots">${[0,1,2].map(i => `<i class="${i <= ob.step ? 'on' : ''}"></i>`).join('')}</div>
-        ${body}
-      </div>
-      <div class="ov-foot"><div class="btn-row">
-        ${ob.step > 0 ? `<button class="btn-secondary" data-act="obback" style="margin-top:0">Back</button>` : ''}
-        <button class="btn-primary" data-act="obnext" style="margin-top:0" ${canNext ? '' : 'disabled'}>${lastStep ? 'Start earning' : 'Continue'}</button>
-      </div></div>`);
-    if (focus && ob.step === 0) { const el = document.getElementById('obName'); if (el) el.focus(); }
-  }
-
-  // ---------------- backup ----------------
-  function exportData() {
-    const blob = new Blob([JSON.stringify({ app: 'reward-habits', version: 1, exportedAt: new Date().toISOString(), state: S }, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob); const a = document.createElement('a');
-    a.href = url; a.download = `reward-habits-backup-${todayStr()}.json`; document.body.appendChild(a); a.click();
-    document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(url), 1000);
-    toast('Backup downloaded');
-  }
-  importFile.addEventListener('change', e => {
-    const file = e.target.files && e.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const parsed = JSON.parse(reader.result);
-        const st = parsed.state || parsed;
-        if (!st.tasks || !st.settings) throw new Error('bad');
-        S = st; save(); ui.month = curMonth(); toast('Data restored'); boot();
-      } catch (err) { alert('That file is not a valid Reward Habits backup.'); }
-    };
-    reader.readAsText(file); e.target.value = '';
-  });
-
-  // ---------------- event handling ----------------
-  tabbar.addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) setTab(b.dataset.tab); });
-
-  // Live input sync so validation-driven buttons enable/disable as you type
-  // (without a full re-render that would drop focus).
-  document.addEventListener('input', e => {
-    const t = e.target;
-    if (t.id === 'obName' && ui.ob) {
-      ui.ob.name = t.value;
-      const b = overlay.querySelector('[data-act="obnext"]');
-      if (b) b.disabled = ui.ob.step === 0 && !t.value.trim();
-    } else if (t.id === 'edTitle' && ui.editor) {
-      ui.editor.title = t.value;
-      const b = overlay.querySelector('[data-act="savetask"]');
-      if (b) b.disabled = !t.value.trim();
-      if (ui.editor.categoryAuto) {
-        const guess = guessCategory(t.value);
-        if (guess && guess !== ui.editor.category) {
-          ui.editor.category = guess;
-          refreshEditorCategoryUI();
-        }
-      }
-    }
-  });
-
-  document.addEventListener('click', e => {
-    const el = e.target.closest('[data-act]'); if (!el) return;
-    const act = el.dataset.act; const id = el.dataset.id ? Number(el.dataset.id) : null; const v = el.dataset.v;
-
-    switch (act) {
-      // home
-      case 'toggle': {
-        const now = toggleTask(id); save();
-        vibrate(now ? 14 : 8);
-        renderTab();
-        const r = document.getElementById('rewardNum'); if (r) { r.classList.add('bump'); setTimeout(() => r.classList.remove('bump'), 200); }
-        if (now) { const t = S.tasks.find(x => x.id === id); if (t) toast('+' + taskPoints(t, priorityCategories()) + ' pts 🎉'); }
-        break;
-      }
-      case 'month': openMonth(); break;
-      case 'setprio': openPriority(); break;
-      case 'add': openEditor(null); break;
-
-      // tasks
-      case 'edit': openEditor(id); break;
-      case 'del': {
-        const t = S.tasks.find(x => x.id === id);
-        if (isLocked(id)) { alert('Locked this month — you\'ve earned points from this task, so it can\'t be removed until the 1st. This keeps your reward honest.'); break; }
-        if (confirm(`Delete "${t.title}"?`)) { deleteTask(id); save(); renderTab(); }
-        break;
-      }
-
-      // editor
-      case 'edcat': syncEditorTitle(); ui.editor.category = v; ui.editor.categoryAuto = false; renderEditor(); break;
-      case 'edimp': syncEditorTitle(); ui.editor.importance = v; renderEditor(); break;
-      case 'edpreset':
-        syncEditorTitle();
-        ui.editor.days = v === 'all' ? 'all' : v === 'weekdays' ? WEEKDAYS_ONLY : (ui.editor.days === 'all' ? WEEKDAYS_ONLY : ui.editor.days);
-        renderEditor(); break;
-      case 'edday': {
-        syncEditorTitle();
-        const set = new Set((ui.editor.days && ui.editor.days !== 'all') ? String(ui.editor.days).split(',').map(Number) : [0,1,2,3,4,5,6]);
-        const day = Number(v); set.has(day) ? set.delete(day) : set.add(day);
-        if (set.size > 0) ui.editor.days = set.size === 7 ? 'all' : [...set].sort((a,b)=>a-b).join(',');
-        renderEditor(); break;
-      }
-      case 'savetask': {
-        syncEditorTitle();
-        const e2 = ui.editor; if (!e2.title.trim()) break;
-        if (e2.id) updateTask(e2.id, e2); else addTask(e2);
-        save(); closeOverlay(); renderTab(); break;
-      }
-
-      // priority (multi-select)
-      case 'priocat': {
-        syncPrioLabel();
-        const idx = ui.prio.categories.indexOf(v);
-        if (idx >= 0) ui.prio.categories.splice(idx, 1); else ui.prio.categories.push(v);
-        renderPriority();
-        break;
-      }
-      case 'saveprio': {
-        syncPrioLabel();
-        setPriority(ui.prio.categories, ui.prio.label.trim() || ui.prio.categories.join(', ') || 'Priority');
-        save(); closeOverlay(); renderTab();
-        break;
-      }
-
-      // month complete
-      case 'pay': {
-        const s = summary(); S.payouts[s.mk] = { amount: s.reward, consistency: s.cons, points: s.totalPoints, paid: true, paidAt: new Date().toISOString() };
-        save(); openMonth(); toast('Logged to your ledger'); break;
-      }
-      case 'unpay': { const s = summary(); delete S.payouts[s.mk]; save(); openMonth(); break; }
-
-      // onboarding
-      case 'obcat': {
-        syncOb();
-        const idx = ui.ob.categories.indexOf(v);
-        if (idx >= 0) ui.ob.categories.splice(idx, 1); else ui.ob.categories.push(v);
-        renderOnboarding();
-        break;
-      }
-      case 'obback': syncOb(); ui.ob.step--; renderOnboarding(true); break;
-      case 'obnext': {
-        syncOb();
-        if (ui.ob.step < 2) { ui.ob.step++; renderOnboarding(true); break; }
-        const ob = ui.ob;
-        S.settings.name = ob.name.trim();
-        setPriority(ob.categories.length ? ob.categories : ['Health'], ob.label.trim() || ob.categories.join(', ') || 'Priority');
-        ob.tasks.forEach(t => {
-          if (t.title.trim()) {
-            const guess = guessCategory(t.title);
-            addTask({ title: t.title, category: guess || t.category, importance: t.importance, days: 'all' });
-          }
-        });
-        S.settings.onboarded = true; save(); closeOverlay(); boot(); break;
-      }
-
-      // settings
-      case 'savename': { const el = document.getElementById('nameInput'); if (el) { S.settings.name = el.value.trim(); save(); toast('Saved'); } break; }
-      case 'saverange': {
-        const minEl = document.getElementById('rewardMinInput'), maxEl = document.getElementById('rewardMaxInput');
-        const mn = Math.round(Number(minEl.value)), mx = Math.round(Number(maxEl.value));
-        if (!isFinite(mn) || !isFinite(mx) || mn < 0 || mx <= mn) { alert('Enter a valid range — the maximum must be greater than the minimum.'); break; }
-        S.settings.rewardMin = mn; S.settings.rewardMax = mx; save(); renderTab(); toast('Reward range saved');
-        break;
-      }
-      case 'theme': S.settings.theme = v; save(); applyTheme(v); renderTab(); toast(THEMES[v].name + ' applied'); break;
-      case 'togglereminder': S.settings.reminderEnabled = !S.settings.reminderEnabled; save(); renderTab(); break;
-      case 'hourup': S.settings.reminderHour = (S.settings.reminderHour + 1) % 24; save(); renderTab(); break;
-      case 'hourdn': S.settings.reminderHour = (S.settings.reminderHour + 23) % 24; save(); renderTab(); break;
-      case 'minup': S.settings.reminderMinute = (S.settings.reminderMinute + 5) % 60; save(); renderTab(); break;
-      case 'mindn': S.settings.reminderMinute = (S.settings.reminderMinute + 55) % 60; save(); renderTab(); break;
-      case 'export': exportData(); break;
-      case 'import': importFile.click(); break;
-      case 'reset': if (confirm('This permanently deletes all tasks, history and rewards. Continue?')) { S = defaultState(); save(); ui = { tab: 'home', month: curMonth(), editor: null, ob: null }; boot(); } break;
-
-      // history
-      case 'prevmonth': ui.month = shiftMonth(ui.month, -1); renderTab(); break;
-      case 'nextmonth': if (ui.month < curMonth()) { ui.month = shiftMonth(ui.month, 1); renderTab(); } break;
-
-      case 'closeov': closeOverlay(); break;
-    }
-  });
-
-  // ---------------- boot ----------------
-  function boot() {
-    applyTheme(S.settings.theme || 'classic');
-    if (!S.settings.onboarded) { renderTab(); syncTabbar(); openOnboarding(); }
-    else { closeOverlay(); setTab(ui.tab || 'home'); }
-  }
-  boot();
-})();
-</script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('./sw.js').catch(function () {});
+/* ------------------------------- IndexedDB -------------------------------- */
+/* Photos are stored as Blobs in IndexedDB (localStorage is far too small).
+   Item/outfit/profile metadata is small enough to keep in localStorage for
+   simple synchronous access, but images go to IDB and are referenced by id. */
+const IDB = (() => {
+  let dbp;
+  function open() {
+    if (dbp) return dbp;
+    dbp = new Promise((res, rej) => {
+      const r = indexedDB.open('stylemate', 1);
+      r.onupgradeneeded = () => {
+        const db = r.result;
+        if (!db.objectStoreNames.contains('images')) db.createObjectStore('images');
+      };
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
     });
+    return dbp;
   }
+  async function tx(mode) { const db = await open(); return db.transaction('images', mode).objectStore('images'); }
+  return {
+    async put(key, blob) { const s = await tx('readwrite'); return new Promise((res, rej) => { const r = s.put(blob, key); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); },
+    async get(key) { const s = await tx('readonly'); return new Promise((res, rej) => { const r = s.get(key); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); },
+    async del(key) { const s = await tx('readwrite'); return new Promise((res, rej) => { const r = s.delete(key); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); },
+    async clear() { const s = await tx('readwrite'); return new Promise((res, rej) => { const r = s.clear(); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); },
+  };
+})();
+
+// Object-URL cache so we don't re-create URLs for the same image on every render.
+const urlCache = new Map();
+async function imgURL(id) {
+  if (!id) return null;
+  if (urlCache.has(id)) return urlCache.get(id);
+  const blob = await IDB.get(id);
+  if (!blob) return null;
+  const u = URL.createObjectURL(blob);
+  urlCache.set(id, u);
+  return u;
+}
+function revoke(id) { if (urlCache.has(id)) { URL.revokeObjectURL(urlCache.get(id)); urlCache.delete(id); } }
+
+/* --------------------------- Persistent state ----------------------------- */
+const LS_KEY = 'stylemate:data:v1';
+const defaultState = () => ({
+  onboarded: false,
+  theme: 'dark',
+  items: [],        // wardrobe items
+  outfits: [],      // history + favorites: {id, occasion, itemIds, date, favorite, weather}
+  profile: null,    // {undertone, skinHex, bodyType, palette:[], updatedAt}
+  location: null,   // {lat, lon, label}
+  units: 'C',       // C | F
+  notifs: false,
+  lastOccasion: '',
+});
+let S = load();
+function load() {
+  try { const raw = localStorage.getItem(LS_KEY); if (raw) return Object.assign(defaultState(), JSON.parse(raw)); }
+  catch (e) {}
+  return defaultState();
+}
+function save() { try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) { toast('Storage full — could not save'); } }
+
+/* ------------------------------- Taxonomy --------------------------------- */
+const CATEGORIES = [
+  { id: 'upper', label: 'Upper wear', icon: '👕', color: 'var(--cat-upper)',
+    subtypes: ['T-shirt', 'Shirt', 'Polo', 'Jacket', 'Hoodie', 'Sweater', 'Blazer', 'Kurta', 'Coat'] },
+  { id: 'bottom', label: 'Bottoms', icon: '👖', color: 'var(--cat-bottom)',
+    subtypes: ['Jeans', 'Trousers', 'Chinos', 'Shorts', 'Joggers', 'Skirt', 'Formal pants'] },
+  { id: 'footwear', label: 'Footwear', icon: '👟', color: 'var(--cat-footwear)',
+    subtypes: ['Sneakers', 'Formal shoes', 'Loafers', 'Boots', 'Sandals', 'Sports shoes', 'Ethnic footwear'] },
+  { id: 'accessory', label: 'Accessories', icon: '🧢', color: 'var(--cat-accessory)',
+    subtypes: ['Sunglasses', 'Watch', 'Belt', 'Cap', 'Bag', 'Scarf', 'Tie', 'Jewellery'] },
+];
+const catById = (id) => CATEGORIES.find(c => c.id === id);
+const STYLES = ['Casual', 'Formal', 'Sporty', 'Ethnic', 'Party'];
+const PATTERNS = ['Solid', 'Striped', 'Checked', 'Printed', 'Textured'];
+const FABRICS = ['Cotton', 'Denim', 'Linen', 'Wool', 'Polyester', 'Leather', 'Silk', 'Blend'];
+const SEASONS = ['Summer', 'Winter', 'Monsoon', 'All-season'];
+
+const OCCASIONS = [
+  { id: 'office', label: 'Office', icon: '💼', formality: 3, styles: ['Formal', 'Casual'] },
+  { id: 'interview', label: 'Interview', icon: '🤝', formality: 4, styles: ['Formal'] },
+  { id: 'wedding', label: 'Wedding', icon: '💍', formality: 4, styles: ['Formal', 'Ethnic', 'Party'] },
+  { id: 'date', label: 'Date', icon: '❤️', formality: 2, styles: ['Casual', 'Party', 'Formal'] },
+  { id: 'party', label: 'Party', icon: '🎉', formality: 2, styles: ['Party', 'Casual'] },
+  { id: 'casual', label: 'Casual outing', icon: '🚶', formality: 1, styles: ['Casual', 'Sporty'] },
+  { id: 'gym', label: 'Gym', icon: '🏋️', formality: 0, styles: ['Sporty'] },
+  { id: 'festival', label: 'Festival', icon: '🪔', formality: 2, styles: ['Ethnic', 'Party', 'Casual'] },
+  { id: 'travel', label: 'Travel', icon: '✈️', formality: 1, styles: ['Casual', 'Sporty'] },
+];
+const occById = (id) => OCCASIONS.find(o => o.id === id);
+
+/* ------------------------- Colour analysis --------------------------------- */
+// Named colour reference for nearest-match tagging.
+const NAMED = [
+  ['Black', '#111111'], ['Charcoal', '#333a42'], ['Grey', '#8a8f96'], ['Silver', '#c9ced4'],
+  ['White', '#f4f5f6'], ['Cream', '#efe7d3'], ['Beige', '#d9c6a5'], ['Tan', '#c19a6b'],
+  ['Brown', '#7b4a24'], ['Maroon', '#7c2233'], ['Red', '#d13438'], ['Orange', '#e8792b'],
+  ['Mustard', '#d0a12a'], ['Yellow', '#eec213'], ['Olive', '#7d7c3a'], ['Green', '#3a9d5a'],
+  ['Teal', '#2aa198'], ['Sky', '#5fb0e5'], ['Blue', '#2f6ad9'], ['Navy', '#22335f'],
+  ['Purple', '#7d4bb5'], ['Lavender', '#b9a7e6'], ['Pink', '#e08cae'], ['Magenta', '#c0398f'],
+];
+const NEUTRALS = new Set(['Black', 'Charcoal', 'Grey', 'Silver', 'White', 'Cream', 'Beige', 'Tan', 'Brown', 'Navy']);
+function hexToRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function rgbToHex(r, g, b) { return '#' + [r, g, b].map(v => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join(''); }
+function nearestName(hex) {
+  const [r, g, b] = hexToRgb(hex); let best = NAMED[0], bd = 1e9;
+  for (const [name, h] of NAMED) { const [R, G, B] = hexToRgb(h); const d = (r - R) ** 2 + (g - G) ** 2 + (b - B) ** 2; if (d < bd) { bd = d; best = [name, h]; } }
+  return best[0];
+}
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0, s = 0; const l = (mx + mn) / 2;
+  if (mx !== mn) { const d = mx - mn; s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn);
+    if (mx === r) h = (g - b) / d + (g < b ? 6 : 0); else if (mx === g) h = (b - r) / d + 2; else h = (r - g) / d + 4; h /= 6; }
+  return [h * 360, s, l];
+}
+// Extract a representative dominant colour from an image element via canvas.
+function dominantColor(imgEl) {
+  const c = document.createElement('canvas'); const size = 64; c.width = size; c.height = size;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(imgEl, 0, 0, size, size);
+  let data; try { data = ctx.getImageData(0, 0, size, size).data; } catch (e) { return '#8a8f96'; }
+  // Bucket colours; ignore near-transparent and extreme white/black (likely background).
+  const buckets = new Map();
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+    if (a < 200) continue;
+    const [, s, l] = rgbToHsl(r, g, b);
+    // Weight saturated, mid-luminance pixels higher (the garment, not the wall).
+    const w = 1 + s * 2 + (l > .12 && l < .9 ? 1 : 0) - (l > .93 ? 2 : 0);
+    if (w <= 0) continue;
+    const key = (r >> 4) + ',' + (g >> 4) + ',' + (b >> 4);
+    const cur = buckets.get(key) || { r: 0, g: 0, b: 0, w: 0 };
+    cur.r += r * w; cur.g += g * w; cur.b += b * w; cur.w += w; buckets.set(key, cur);
+  }
+  let best = null, bw = -1;
+  for (const v of buckets.values()) if (v.w > bw) { bw = v.w; best = v; }
+  if (!best) return '#8a8f96';
+  return rgbToHex(best.r / best.w, best.g / best.w, best.b / best.w);
+}
+
+/* --------------------------- Image processing ----------------------------- */
+// Downscale an uploaded photo to a reasonable max dimension and return
+// {blob, hex}. Keeps storage small and gives us the dominant colour for tagging.
+function processImage(file, maxDim = 1000) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width: w, height: h } = img;
+      const scale = Math.min(1, maxDim / Math.max(w, h));
+      w = Math.round(w * scale); h = Math.round(h * scale);
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+      const hex = dominantColor(img);
+      c.toBlob(b => { URL.revokeObjectURL(img.src); b ? resolve({ blob: b, hex }) : reject(new Error('encode failed')); }, 'image/jpeg', 0.82);
+    };
+    img.onerror = () => reject(new Error('bad image'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+/* -------------------------- Skin-tone analysis ---------------------------- */
+// On-device undertone estimation from a selfie. We sample the central region
+// (a rough face location), filter to skin-like pixels, and infer warm/cool/
+// neutral undertone. Nothing leaves the device.
+function analyzeSkin(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas'); const S = 120; c.width = S; c.height = S;
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0, S, S);
+      let data; try { data = ctx.getImageData(0, 0, S, S).data; } catch (e) { URL.revokeObjectURL(img.src); return reject(new Error('cannot read image')); }
+      let R = 0, G = 0, B = 0, n = 0;
+      for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+        // Focus on central band where a face usually sits.
+        const cx = Math.abs(x - S / 2) / (S / 2), cy = Math.abs(y - S / 2) / (S / 2);
+        if (cx > 0.55 || cy > 0.6) continue;
+        const i = (y * S + x) * 4; const r = data[i], g = data[i + 1], b = data[i + 2];
+        // Simple skin heuristic.
+        const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+        const skin = r > 60 && g > 40 && b > 20 && r > g && g >= b && (mx - mn) > 12 && (mx - mn) < 130 && r < 250;
+        if (!skin) continue;
+        R += r; G += g; B += b; n++;
+      }
+      URL.revokeObjectURL(img.src);
+      if (n < 40) return reject(new Error('no-face'));
+      R /= n; G /= n; B /= n;
+      const hex = rgbToHex(R, G, B);
+      // Undertone: warm if red/yellow dominates over blue; cool if blue closer to red.
+      const warmth = (R - B) / 255;         // higher => warmer
+      const [h] = rgbToHsl(R, G, B);
+      let undertone;
+      if (warmth > 0.22 && (h < 45 || h > 20)) undertone = 'Warm';
+      else if (warmth < 0.14) undertone = 'Cool';
+      else undertone = 'Neutral';
+      // Depth for contrast guidance.
+      const lum = (0.299 * R + 0.587 * G + 0.114 * B);
+      const depth = lum > 180 ? 'Fair' : lum > 120 ? 'Medium' : 'Deep';
+      resolve({ skinHex: hex, undertone, depth });
+    };
+    img.onerror = () => { URL.revokeObjectURL(img.src); reject(new Error('bad image')); };
+    img.src = URL.createObjectURL(file);
+  });
+}
+// Colour palette recommendations per undertone.
+const PALETTES = {
+  Warm: { good: [['Olive', '#7d7c3a'], ['Mustard', '#d0a12a'], ['Rust', '#b5502a'], ['Cream', '#efe7d3'], ['Camel', '#c19a6b'], ['Warm red', '#c53a30'], ['Teal', '#2aa198']],
+          avoid: ['icy pastels', 'cool greys'] },
+  Cool: { good: [['Navy', '#22335f'], ['Emerald', '#1f8a5b'], ['Cool grey', '#8a8f96'], ['Sapphire', '#2f6ad9'], ['Berry', '#8e2f6a'], ['Pure white', '#f4f5f6'], ['Lavender', '#b9a7e6']],
+          avoid: ['orange', 'warm yellows'] },
+  Neutral: { good: [['Navy', '#22335f'], ['Teal', '#2aa198'], ['Soft white', '#f0ede6'], ['Denim blue', '#5678a8'], ['Blush', '#e0a5ab'], ['Olive', '#7d7c3a'], ['Charcoal', '#333a42']],
+          avoid: ['very bright neons'] },
+};
+
+/* --------------------------- Colour matching ------------------------------ */
+// Does bottom colour coordinate with top colour? Neutrals go with everything.
+function colorsCoordinate(hexA, hexB) {
+  const nA = nearestName(hexA), nB = nearestName(hexB);
+  if (NEUTRALS.has(nA) || NEUTRALS.has(nB)) return 1;
+  const [hA, sA] = rgbToHsl(...hexToRgb(hexA));
+  const [hB, sB] = rgbToHsl(...hexToRgb(hexB));
+  if (sA < 0.18 || sB < 0.18) return 0.9; // desaturated ~ neutral
+  let d = Math.abs(hA - hB); if (d > 180) d = 360 - d;
+  // Analogous (close) or complementary (~180) are pleasing; clashing mid-ranges less so.
+  if (d < 35) return 0.85;
+  if (d > 150) return 0.8;
+  if (d > 90 && d < 150) return 0.45;
+  return 0.55;
+}
+
+/* =========================================================================
+   OUTFIT ENGINE
+   Builds 2–3 complete outfits for an occasion using only the user's items,
+   scoring by formality fit, weather suitability, colour coordination and
+   recency (avoid repeats).
+   ========================================================================= */
+function recentlyWornItemIds(days = 7) {
+  const cut = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+  const map = new Map();
+  for (const o of S.outfits) if (o.date >= cut) for (const id of o.itemIds) map.set(id, Math.max(map.get(id) || 0, o.date));
+  return map;
+}
+function weatherTags(wx) {
+  const tags = new Set();
+  if (!wx) return tags;
+  if (wx.temp <= 12) tags.add('cold');
+  else if (wx.temp >= 30) tags.add('hot');
+  else tags.add('mild');
+  if (wx.rain) tags.add('rain');
+  return tags;
+}
+function scoreItem(item, occ, wxTags, recent) {
+  let sc = 1;
+  // Formality/style fit.
+  if (item.styles && item.styles.some(s => occ.styles.includes(s))) sc += 2; else sc -= 1.2;
+  // Weather suitability.
+  const sub = (item.subtype || '').toLowerCase();
+  const warm = ['jacket', 'hoodie', 'sweater', 'coat', 'blazer'].some(k => sub.includes(k));
+  const light = ['t-shirt', 'shorts', 'linen', 'polo', 'sandals'].some(k => sub.includes(k) || (item.fabric || '').toLowerCase().includes(k));
+  if (wxTags.has('cold')) { if (warm || (item.seasons || []).includes('Winter')) sc += 1.3; if (light) sc -= 1.2; }
+  if (wxTags.has('hot')) { if (light || (item.seasons || []).includes('Summer')) sc += 1.1; if (warm) sc -= 1.6; }
+  if (wxTags.has('rain')) { if (['boots', 'sneakers', 'sports'].some(k => sub.includes(k))) sc += 0.6; if (sub.includes('sandal') || sub.includes('loafer')) sc -= 0.6; }
+  // Recency penalty.
+  const r = recent.get(item.id); if (r) sc -= (7 - clamp(daysBetween(r, todayISO()), 0, 7)) * 0.35;
+  // Favorite nudge.
+  if (item.favorite) sc += 0.4;
+  return sc;
+}
+function pickWeighted(cands, n) {
+  // Softmax-ish weighted pick without replacement for variety across outfits.
+  const out = []; const pool = cands.slice();
+  for (let k = 0; k < n && pool.length; k++) {
+    const weights = pool.map(c => Math.exp(c.score * 0.9) + 0.05);
+    const total = weights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total, idx = 0;
+    for (; idx < pool.length; idx++) { r -= weights[idx]; if (r <= 0) break; }
+    idx = clamp(idx, 0, pool.length - 1);
+    out.push(pool[idx].item); pool.splice(idx, 1);
+  }
+  return out;
+}
+function buildOutfits(occId, wx, count = 3) {
+  const occ = occById(occId);
+  const wxTags = weatherTags(wx);
+  const recent = recentlyWornItemIds(7);
+  const avail = S.items.filter(i => !i.inWash);
+  const byCat = {};
+  for (const c of CATEGORIES) {
+    byCat[c.id] = avail.filter(i => i.category === c.id)
+      .map(item => ({ item, score: scoreItem(item, occ, wxTags, recent) }))
+      .sort((a, b) => b.score - a.score);
+  }
+  if (!byCat.upper.length || !byCat.bottom.length) return { outfits: [], missing: missingReport(byCat) };
+
+  const outfits = [];
+  const usedSig = new Set();
+  let attempts = 0;
+  while (outfits.length < count && attempts < 24) {
+    attempts++;
+    const topPool = byCat.upper.slice(0, Math.max(3, Math.ceil(byCat.upper.length * 0.6)));
+    const top = pickWeighted(topPool, 1)[0];
+    if (!top) break;
+    // Choose a bottom that coordinates with the top's colour.
+    const bottomCands = byCat.bottom.map(b => ({ item: b.item, score: b.score + colorsCoordinate(top.color, b.item.color) * 2.2 }))
+      .sort((a, b) => b.score - a.score);
+    const bottom = pickWeighted(bottomCands.slice(0, Math.max(3, Math.ceil(bottomCands.length * 0.6))), 1)[0];
+    if (!bottom) break;
+    const foot = byCat.footwear.length ? pickWeighted(byCat.footwear.slice(0, Math.max(3, byCat.footwear.length)), 1)[0] : null;
+    // 1–2 accessories that fit occasion.
+    const accs = byCat.accessory.length ? pickWeighted(byCat.accessory.slice(0, Math.max(4, byCat.accessory.length)), occ.formality >= 3 ? 2 : 1) : [];
+    const ids = [top.id, bottom.id, foot && foot.id, ...accs.map(a => a.id)].filter(Boolean);
+    const sig = [top.id, bottom.id, foot && foot.id].filter(Boolean).sort().join('|');
+    if (usedSig.has(sig)) continue;
+    usedSig.add(sig);
+    const coord = colorsCoordinate(top.color, bottom.color);
+    outfits.push({ top, bottom, foot, accs, ids, coord });
+  }
+  return { outfits, missing: missingReport(byCat) };
+}
+function missingReport(byCat) {
+  const m = [];
+  if (!byCat.upper.length) m.push('upper wear');
+  if (!byCat.bottom.length) m.push('bottoms');
+  if (!byCat.footwear.length) m.push('footwear');
+  return m;
+}
+
+/* ============================ WEATHER (Open-Meteo) ========================= */
+let wxCache = null;
+async function getWeather(force = false) {
+  if (!S.location) return null;
+  if (wxCache && !force && Date.now() - wxCache.at < 30 * 60000) return wxCache.data;
+  try {
+    const { lat, lon } = S.location;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation,weather_code,is_day&timezone=auto`;
+    const r = await fetch(url); if (!r.ok) throw new Error('wx http ' + r.status);
+    const j = await r.json();
+    const cur = j.current;
+    const data = {
+      temp: Math.round(cur.temperature_2m),
+      tempF: Math.round(cur.temperature_2m * 9 / 5 + 32),
+      rain: (cur.precipitation || 0) > 0.1 || [51,53,55,61,63,65,80,81,82,95,96,99].includes(cur.weather_code),
+      code: cur.weather_code,
+      day: cur.is_day === 1,
+    };
+    wxCache = { at: Date.now(), data };
+    return data;
+  } catch (e) { return null; }
+}
+function wxIcon(wx) {
+  if (!wx) return '📍';
+  if (wx.rain) return '🌧️';
+  const c = wx.code;
+  if (c === 0) return wx.day ? '☀️' : '🌙';
+  if ([1, 2].includes(c)) return wx.day ? '🌤️' : '☁️';
+  if (c === 3) return '☁️';
+  if ([45, 48].includes(c)) return '🌫️';
+  if (c >= 71 && c <= 77) return '❄️';
+  return '☁️';
+}
+function wxLabel(wx) {
+  if (!wx) return 'Weather off';
+  const c = wx.code; let d = 'Clear';
+  if (wx.rain) d = 'Rain';
+  else if (c === 3) d = 'Overcast';
+  else if ([1, 2].includes(c)) d = 'Partly cloudy';
+  else if ([45, 48].includes(c)) d = 'Foggy';
+  else if (c >= 71 && c <= 77) d = 'Snow';
+  return d;
+}
+function tempStr(wx) { return S.units === 'F' ? wx.tempF + '°F' : wx.temp + '°C'; }
+
+async function requestLocation() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) { toast('Geolocation not available'); return resolve(null); }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { S.location = { lat: +pos.coords.latitude.toFixed(3), lon: +pos.coords.longitude.toFixed(3), label: 'Your location' }; save(); wxCache = null; resolve(S.location); },
+      () => { toast('Location permission denied'); resolve(null); },
+      { timeout: 8000, maximumAge: 600000 }
+    );
+  });
+}
+
+/* ================================ ROUTER ================================== */
+const ROUTES = [
+  { id: 'wardrobe', label: 'Wardrobe', icon: '🗄️' },
+  { id: 'suggest', label: 'Outfits', icon: '✨' },
+  { id: 'style', label: 'Style', icon: '🎨' },
+  { id: 'more', label: 'More', icon: '☰' },
+];
+let route = 'wardrobe';
+let routeState = {};
+function go(r, st = {}) { route = r; routeState = st; render(); $('#screen').scrollTop = 0; }
+
+function renderTabs() {
+  const bar = $('#tabbar'); bar.innerHTML = '';
+  for (const t of ROUTES) {
+    bar.append(el('button', { class: 'tab' + (route === t.id ? ' active' : ''), onclick: () => { haptic(); go(t.id); } }, [
+      el('span', { class: 'ti', text: t.icon }), el('span', { text: t.label }),
+    ]));
+  }
+}
+
+function render() {
+  renderTabs();
+  const scr = $('#screen'); scr.innerHTML = '';
+  const view = el('div', { class: 'fade' });
+  scr.append(view);
+  if (route === 'wardrobe') renderWardrobe(view);
+  else if (route === 'suggest') renderSuggest(view);
+  else if (route === 'style') renderStyle(view);
+  else if (route === 'more') renderMore(view);
+}
+
+/* -------------------------- Header helper --------------------------------- */
+function header(title, sub, actions) {
+  return el('div', {}, [
+    el('div', { class: 'topbar' }, [
+      el('div', { class: 'brand' }, [
+        el('div', { class: 'brand-mark', text: 'S' }),
+        el('div', { class: 'brand-name', text: 'StyleMate' }),
+      ]),
+      actions || el('span'),
+    ]),
+    title ? el('h1', { class: 'h-title', text: title }) : null,
+    sub ? el('p', { class: 'h-sub', text: sub }) : null,
+  ]);
+}
+
+/* Async: fill a tile/cell with the item image once loaded. */
+function attachImg(node, item, cls) {
+  imgURL(item.imageId).then(u => {
+    if (!u) { node.append(el('div', { class: 'center', style: 'width:100%;height:100%;font-size:28px', text: catById(item.category).icon })); return; }
+    node.prepend(el('img', { src: u, class: cls || '', alt: item.subtype }));
+  });
+}
+
+/* ============================== WARDROBE =================================== */
+function renderWardrobe(v) {
+  v.append(header('Your Wardrobe', `${S.items.length} item${S.items.length === 1 ? '' : 's'} digitized`,
+    el('button', { class: 'icon-btn', onclick: () => openAddItem(), 'aria-label': 'Add item' }, '＋')));
+
+  // Category filter + search state
+  routeState.cat = routeState.cat || 'all';
+  routeState.q = routeState.q || '';
+
+  const search = el('input', { class: 'input', placeholder: '🔍  Search items, colours, notes…', value: routeState.q,
+    oninput: (e) => { routeState.q = e.target.value; refreshGrid(); } });
+  v.append(el('div', { style: 'margin:6px 0 12px' }, search));
+
+  const filterRow = el('div', { class: 'chips', style: 'margin-bottom:14px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px' });
+  const mkChip = (id, label) => el('button', { class: 'chip' + (routeState.cat === id ? ' active' : ''), onclick: () => { routeState.cat = id; render(); } }, label);
+  filterRow.append(mkChip('all', 'All'));
+  for (const c of CATEGORIES) filterRow.append(mkChip(c.id, `${c.icon} ${c.label}`));
+  v.append(filterRow);
+
+  // Extra style filter
+  routeState.style = routeState.style || 'all';
+  const styleRow = el('div', { class: 'chips', style: 'margin-bottom:16px;overflow-x:auto;flex-wrap:nowrap' });
+  styleRow.append(el('button', { class: 'chip accent' + (routeState.style === 'all' ? ' active' : ''), onclick: () => { routeState.style = 'all'; refreshGrid(); } }, 'Any style'));
+  for (const s of STYLES) styleRow.append(el('button', { class: 'chip accent' + (routeState.style === s ? ' active' : ''), onclick: () => { routeState.style = s; refreshGrid(); } }, s));
+  v.append(styleRow);
+
+  const gridWrap = el('div', { id: 'gridWrap' });
+  v.append(gridWrap);
+
+  function currentItems() {
+    let list = S.items.slice().sort((a, b) => b.createdAt - a.createdAt);
+    if (routeState.cat !== 'all') list = list.filter(i => i.category === routeState.cat);
+    if (routeState.style !== 'all') list = list.filter(i => (i.styles || []).includes(routeState.style));
+    const q = routeState.q.trim().toLowerCase();
+    if (q) list = list.filter(i => [i.subtype, i.colorName, i.pattern, i.fabric, i.notes, ...(i.styles || [])].join(' ').toLowerCase().includes(q));
+    return list;
+  }
+  function refreshGrid() {
+    gridWrap.innerHTML = '';
+    const list = currentItems();
+    if (!S.items.length) {
+      gridWrap.append(emptyState('👗', 'Your wardrobe is empty', 'Add your first clothing item to start getting outfit suggestions.',
+        el('button', { class: 'btn btn-primary', onclick: () => openAddItem() }, '＋ Add an item')));
+      return;
+    }
+    if (!list.length) { gridWrap.append(emptyState('🔍', 'Nothing matches', 'Try a different filter or search term.')); return; }
+    const grid = el('div', { class: 'grid' });
+    for (const item of list) {
+      const tile = el('button', { class: 'tile', onclick: () => openItem(item.id) });
+      attachImg(tile, item);
+      if (item.inWash) tile.append(el('div', { class: 'badge-wash', text: 'IN WASH' }));
+      if (item.favorite) tile.append(el('div', { class: 'badge-fav', text: '★' }));
+      tile.append(el('div', { class: 'tile-meta' }, [
+        el('span', { class: 'swatch', style: `background:${item.color}` }), item.subtype,
+      ]));
+      grid.append(tile);
+    }
+    gridWrap.append(grid);
+  }
+  refreshGrid();
+}
+function emptyState(ico, title, sub, action) {
+  return el('div', { class: 'empty' }, [
+    el('div', { class: 'em-ico', text: ico }),
+    el('div', { style: 'font-weight:700;font-size:16px;color:var(--text);margin-bottom:6px', text: title }),
+    el('div', { style: 'font-size:14px;line-height:1.5', text: sub }),
+    action ? el('div', { style: 'margin-top:18px' }, action) : null,
+  ]);
+}
+
+/* ------------------------- Add / Edit item sheet -------------------------- */
+let pendingImage = null; // {blob, hex} awaiting form save
+function openAddItem(presetCat) {
+  pendingImage = null;
+  const draft = { category: presetCat || 'upper', subtype: '', color: '#8a8f96', colorName: 'Grey',
+    pattern: 'Solid', fabric: 'Cotton', styles: ['Casual'], seasons: ['All-season'], notes: '', favorite: false };
+  showItemForm(draft, null);
+}
+function openItem(id) {
+  const item = S.items.find(i => i.id === id); if (!item) return;
+  // Detail view first
+  const body = $('#sheetBody'); body.innerHTML = '';
+  $('#sheetTitle').textContent = item.subtype || 'Item';
+  const hero = el('div', { class: 'tile', style: 'aspect-ratio:4/3;border-radius:16px' });
+  attachImg(hero, item);
+  body.append(hero);
+  const meta = el('div', { style: 'margin-top:14px' }, [
+    el('div', { class: 'row', style: 'margin-bottom:10px' }, [
+      el('div', {}, [ el('span', { class: 'swatch', style: `background:${item.color};width:16px;height:16px` }),
+        el('span', { style: 'font-weight:700', text: ' ' + item.colorName }) ]),
+      el('span', { class: 'pill', text: catById(item.category).label }),
+    ]),
+    el('div', { class: 'chips', style: 'margin:6px 0 4px' },
+      [...(item.styles || []).map(s => el('span', { class: 'pill', text: s })),
+       el('span', { class: 'pill', text: item.pattern }), el('span', { class: 'pill', text: item.fabric }),
+       ...(item.seasons || []).map(s => el('span', { class: 'pill', text: s }))]),
+    item.notes ? el('div', { class: 'card', style: 'margin-top:12px' }, [ el('div', { class: 'faint', style: 'font-size:11px;font-weight:700;margin-bottom:4px', text: 'NOTE' }), item.notes ]) : null,
+  ]);
+  body.append(meta);
+  body.append(el('div', { style: 'display:flex;gap:8px;margin-top:16px' }, [
+    el('button', { class: 'btn btn-ghost', style: 'flex:1', onclick: () => toggleWash(item.id) }, item.inWash ? '🧺 Mark clean' : '🧺 Send to wash'),
+    el('button', { class: 'btn btn-ghost', style: 'flex:1', onclick: () => toggleFav(item.id) }, item.favorite ? '★ Favorited' : '☆ Favorite'),
+  ]));
+  body.append(el('div', { style: 'display:flex;gap:8px;margin-top:8px' }, [
+    el('button', { class: 'btn', style: 'flex:1', onclick: () => showItemForm(Object.assign({}, item), item.id) }, '✏️ Edit tags'),
+    el('button', { class: 'btn btn-danger', style: 'flex:1', onclick: () => deleteItem(item.id) }, '🗑 Delete'),
+  ]));
+  openSheet();
+}
+
+function showItemForm(draft, editId) {
+  const body = $('#sheetBody'); body.innerHTML = '';
+  $('#sheetTitle').textContent = editId ? 'Edit item' : 'Add item';
+
+  // Photo area with auto-detected colour
+  const photoBox = el('div', { class: 'tile', style: 'aspect-ratio:4/3;border-radius:16px;cursor:pointer', onclick: () => triggerPick() });
+  const rebuildPhoto = () => {
+    photoBox.innerHTML = '';
+    if (pendingImage) {
+      photoBox.append(el('img', { src: URL.createObjectURL(pendingImage.blob) }));
+    } else if (editId) {
+      const it = S.items.find(i => i.id === editId);
+      if (it && it.imageId) attachImg(photoBox, it);
+      else photoBox.append(photoPlaceholder());
+    } else photoBox.append(photoPlaceholder());
+  };
+  function photoPlaceholder() {
+    return el('div', { class: 'center', style: 'width:100%;height:100%;flex-direction:column;gap:8px;color:var(--dim)' }, [
+      el('div', { style: 'font-size:40px', text: '📷' }),
+      el('div', { style: 'font-weight:700', text: 'Tap to add photo' }),
+      el('div', { style: 'font-size:12px', text: 'Camera or gallery' }),
+    ]);
+  }
+  rebuildPhoto();
+  body.append(photoBox);
+
+  const detected = el('div', { style: 'display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12.5px;color:var(--dim)' });
+  const renderDetected = () => {
+    detected.innerHTML = '';
+    detected.append(el('span', { class: 'swatch', style: `background:${draft.color};width:14px;height:14px` }),
+      el('span', {}, [ el('b', { text: draft.colorName }), ' auto-detected' ]),
+      el('button', { class: 'btn btn-sm btn-ghost', style: 'margin-left:auto', onclick: () => editColor() }, 'Change'));
+  };
+  function editColor() {
+    const inp = el('input', { type: 'color', value: draft.color, style: 'width:44px;height:34px;border:none;background:none' });
+    inp.addEventListener('input', () => { draft.color = inp.value; draft.colorName = nearestName(inp.value); renderDetected(); });
+    detected.innerHTML = ''; detected.append(inp, el('span', { style: 'font-size:12px', text: 'Pick the true colour' }));
+  }
+  renderDetected();
+  body.append(detected);
+
+  function triggerPick() {
+    const fp = $('#filePick'); fp.value = '';
+    fp.onchange = async () => {
+      const f = fp.files[0]; if (!f) return;
+      photoBox.innerHTML = ''; photoBox.append(el('div', { class: 'center', style: 'width:100%;height:100%' }, el('div', { class: 'spin' })));
+      try {
+        const res = await processImage(f);
+        pendingImage = res; draft.color = res.hex; draft.colorName = nearestName(res.hex);
+        rebuildPhoto(); renderDetected();
+        toast('Colour auto-detected · ' + draft.colorName);
+      } catch (e) { rebuildPhoto(); toast('Could not read that image'); }
+    };
+    fp.click();
+  }
+
+  // Category segmented
+  body.append(fieldLabel('Category'));
+  const catSeg = el('div', { class: 'chips', style: 'margin-top:2px' });
+  const catBtns = {};
+  for (const c of CATEGORIES) {
+    const b = el('button', { class: 'chip' + (draft.category === c.id ? ' active' : ''), onclick: () => {
+      draft.category = c.id; draft.subtype = ''; for (const k in catBtns) catBtns[k].classList.toggle('active', k === c.id); buildSubtypes();
+    } }, `${c.icon} ${c.label}`);
+    catBtns[c.id] = b; catSeg.append(b);
+  }
+  body.append(catSeg);
+
+  // Subtype
+  const subWrap = el('div', {});
+  body.append(fieldLabel('Type'));
+  body.append(subWrap);
+  function buildSubtypes() {
+    subWrap.innerHTML = '';
+    const chips = el('div', { class: 'chips' });
+    for (const st of catById(draft.category).subtypes) {
+      chips.append(el('button', { class: 'chip' + (draft.subtype === st ? ' active' : ''), onclick: () => { draft.subtype = st; buildSubtypes(); } }, st));
+    }
+    subWrap.append(chips);
+  }
+  buildSubtypes();
+
+  // Style (multi)
+  body.append(fieldLabel('Style'));
+  body.append(multiChips(STYLES, draft.styles));
+  // Pattern (single)
+  body.append(fieldLabel('Pattern'));
+  body.append(singleChips(PATTERNS, () => draft.pattern, (val) => draft.pattern = val));
+  // Fabric (single)
+  body.append(fieldLabel('Fabric'));
+  body.append(singleChips(FABRICS, () => draft.fabric, (val) => draft.fabric = val));
+  // Season (multi)
+  body.append(fieldLabel('Season'));
+  body.append(multiChips(SEASONS, draft.seasons));
+
+  // Notes
+  body.append(fieldLabel('Notes (optional)'));
+  const notes = el('textarea', { class: 'input', placeholder: 'e.g. slightly tight, special occasions only…' }); notes.value = draft.notes || '';
+  notes.addEventListener('input', () => draft.notes = notes.value);
+  body.append(notes);
+
+  // Save
+  body.append(el('div', { style: 'height:8px' }));
+  body.append(el('button', { class: 'btn btn-primary btn-block', style: 'margin-top:10px', onclick: () => saveItem(draft, editId) },
+    editId ? 'Save changes' : 'Add to wardrobe'));
+
+  openSheet();
+}
+function fieldLabel(t) { return el('div', { style: 'font-size:12.5px;font-weight:700;color:var(--dim);margin:16px 2px 8px;letter-spacing:.02em', text: t }); }
+function multiChips(options, arrRef) {
+  const wrap = el('div', { class: 'chips' });
+  for (const o of options) {
+    const b = el('button', { class: 'chip' + (arrRef.includes(o) ? ' active' : '') }, o);
+    b.addEventListener('click', () => { const i = arrRef.indexOf(o); if (i >= 0) arrRef.splice(i, 1); else arrRef.push(o); b.classList.toggle('active'); });
+    wrap.append(b);
+  }
+  return wrap;
+}
+function singleChips(options, get, set) {
+  const wrap = el('div', { class: 'chips' });
+  const btns = [];
+  for (const o of options) {
+    const b = el('button', { class: 'chip' + (get() === o ? ' active' : '') }, o);
+    b.addEventListener('click', () => { set(o); btns.forEach(x => x.classList.toggle('active', x === b)); });
+    btns.push(b); wrap.append(b);
+  }
+  return wrap;
+}
+
+async function saveItem(draft, editId) {
+  if (!draft.subtype) { toast('Pick an item type'); return; }
+  if (!draft.styles.length) draft.styles = ['Casual'];
+  if (!draft.seasons.length) draft.seasons = ['All-season'];
+  let imageId = editId ? (S.items.find(i => i.id === editId) || {}).imageId : null;
+  if (pendingImage) {
+    const newId = 'img_' + uid();
+    try { await IDB.put(newId, pendingImage.blob); } catch (e) { toast('Could not store photo'); }
+    if (imageId) { revoke(imageId); IDB.del(imageId); }
+    imageId = newId;
+  }
+  if (editId) {
+    const it = S.items.find(i => i.id === editId);
+    Object.assign(it, { category: draft.category, subtype: draft.subtype, color: draft.color, colorName: draft.colorName,
+      pattern: draft.pattern, fabric: draft.fabric, styles: draft.styles.slice(), seasons: draft.seasons.slice(), notes: draft.notes, imageId });
+  } else {
+    S.items.push({ id: uid(), category: draft.category, subtype: draft.subtype, color: draft.color, colorName: draft.colorName,
+      pattern: draft.pattern, fabric: draft.fabric, styles: draft.styles.slice(), seasons: draft.seasons.slice(),
+      notes: draft.notes, imageId, inWash: false, favorite: false, createdAt: Date.now() });
+  }
+  pendingImage = null; save(); closeSheet(); render(); toast(editId ? 'Item updated' : 'Added to wardrobe ✓'); haptic();
+}
+function toggleWash(id) { const it = S.items.find(i => i.id === id); it.inWash = !it.inWash; save(); closeSheet(); render(); toast(it.inWash ? 'Moved to laundry' : 'Back in rotation'); }
+function toggleFav(id) { const it = S.items.find(i => i.id === id); it.favorite = !it.favorite; save(); openItem(id); render(); }
+function deleteItem(id) {
+  if (!confirm('Delete this item permanently?')) return;
+  const it = S.items.find(i => i.id === id);
+  if (it && it.imageId) { revoke(it.imageId); IDB.del(it.imageId); }
+  S.items = S.items.filter(i => i.id !== id);
+  // Also drop from any saved outfits.
+  S.outfits.forEach(o => o.itemIds = o.itemIds.filter(x => x !== id));
+  save(); closeSheet(); render(); toast('Item deleted');
+}
+
+/* ============================== SUGGEST =================================== */
+async function renderSuggest(v) {
+  v.append(header('Outfit Suggestions', 'Complete looks from your own wardrobe.'));
+
+  // Weather strip
+  const wxStrip = el('div', { class: 'weather' });
+  v.append(wxStrip);
+  renderWeatherStrip(wxStrip);
+
+  // Occasion picker
+  v.append(el('div', { class: 'sec-title', text: 'Where are you going?' }));
+  const occGrid = el('div', { class: 'grid two', style: 'gap:9px' });
+  routeState.occ = routeState.occ || S.lastOccasion || '';
+  for (const o of OCCASIONS) {
+    const active = routeState.occ === o.id;
+    occGrid.append(el('button', { class: 'card', style: `text-align:left;padding:13px;display:flex;align-items:center;gap:10px;${active ? 'border-color:var(--primary);background:color-mix(in srgb, var(--primary) 12%, var(--surface))' : ''}`,
+      onclick: () => { routeState.occ = o.id; S.lastOccasion = o.id; save(); render(); } }, [
+      el('span', { style: 'font-size:22px', text: o.icon }),
+      el('span', { style: 'font-weight:700;font-size:14px', text: o.label }),
+    ]));
+  }
+  v.append(occGrid);
+
+  const resultWrap = el('div', { id: 'resultWrap', style: 'margin-top:18px' });
+  v.append(resultWrap);
+
+  if (routeState.occ) {
+    v.append(el('button', { class: 'btn btn-primary btn-block', style: 'margin-top:16px', onclick: () => generate() }, '✨  Suggest outfits'));
+    if (!routeState.generated) generate();
+    else drawResults(routeState.generated);
+  }
+
+  async function generate() {
+    haptic();
+    resultWrap.innerHTML = '';
+    resultWrap.append(el('div', { class: 'center', style: 'padding:30px' }, el('div', { class: 'spin', style: 'width:26px;height:26px;border-color:rgba(124,111,240,.3);border-top-color:var(--primary)' })));
+    const wx = await getWeather();
+    const res = buildOutfits(routeState.occ, wx, 3);
+    routeState.generated = { res, wx };
+    drawResults(routeState.generated);
+  }
+
+  function drawResults({ res, wx }) {
+    resultWrap.innerHTML = '';
+    if (!res.outfits.length) {
+      const miss = res.missing.length ? `You need at least an upper and a bottom. Missing: ${res.missing.join(', ')}.` : 'Not enough items for this occasion yet.';
+      resultWrap.append(emptyState('🧺', 'No complete outfit yet', miss,
+        el('button', { class: 'btn btn-primary', onclick: () => go('wardrobe') }, 'Add more items')));
+      return;
+    }
+    resultWrap.append(el('div', { class: 'sec-title', style: 'margin-top:4px', text: `${res.outfits.length} looks for ${occById(routeState.occ).label}` }));
+    res.outfits.forEach((o, i) => resultWrap.append(outfitCard(o, i, wx)));
+  }
+}
+
+function renderWeatherStrip(node) {
+  node.innerHTML = '';
+  if (!S.location) {
+    node.append(el('span', { class: 'wx-ico', text: '📍' }),
+      el('div', { style: 'flex:1' }, [ el('div', { style: 'font-weight:700;font-size:14px', text: 'Weather-aware suggestions' }),
+        el('div', { class: 'wx-d', text: 'Share location for temperature & rain tuning' }) ]),
+      el('button', { class: 'btn btn-sm btn-primary', onclick: async () => { const loc = await requestLocation(); if (loc) { render(); } } }, 'Enable'));
+    return;
+  }
+  node.append(el('span', { class: 'wx-ico', text: '⛅' }), el('div', { style: 'flex:1' }, el('div', { class: 'wx-d', text: 'Loading weather…' })));
+  getWeather().then(wx => {
+    node.innerHTML = '';
+    if (!wx) { node.append(el('span', { class: 'wx-ico', text: '⚠️' }), el('div', { style: 'flex:1' }, el('div', { class: 'wx-d', text: 'Weather unavailable — using neutral defaults' }))); return; }
+    node.append(el('span', { class: 'wx-ico', text: wxIcon(wx) }),
+      el('div', { style: 'flex:1' }, [ el('div', { class: 'wx-t', text: tempStr(wx) }),
+        el('div', { class: 'wx-d', text: `${wxLabel(wx)} · ${wx.day ? 'Daytime' : 'Evening'}` }) ]),
+      el('button', { class: 'icon-btn', onclick: () => { wxCache = null; render(); }, 'aria-label': 'Refresh' }, '↻'));
+  });
+}
+
+function outfitCard(o, idx, wx) {
+  const card = el('div', { class: 'outfit', style: 'margin-bottom:14px' });
+  const coordPct = Math.round(o.coord * 100);
+  card.append(el('div', { class: 'outfit-head' }, [
+    el('div', { class: 'outfit-title', text: `Look ${idx + 1}` }),
+    el('span', { class: 'pill', text: `${coordPct >= 80 ? '🎯' : '🎨'} ${coordPct >= 80 ? 'Great match' : 'Balanced'}` }),
+  ]));
+  const collage = el('div', { class: 'collage' });
+  const cells = [];
+  const addCell = (item, label, tall) => {
+    const cell = el('div', { class: 'cell' + (tall ? ' tall' : '') });
+    if (item) {
+      attachImg(cell, item);
+      cell.append(el('div', { class: 'lbl' }, [ el('span', { class: 'swatch', style: `background:${item.color}` }), label + ' · ' + item.subtype ]));
+      cell.append(el('button', { class: 'swap', 'aria-label': 'Swap', onclick: (e) => { e.stopPropagation(); swapItem(o, item.category, idx); } }, '⇄'));
+    } else {
+      cell.classList.add('empty-cell'); cell.textContent = label + '\n(none in wardrobe)';
+    }
+    collage.append(cell); cells.push(cell);
+  };
+  addCell(o.top, 'Top', true);
+  addCell(o.bottom, 'Bottom');
+  addCell(o.foot, 'Shoes');
+  if (o.accs && o.accs.length) addCell(o.accs[0], 'Accessory', false);
+  card.append(collage);
+
+  card.append(el('div', { class: 'outfit-actions' }, [
+    el('button', { class: 'btn btn-sm btn-ghost', style: 'flex:1', onclick: () => shuffleOutfit(idx) }, '🔀 Shuffle'),
+    el('button', { class: 'btn btn-sm btn-ghost', style: 'flex:1', onclick: () => saveOutfit(o, false) }, '★ Save'),
+    el('button', { class: 'btn btn-sm btn-primary', style: 'flex:1.3', onclick: () => wearOutfit(o) }, '✓ Wear today'),
+  ]));
+  return card;
+}
+function shuffleOutfit(idx) {
+  const { wx } = routeState.generated;
+  const res = buildOutfits(routeState.occ, wx, 3);
+  if (res.outfits[idx]) { routeState.generated.res.outfits[idx] = res.outfits[idx]; render(); }
+}
+function swapItem(outfit, category, idx) {
+  const avail = S.items.filter(i => !i.inWash && i.category === category);
+  if (avail.length <= 1) { toast('No other ' + catById(category).label.toLowerCase() + ' to swap'); return; }
+  const key = category === 'upper' ? 'top' : category === 'bottom' ? 'bottom' : category === 'footwear' ? 'foot' : null;
+  if (!key) return;
+  const curId = outfit[key] && outfit[key].id;
+  const others = avail.filter(i => i.id !== curId);
+  const next = sample(others);
+  outfit[key] = next;
+  // Recompute ids and coordination.
+  outfit.ids = [outfit.top && outfit.top.id, outfit.bottom && outfit.bottom.id, outfit.foot && outfit.foot.id, ...(outfit.accs || []).map(a => a.id)].filter(Boolean);
+  if (outfit.top && outfit.bottom) outfit.coord = colorsCoordinate(outfit.top.color, outfit.bottom.color);
+  render(); toast('Swapped ' + next.subtype); haptic();
+}
+function saveOutfit(o, worn) {
+  const wx = routeState.generated && routeState.generated.wx;
+  S.outfits.unshift({ id: uid(), occasion: routeState.occ, itemIds: o.ids.slice(), date: todayISO(), favorite: !worn, worn,
+    weather: wx ? { temp: wx.temp, code: wx.code } : null });
+  save(); toast(worn ? 'Logged as worn today' : 'Saved to favorites ★'); haptic();
+}
+function wearOutfit(o) { saveOutfit(o, true); toast('Nice! Logged for today ✓'); }
+
+/* =============================== STYLE ==================================== */
+function renderStyle(v) {
+  v.append(header('Style Profile', 'Colours and fits that suit you — plus what to buy next.'));
+
+  if (!S.profile) {
+    v.append(el('div', { class: 'card', style: 'text-align:center;padding:26px' }, [
+      el('div', { style: 'font-size:44px;margin-bottom:10px', text: '🎨' }),
+      el('div', { style: 'font-weight:800;font-size:18px;margin-bottom:8px', text: 'Discover your colours' }),
+      el('p', { class: 'muted', style: 'font-size:14px;line-height:1.55;margin:0 0 8px', text: 'Take or upload a selfie in natural light. StyleMate estimates your skin undertone entirely on your device to recommend colours that flatter you.' }),
+      el('div', { class: 'pill', style: 'margin:6px 0 16px', text: '🔒 Processed on-device · photo never stored' }),
+      el('button', { class: 'btn btn-primary btn-block', onclick: () => startProfile() }, '📸  Analyze my colours'),
+    ]));
+    v.append(el('div', { class: 'sec-title', text: 'Or set it manually' }));
+    v.append(el('div', { class: 'chips' }, ['Warm', 'Cool', 'Neutral'].map(u =>
+      el('button', { class: 'chip', onclick: () => { S.profile = { undertone: u, skinHex: null, bodyType: null, depth: 'Medium', palette: PALETTES[u].good, updatedAt: Date.now() }; save(); render(); } }, u + ' undertone'))));
+    return;
+  }
+
+  const p = S.profile;
+  // Profile summary
+  v.append(el('div', { class: 'card' }, [
+    el('div', { class: 'row' }, [
+      el('div', { style: 'display:flex;align-items:center;gap:12px' }, [
+        p.skinHex ? el('div', { style: `width:46px;height:46px;border-radius:12px;background:${p.skinHex};border:1px solid var(--border)` }) : el('div', { style: 'font-size:34px', text: '🎨' }),
+        el('div', {}, [ el('div', { style: 'font-weight:800;font-size:17px', text: p.undertone + ' undertone' }),
+          el('div', { class: 'muted', style: 'font-size:12.5px', text: (p.depth ? p.depth + ' depth · ' : '') + 'Tap re-scan to update' }) ]),
+      ]),
+      el('button', { class: 'btn btn-sm btn-ghost', onclick: () => startProfile() }, 'Re-scan'),
+    ]),
+  ]));
+
+  // Recommended colours
+  v.append(el('div', { class: 'sec-title', text: 'Colours that suit you' }));
+  const pal = el('div', { class: 'pal', style: 'margin-bottom:24px' });
+  for (const [name, hex] of (p.palette || PALETTES[p.undertone].good)) pal.append(el('div', { class: 'p', style: `background:${hex}`, title: name }, el('span', { text: name })));
+  v.append(pal);
+
+  // Body type / fit guidance
+  v.append(el('div', { class: 'sec-title', text: 'Your body type' }));
+  const bodyTypes = ['Slim', 'Athletic', 'Average', 'Broad', 'Fuller'];
+  const bt = el('div', { class: 'chips' });
+  for (const t of bodyTypes) bt.append(el('button', { class: 'chip' + (p.bodyType === t ? ' active' : ''), onclick: () => { p.bodyType = t; save(); render(); } }, t));
+  v.append(bt);
+  if (p.bodyType) v.append(el('div', { class: 'card', style: 'margin-top:12px' }, [
+    el('div', { class: 'faint', style: 'font-size:11px;font-weight:700;margin-bottom:6px', text: 'FIT TIP' }),
+    el('div', { style: 'font-size:14px;line-height:1.5', text: FIT_TIPS[p.bodyType] }),
+  ]));
+
+  // Shopping suggestions — gap analysis
+  v.append(el('div', { class: 'sec-title', text: 'Smart shopping suggestions' }));
+  const gaps = wardrobeGaps(p);
+  if (!gaps.length) v.append(el('div', { class: 'card muted', text: 'Your wardrobe looks well-rounded. Nothing urgent to buy!' }));
+  for (const g of gaps) {
+    v.append(el('div', { class: 'card', style: 'margin-bottom:10px;display:flex;gap:12px;align-items:flex-start' }, [
+      el('div', { style: 'font-size:26px', text: g.icon }),
+      el('div', { style: 'flex:1' }, [
+        el('div', { style: 'font-weight:700;font-size:14.5px;margin-bottom:3px', text: g.title }),
+        el('div', { class: 'muted', style: 'font-size:13px;line-height:1.45', text: g.why }),
+        el('a', { href: g.shop, target: '_blank', rel: 'noopener', class: 'btn btn-sm btn-ghost', style: 'margin-top:10px;text-decoration:none', text: '🛍 Shop this' }),
+      ]),
+    ]));
+  }
+}
+const FIT_TIPS = {
+  Slim: 'Slim & tailored fits work best. Layering (overshirts, cardigans) adds welcome structure. Horizontal stripes and lighter colours add visual weight.',
+  Athletic: 'Show your shape with regular-to-slim fits. Avoid anything boxy. V-necks and structured jackets flatter your frame.',
+  Average: 'Most fits work — aim for regular fits that skim rather than cling. Mid-rise bottoms and structured shoulders keep proportions balanced.',
+  Broad: 'Go for regular fits with clean vertical lines. Darker tops, single-breasted jackets and open collars elongate. Avoid tight or heavily patterned tops.',
+  Fuller: 'Structured, regular fits in darker shades are most flattering. Vertical patterns and monochrome outfits create a lengthening line; avoid clingy fabrics.',
+};
+function startProfile() {
+  const fs = $('#fileSelfie'); fs.value = '';
+  fs.onchange = async () => {
+    const f = fs.files[0]; if (!f) return;
+    toast('Analyzing on-device…');
+    try {
+      const r = await analyzeSkin(f);
+      S.profile = Object.assign(S.profile || {}, { skinHex: r.skinHex, undertone: r.undertone, depth: r.depth, palette: PALETTES[r.undertone].good, updatedAt: Date.now() });
+      if (!S.profile.bodyType) S.profile.bodyType = null;
+      save(); render(); toast(`Detected ${r.undertone.toLowerCase()} undertone ✓`); haptic();
+    } catch (e) {
+      if (e.message === 'no-face') toast('Could not find a face — try better lighting');
+      else toast('Could not analyze that photo');
+    }
+  };
+  fs.click();
+}
+// Gap analysis: what's missing / thin, tuned to undertone.
+function wardrobeGaps(p) {
+  const gaps = [];
+  const byCat = {}; CATEGORIES.forEach(c => byCat[c.id] = S.items.filter(i => i.category === c.id));
+  const has = (cat, pred) => byCat[cat].some(pred);
+  const goodColor = (PALETTES[p.undertone].good[0] || ['', 'Navy'])[0].toLowerCase();
+  const store = (q) => 'https://www.google.com/search?tbm=shop&q=' + encodeURIComponent(q);
+
+  if (!has('footwear', i => /formal|loafer/i.test(i.subtype))) {
+    const rec = p.undertone === 'Warm' ? 'dark brown loafers' : 'black leather derbies';
+    gaps.push({ icon: '👞', title: 'Formal footwear', why: `You lack formal shoes — ${rec} would suit your ${p.undertone.toLowerCase()} undertone and cover office, weddings and interviews.`, shop: store(rec) });
+  }
+  if (byCat.upper.filter(i => (i.styles || []).includes('Formal')).length < 2) {
+    gaps.push({ icon: '👔', title: 'Formal shirts', why: `Few formal tops in rotation. A crisp ${p.undertone === 'Cool' ? 'white or sky-blue' : 'cream or soft-blue'} shirt maximises office & interview combinations.`, shop: store('formal shirt ' + (p.undertone === 'Cool' ? 'white' : 'light blue')) });
+  }
+  if (!has('upper', i => /jacket|blazer|coat|hoodie|sweater/i.test(i.subtype))) {
+    gaps.push({ icon: '🧥', title: 'A layering piece', why: `No jackets or knits yet. A ${goodColor} overshirt or blazer instantly elevates casual looks and handles cool weather.`, shop: store(goodColor + ' blazer') });
+  }
+  if (byCat.accessory.length < 2) {
+    gaps.push({ icon: '⌚', title: 'Finishing accessories', why: 'Accessories complete a look. A leather watch and matching belt pull most outfits together.', shop: store('leather watch minimalist') });
+  }
+  if (byCat.bottom.filter(i => (i.styles || []).includes('Formal') || /trouser|formal|chino/i.test(i.subtype)).length < 1) {
+    gaps.push({ icon: '👖', title: 'Tailored trousers', why: 'A pair of well-fitting chinos or trousers bridges smart-casual and formal — currently missing.', shop: store('slim fit chinos') });
+  }
+  return gaps.slice(0, 4);
+}
+
+/* =============================== MORE ===================================== */
+function renderMore(v) {
+  v.append(header('More', null));
+
+  // Stats
+  const inWash = S.items.filter(i => i.inWash).length;
+  v.append(el('div', { class: 'stat', style: 'margin-bottom:6px' }, [
+    statCard(S.items.length, 'Items'),
+    statCard(S.outfits.filter(o => o.worn).length, 'Outfits worn'),
+    statCard(inWash, 'In wash'),
+  ]));
+
+  v.append(el('div', { class: 'sec-title', text: 'Tools' }));
+  v.append(el('div', { class: 'card', style: 'padding:6px 16px' }, [
+    listRow('🧳', 'Packing assistant', 'Trip outfits & a checklist', () => openPacking()),
+    listRow('🧺', 'Laundry', inWash ? `${inWash} item${inWash === 1 ? '' : 's'} in wash` : 'Nothing in the wash', () => openLaundry()),
+    listRow('🕑', 'Outfit history', `${S.outfits.length} logged`, () => openHistory()),
+    listRow('⭐', 'Favorite looks', `${S.outfits.filter(o => o.favorite).length} saved`, () => openHistory('fav')),
+  ]));
+
+  v.append(el('div', { class: 'sec-title', text: 'Settings' }));
+  const settings = el('div', { class: 'card', style: 'padding:6px 16px' });
+  // Theme toggle
+  settings.append(toggleRow('🌙', 'Dark mode', 'Comfortable in low light', S.theme === 'dark', (on) => { S.theme = on ? 'dark' : 'light'; applyTheme(); save(); }));
+  // Notifications
+  settings.append(toggleRow('🔔', 'Morning suggestion', 'A daily outfit nudge (in-app)', S.notifs, (on) => { S.notifs = on; save(); if (on) toast('Morning suggestions on'); }));
+  // Weather / location
+  settings.append(listRow('📍', 'Location for weather', S.location ? 'Enabled' : 'Not set', async () => { const loc = await requestLocation(); if (loc) { toast('Location saved'); render(); } }));
+  // Units
+  const unitsRow = el('div', { class: 'list-row' }, [
+    el('div', { class: 'lr-ico', text: '🌡' }),
+    el('div', { class: 'lr-main' }, [ el('div', { class: 'lr-t', text: 'Temperature units' }), el('div', { class: 'lr-s', text: 'Celsius or Fahrenheit' }) ]),
+    el('div', { class: 'seg', style: 'width:110px' }, ['C', 'F'].map(u => el('button', { class: S.units === u ? 'active' : '', onclick: () => { S.units = u; wxCache = null; save(); render(); } }, '°' + u))),
+  ]);
+  settings.append(unitsRow);
+  v.append(settings);
+
+  // Privacy
+  v.append(el('div', { class: 'sec-title', text: 'Privacy & data' }));
+  v.append(el('div', { class: 'card' }, [
+    el('p', { class: 'muted', style: 'font-size:13px;line-height:1.55;margin:2px 0 14px' },
+      '🔒 Everything — including every photo — is stored only on this device. StyleMate never uploads your wardrobe or personal photos. Selfies for colour analysis are processed on-device and are not saved.'),
+    el('div', { style: 'display:flex;gap:8px' }, [
+      el('button', { class: 'btn btn-ghost', style: 'flex:1', onclick: () => exportData() }, '⬇ Export data'),
+      el('button', { class: 'btn btn-danger', style: 'flex:1', onclick: () => wipeAll() }, '🗑 Delete all data'),
+    ]),
+  ]));
+
+  v.append(el('div', { style: 'text-align:center;color:var(--faint);font-size:12px;margin:22px 0 8px' }, 'StyleMate · offline personal wardrobe'));
+}
+function statCard(n, l) { return el('div', { class: 's' }, [ el('div', { class: 'n', text: n }), el('div', { class: 'l', text: l }) ]); }
+function listRow(ico, t, s, onclick) {
+  return el('button', { class: 'list-row', style: 'width:100%;background:none;border:none;border-bottom:1px solid var(--border);text-align:left;color:var(--text)', onclick }, [
+    el('div', { class: 'lr-ico', text: ico }),
+    el('div', { class: 'lr-main' }, [ el('div', { class: 'lr-t', text: t }), el('div', { class: 'lr-s', text: s }) ]),
+    el('div', { style: 'color:var(--faint);font-size:20px', text: '›' }),
+  ]);
+}
+function toggleRow(ico, t, s, on, onchange) {
+  const sw = el('div', { class: 'switch' + (on ? ' on' : '') });
+  const row = el('div', { class: 'list-row' }, [
+    el('div', { class: 'lr-ico', text: ico }),
+    el('div', { class: 'lr-main' }, [ el('div', { class: 'lr-t', text: t }), el('div', { class: 'lr-s', text: s }) ]),
+    sw,
+  ]);
+  row.addEventListener('click', () => { const nv = !sw.classList.contains('on'); sw.classList.toggle('on', nv); onchange(nv); });
+  return row;
+}
+
+/* -------------------------- Packing assistant ----------------------------- */
+function openPacking() {
+  const body = $('#sheetBody'); body.innerHTML = ''; $('#sheetTitle').textContent = 'Packing assistant';
+  const st = { dest: '', days: 3, occ: 'casual' };
+  body.append(el('label', { class: 'fld' }, [ el('span', { text: 'Destination' }), el('input', { class: 'input', placeholder: 'e.g. Goa, Manali…', oninput: (e) => st.dest = e.target.value }) ]));
+  const daysWrap = el('label', { class: 'fld' }, [ el('span', { text: 'Trip length (days)' }) ]);
+  const daysInp = el('input', { class: 'input', type: 'number', min: '1', max: '30', value: '3', oninput: (e) => st.days = clamp(+e.target.value || 1, 1, 30) });
+  daysWrap.append(daysInp); body.append(daysWrap);
+  body.append(el('div', { class: 'fld' }, [ el('span', { style: 'display:block;font-size:12.5px;font-weight:700;color:var(--dim);margin-bottom:7px', text: 'Trip vibe' }) ]));
+  const occChips = el('div', { class: 'chips' });
+  ['casual', 'party', 'office', 'wedding', 'festival'].forEach(id => occChips.append(el('button', { class: 'chip' + (st.occ === id ? ' active' : ''), onclick: () => { st.occ = id; [...occChips.children].forEach(c => c.classList.toggle('active', c.textContent === occById(id).label)); } }, occById(id).label)));
+  body.append(occChips);
+  const out = el('div', { style: 'margin-top:18px' }); body.append(out);
+  body.append(el('button', { class: 'btn btn-primary btn-block', style: 'margin-top:16px', onclick: () => buildPack() }, '🧳 Generate packing list'));
+
+  function buildPack() {
+    out.innerHTML = '';
+    const nOutfits = Math.min(st.days, 7);
+    const looks = [];
+    for (let i = 0; i < nOutfits; i++) { const r = buildOutfits(st.occ, null, 1); if (r.outfits[0]) looks.push(r.outfits[0]); }
+    if (!looks.length) { out.append(emptyState('🧺', 'Add more items', 'Not enough wardrobe items to pack for this trip.')); return; }
+    // Aggregate unique items into a checklist.
+    const ids = new Set(); looks.forEach(o => o.ids.forEach(id => ids.add(id)));
+    out.append(el('div', { class: 'sec-title', style: 'margin-top:0', text: `${looks.length} outfits · ${ids.size} items for ${st.dest || 'your trip'}` }));
+    const list = el('div', { class: 'card', style: 'padding:4px 14px' });
+    [...ids].forEach(id => {
+      const it = S.items.find(i => i.id === id); if (!it) return;
+      const row = el('label', { class: 'list-row', style: 'cursor:pointer' }, [
+        el('input', { type: 'checkbox', style: 'width:20px;height:20px;accent-color:var(--primary)' }),
+        el('span', { class: 'swatch', style: `background:${it.color};width:16px;height:16px` }),
+        el('div', { class: 'lr-main' }, [ el('div', { class: 'lr-t', text: it.subtype }), el('div', { class: 'lr-s', text: it.colorName + ' · ' + catById(it.category).label }) ]),
+      ]);
+      list.append(row);
+    });
+    out.append(list);
+    // Essentials reminder
+    out.append(el('div', { class: 'card muted', style: 'margin-top:10px;font-size:13px' }, '💡 Don\'t forget: underwear ×' + st.days + ', socks ×' + st.days + ', toiletries, charger.'));
+  }
+  openSheet();
+}
+
+/* ----------------------------- Laundry ------------------------------------ */
+function openLaundry() {
+  const body = $('#sheetBody'); body.innerHTML = ''; $('#sheetTitle').textContent = 'Laundry';
+  const inWash = S.items.filter(i => i.inWash);
+  const clean = S.items.filter(i => !i.inWash);
+  if (!inWash.length) body.append(el('div', { class: 'card muted', style: 'text-align:center;padding:20px', text: 'Nothing in the wash. Tap an item below to send it.' }));
+  else {
+    body.append(el('div', { class: 'sec-title', style: 'margin-top:4px', text: 'In the wash — excluded from suggestions' }));
+    const grid = el('div', { class: 'grid' });
+    inWash.forEach(it => { const t = el('button', { class: 'tile', onclick: () => { it.inWash = false; save(); openLaundry(); render(); toast('Back in rotation'); } }); attachImg(t, it); t.append(el('div', { class: 'tile-meta', text: it.subtype })); grid.append(t); });
+    body.append(grid);
+    body.append(el('button', { class: 'btn btn-ghost btn-block', style: 'margin-top:12px', onclick: () => { inWash.forEach(i => i.inWash = false); save(); openLaundry(); render(); toast('All items marked clean'); } }, 'Mark all clean'));
+  }
+  body.append(el('div', { class: 'sec-title', text: 'Send to wash' }));
+  if (!clean.length) body.append(el('div', { class: 'muted', text: 'No clean items.' }));
+  else { const grid2 = el('div', { class: 'grid' }); clean.forEach(it => { const t = el('button', { class: 'tile', onclick: () => { it.inWash = true; save(); openLaundry(); render(); toast('Moved to wash'); } }); attachImg(t, it); t.append(el('div', { class: 'tile-meta', text: it.subtype })); grid2.append(t); }); body.append(grid2); }
+  openSheet();
+}
+
+/* ----------------------------- History ------------------------------------ */
+function openHistory(mode) {
+  const body = $('#sheetBody'); body.innerHTML = ''; $('#sheetTitle').textContent = mode === 'fav' ? 'Favorite looks' : 'Outfit history';
+  let list = S.outfits.slice();
+  if (mode === 'fav') list = list.filter(o => o.favorite);
+  if (!list.length) { body.append(emptyState('🕑', 'Nothing here yet', mode === 'fav' ? 'Save looks you love from the Outfits tab.' : 'Wear or save an outfit and it will appear here.')); openSheet(); return; }
+  for (const o of list) {
+    const occ = occById(o.occasion) || { label: 'Outfit', icon: '👕' };
+    const card = el('div', { class: 'card', style: 'margin-bottom:10px' });
+    card.append(el('div', { class: 'row', style: 'margin-bottom:10px' }, [
+      el('div', {}, [ el('div', { style: 'font-weight:700', text: `${occ.icon} ${occ.label}` }), el('div', { class: 'muted', style: 'font-size:12px', text: prettyDate(o.date) + (o.worn ? ' · worn' : ' · saved') }) ]),
+      el('button', { class: 'icon-btn', onclick: () => { const oo = S.outfits.find(x => x.id === o.id); oo.favorite = !oo.favorite; save(); openHistory(mode); }, 'aria-label': 'Favorite' }, o.favorite ? '★' : '☆'),
+    ]));
+    const strip = el('div', { style: 'display:flex;gap:6px;overflow-x:auto' });
+    o.itemIds.forEach(id => { const it = S.items.find(i => i.id === id); if (!it) return; const t = el('div', { style: 'width:64px;height:64px;border-radius:10px;overflow:hidden;flex:none;background:var(--surface-alt);position:relative' }); attachImg(t, it); strip.append(t); });
+    card.append(strip);
+    card.append(el('button', { class: 'btn btn-sm btn-danger', style: 'margin-top:10px', onclick: () => { S.outfits = S.outfits.filter(x => x.id !== o.id); save(); openHistory(mode); render(); } }, 'Remove'));
+    body.append(card);
+  }
+  openSheet();
+}
+function prettyDate(iso) { const d = daysBetween(iso, todayISO()); if (d === 0) return 'Today'; if (d === 1) return 'Yesterday'; if (d < 7) return d + ' days ago'; return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
+
+/* --------------------------- Data export / wipe --------------------------- */
+function exportData() {
+  const clone = JSON.parse(JSON.stringify(S));
+  const blob = new Blob([JSON.stringify(clone, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'stylemate-backup.json'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast('Metadata exported (photos stay on device)');
+}
+async function wipeAll() {
+  if (!confirm('Delete ALL StyleMate data — every item, photo, outfit and your style profile? This cannot be undone.')) return;
+  if (!confirm('Are you absolutely sure? This is permanent.')) return;
+  try { await IDB.clear(); } catch (e) {}
+  urlCache.forEach((u) => URL.revokeObjectURL(u)); urlCache.clear();
+  localStorage.removeItem(LS_KEY);
+  S = defaultState(); save();
+  closeSheet(); toast('All data deleted'); go('wardrobe');
+  // Re-run onboarding.
+  S.onboarded = true; save();
+}
+
+/* ============================ SHEET controls ============================== */
+function openSheet() { $('#scrim').classList.add('show'); $('#sheet').classList.add('show'); }
+function closeSheet() { $('#scrim').classList.remove('show'); $('#sheet').classList.remove('show'); }
+$('#scrim').addEventListener('click', closeSheet);
+$('#sheetClose').addEventListener('click', closeSheet);
+
+/* ============================= ONBOARDING ================================= */
+const ONB_STEPS = [
+  { ic: '👔', h: 'Welcome to StyleMate', p: 'Your personal wardrobe, digitized. Snap your clothes once and get complete outfit ideas whenever you need them — built only from what you actually own.' },
+  { ic: '📷', h: 'Digitize your wardrobe', p: 'Add a photo of each item. StyleMate auto-detects its colour and lets you tag category, style, fabric and season in seconds.' },
+  { ic: '✨', h: 'Get outfit suggestions', p: 'Pick an occasion — office, date, wedding, gym — and get 2–3 full looks, tuned to the live weather and colour-matched. Shuffle or swap any piece.' },
+  { ic: '🎨', h: 'Know what suits you', p: 'An on-device selfie scan estimates your skin undertone to recommend flattering colours and smart purchases that fill gaps. Your photos never leave the phone.' },
+];
+function renderOnboarding() {
+  let step = 0;
+  const wrap = el('div', { class: 'onb' });
+  const bodyEl = el('div', { class: 'onb-body' });
+  const foot = el('div', { class: 'onb-foot' });
+  wrap.append(bodyEl, foot);
+  document.body.append(wrap);
+  function draw() {
+    const s = ONB_STEPS[step];
+    bodyEl.innerHTML = '';
+    bodyEl.append(
+      el('div', { style: 'flex:1;display:flex;flex-direction:column;justify-content:center' }, [
+        el('div', { class: 'onb-illus', text: s.ic }),
+        el('h1', { class: 'onb-h', text: s.h }),
+        el('p', { class: 'onb-p', text: s.p }),
+        step === 3 ? el('div', { class: 'pill', style: 'margin-top:10px', text: '🔒 100% on-device · nothing uploaded' }) : null,
+      ]));
+    foot.innerHTML = '';
+    const dots = el('div', { class: 'dots' }); ONB_STEPS.forEach((_, i) => dots.append(el('div', { class: 'dot' + (i === step ? ' on' : '') })));
+    foot.append(dots);
+    foot.append(el('button', { class: 'btn btn-primary btn-block', onclick: () => { if (step < ONB_STEPS.length - 1) { step++; draw(); } else finish(); } },
+      step < ONB_STEPS.length - 1 ? 'Continue' : 'Start adding items'));
+    if (step < ONB_STEPS.length - 1) foot.append(el('button', { class: 'btn btn-block', style: 'background:none;margin-top:6px;color:var(--dim)', onclick: () => finish() }, 'Skip'));
+  }
+  function finish() { S.onboarded = true; save(); wrap.remove(); go('wardrobe'); setTimeout(() => openAddItem(), 250); }
+  draw();
+}
+
+/* ============================== THEME / BOOT ============================== */
+function applyTheme() { document.documentElement.setAttribute('data-theme', S.theme === 'light' ? 'light' : 'dark');
+  document.querySelector('meta[name=theme-color]').setAttribute('content', S.theme === 'light' ? '#F4F6F9' : '#0B0F14'); }
+
+function boot() {
+  applyTheme();
+  if (!S.onboarded) renderOnboarding();
+  render();
+  // Register service worker for offline use.
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+boot();
+
+// Expose a tiny hook for debugging in the console.
+window.StyleMate = { get state() { return S; }, save, render };
 </script>
 </body>
 </html>

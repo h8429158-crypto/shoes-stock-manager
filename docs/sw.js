@@ -1,8 +1,9 @@
-/* Minimal offline service worker for the Reward Habits PWA.
+/* Offline service worker for the StyleMate PWA.
    Network-first so updates arrive when online, with a cache fallback so the app
-   keeps working with no connection. The app itself is a single self-contained
-   file, so caching the shell + icons is enough. */
-const CACHE = 'reward-habits-v7';
+   keeps working with no connection. The app is a single self-contained file, so
+   caching the shell + icons is enough. Weather API calls (cross-origin) are left
+   to the network and simply fail gracefully offline. */
+const CACHE = 'stylemate-v1';
 const ASSETS = [
   './',
   './index.html',
@@ -29,6 +30,9 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+  // Only handle same-origin requests; let weather API and others hit the network.
+  if (url.origin !== self.location.origin) return;
   e.respondWith(
     fetch(e.request)
       .then((res) => {
