@@ -595,7 +595,7 @@
     const c = catOf(e.cat);
     const sub = [e.note || '', (e.method && e.method !== 'Cash' ? e.method : (e.note ? '' : 'No note'))].filter(Boolean).join(' · ');
     return `<button class="exp" data-act="edit" data-id="${e.id}">
-      <span class="circ" style="background:${c.c}22;color:${c.c}">${c.e}${e.recurringId ? `<span class="rec">🔁</span>` : ''}${e.receipt ? `<span class="rec">📎</span>` : ''}</span>
+      <span class="circ" style="background:${c.c}22;color:${c.c}">${c.e}${e.recurringId ? `<span class="rec">🔁</span>` : e.viaShortcut ? `<span class="rec">⚡</span>` : ''}${e.receipt ? `<span class="rec">📎</span>` : ''}</span>
       <span class="mid"><span class="cn">${esc(c.n)}</span><span class="nt">${esc(sub)}</span></span>
       <span class="right"><span class="amt ${e.credit ? 'credit' : ''}">${e.credit ? '+' : '−'}${rupee(e.amount)}</span><span class="tm">${fmtTime(e.ts)}</span></span>
     </button>`;
@@ -726,6 +726,7 @@
     if (v === 'recEdit') return showSheet(recEditView());
     if (v === 'currency') return showSheet(currencyView());
     if (v === 'pin') return showSheet(pinView());
+    if (v === 'shortcut') return showSheet(shortcutView());
     if (v === 'about') return showSheet(aboutView());
   }
   function head(title, back) { return `<div class="grabber"></div><div class="sheet-head">${back ? `<button class="back" data-act="ovback">‹</button>` : ''}<h3>${title}</h3></div>`; }
@@ -740,6 +741,7 @@
         ${setrow('recurring', '🔁', 'Recurring expenses', rc ? `${rc} active rule${rc === 1 ? '' : 's'}` : 'None yet')}
         ${setrow('currency', '💱', 'Currency', `Symbol ${cur()}`)}
         ${setrow('pin', '🔒', 'App lock', S.settings.lockEnabled ? 'PIN on' : 'Off')}
+        ${setrow('shortcut', '⚡', 'Back Tap quick-add', 'Add expenses by tapping your phone')}
       </div>
       <div class="field-lbl">Backup &amp; data</div>
       <div class="sheet-actions" style="margin-top:0"><button class="btn btn-ghost" data-act="export">Export JSON</button><button class="btn btn-ghost" data-act="import">Restore</button></div>
@@ -811,6 +813,40 @@
       <div class="sheet-actions"><button class="btn btn-save" data-act="pinsave">Save PIN</button></div>`;
   }
 
+  function deepLinkBase() { return location.origin + location.pathname; }
+  function shortcutView() {
+    const base = deepLinkBase();
+    const catList = getCats().map(c => c.n).join(', ');
+    const isArtifact = /claude\.ai/.test(location.host);
+    return `${head('Back Tap quick-add', true)}
+      <p class="sub">Double-tap the back of your iPhone to log an expense in seconds — no app switching.</p>
+      ${isArtifact ? `<div class="card" style="border-color:var(--accent);margin-bottom:14px"><p style="margin:0;color:var(--text);font-size:13px;line-height:1.6">⚠️ You're on the preview link. Back Tap needs the app opened from its own web address (host <b>docs/</b> on GitHub Pages, or add this page to your Home Screen) so the shortcut can pass data to it.</p></div>` : ''}
+      <div class="field-lbl">Your app address</div>
+      <div class="listitem" style="align-items:center"><span class="lt" style="font-size:13px;word-break:break-all">${esc(base)}</span><button class="act" data-act="copyurl">Copy</button></div>
+
+      <div class="field-lbl">1 · Create the Shortcut</div>
+      <div class="card"><p style="margin:0;color:var(--dim);font-size:13.5px;line-height:1.7">In the <b style="color:var(--text)">Shortcuts</b> app → <b style="color:var(--text)">＋</b> new shortcut, add these actions in order:</p>
+        <p style="margin:10px 0 0;color:var(--dim);font-size:13.5px;line-height:1.8">
+        ① <b style="color:var(--text)">Ask for Input</b> — “How much did you spend?”, type <b style="color:var(--text)">Number</b><br>
+        ② <b style="color:var(--text)">Choose from Menu</b> — one item per category<br>
+        ③ <b style="color:var(--text)">Ask for Input</b> — “Add a note”, type Text<br>
+        ④ <b style="color:var(--text)">Text</b> — paste the URL below, replacing the CAPS parts with the variables from steps ①–③<br>
+        ⑤ <b style="color:var(--text)">Open URLs</b> — pass it the Text</p>
+      </div>
+
+      <div class="field-lbl">URL to paste in the Text action</div>
+      <div class="listitem" style="align-items:flex-start"><span class="lt" style="font-size:12.5px;word-break:break-all;font-variant-numeric:tabular-nums">${esc(base)}?add=1&amp;amt=<b style="color:var(--accent)">AMOUNT</b>&amp;cat=<b style="color:var(--accent)">CATEGORY</b>&amp;note=<b style="color:var(--accent)">NOTE</b></span><button class="act" data-act="copytemplate">Copy</button></div>
+      <p class="hint" style="color:var(--faint);font-size:12px;margin-top:8px;line-height:1.6">Optional extras: <b>&amp;credit=1</b> for money received, <b>&amp;method=UPI</b> for a payment method.</p>
+
+      <div class="field-lbl">2 · Assign to Back Tap</div>
+      <div class="card"><p style="margin:0;color:var(--dim);font-size:13.5px;line-height:1.7"><b style="color:var(--text)">Settings → Accessibility → Touch → Back Tap → Double Tap</b>, then pick your shortcut. (Triple Tap works too.)</p></div>
+
+      <div class="field-lbl">Category names to use in step ②</div>
+      <div class="card"><p style="margin:0;color:var(--dim);font-size:13px;line-height:1.6">${esc(catList)}</p><p style="margin:8px 0 0;color:var(--faint);font-size:12px;line-height:1.5">A name that doesn't match one of these is created automatically as a new category.</p></div>
+
+      <div class="sheet-actions"><button class="btn btn-ghost" data-act="testshortcut">Try it now</button></div>
+      <p class="hint" style="color:var(--faint);font-size:12px;margin-top:10px;line-height:1.6">Note: iOS may open the shortcut link in Safari. For your data to stay in one place, use the app in Safari (or always open it via the shortcut) rather than a separate Home-Screen copy.</p>`;
+  }
   function aboutView() {
     return `${head('About', true)}
       <div class="card"><p style="margin:0;color:var(--dim);font-size:14px;line-height:1.6"><b style="color:var(--text)">Spend</b> is a private, offline-first expense tracker. Everything stays on this device — nothing is uploaded. Use <b style="color:var(--text)">Export</b> regularly to keep a backup.</p></div>
@@ -855,6 +891,8 @@
   }
 
   // ================= backup =================
+  function copyText(t) { try { navigator.clipboard.writeText(t).then(() => toast('✓ Copied'), () => fallbackCopy(t)); } catch (e) { fallbackCopy(t); } }
+  function fallbackCopy(t) { try { const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); toast('✓ Copied'); } catch (e) { toast('Copy failed'); } }
   function exportJSON() {
     const blob = new Blob([JSON.stringify({ app: 'spend', version: 2, exportedAt: new Date().toISOString(), state: S }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `spend-backup-${dayKey(Date.now())}.json`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); toast('✓ Backup downloaded');
@@ -988,6 +1026,11 @@
     if (act === 'import') { fileImport.click(); return; }
     if (act === 'resetall') { if (confirm('Delete ALL data permanently? This cannot be undone.')) { S = defaultState(); save(); hideOverlay(); render(); toast('All data cleared'); } return; }
 
+    // shortcut
+    if (act === 'copyurl') { copyText(deepLinkBase()); return; }
+    if (act === 'copytemplate') { copyText(deepLinkBase() + '?add=1&amt=AMOUNT&cat=CATEGORY&note=NOTE'); return; }
+    if (act === 'testshortcut') { const c = getCats()[0]; location.href = deepLinkBase() + '?add=1&amt=1&cat=' + encodeURIComponent(c.n) + '&note=' + encodeURIComponent('Test via shortcut'); return; }
+
     // lock
     if (act === 'lockkey') return lockKey(v.k);
     if (act === 'lockback') { lockEntry = lockEntry.slice(0, -1); document.querySelectorAll('#lockEl .dots i').forEach((el2, i) => el2.classList.toggle('on', i < lockEntry.length)); return; }
@@ -1000,12 +1043,43 @@
   function showReceiptViewer(src) { overlay.className = 'overlay show full-mode'; overlay.innerHTML = `<div style="width:100%;height:100%;display:flex;flex-direction:column;background:#000" data-stop><div style="padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;display:flex;justify-content:flex-end"><button class="iconbtn" data-act="closeviewer">✕</button></div><div style="flex:1;display:flex;align-items:center;justify-content:center;padding:16px"><img src="${src}" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:12px"></div></div>`; }
 
   // ---------------- boot ----------------
-  function afterUnlock() { if (!S.settings.onboarded) { showOnboarding(); return; } hideOverlay(); }
+  // ---------------- deep-link quick add (iOS Back Tap / Siri Shortcut) ----------------
+  // A Shortcut collects amount/category/note natively, then opens the app at
+  //   ?add=1&amt=250&cat=Junk%20food&note=KFC[&credit=1][&method=UPI]
+  // We read those params on load, store the expense, and clean the URL so a
+  // refresh never double-posts. Unknown categories are created on the fly.
+  let pendingShortcutToast = false;
+  function emojiForName(name) {
+    const g = guessCategory(name); if (g) { const c = S.categories.find(x => x.n === g); if (c) return c.e; }
+    const map = { travel: '✈️', grooming: '💇', lending: '🤝', salary: '💰', grocery: '🛒', groceries: '🛒', gift: '🎁', bill: '🧾', food: '🍽️', coffee: '☕', pet: '🐾', kids: '🧸', donation: '❤️', invest: '📈' };
+    const t = String(name).toLowerCase(); for (const k in map) if (t.includes(k)) return map[k];
+    return '🏷️';
+  }
+  function cleanUrl() { try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {} }
+  function handleDeepLink() {
+    let p; try { p = new URLSearchParams(location.search); } catch (e) { return false; }
+    if (!p.get('add')) return false;
+    const amount = parseFloat(String(p.get('amt') || p.get('amount') || '').replace(/[^0-9.]/g, '')) || 0;
+    if (!(amount > 0)) { cleanUrl(); return false; }
+    const note = (p.get('note') || '').trim();
+    let cat = null; const catName = (p.get('cat') || p.get('category') || '').trim();
+    if (catName) { const found = S.categories.find(c => c.n.toLowerCase() === catName.toLowerCase()); if (found) cat = found.n; else { S.categories.push({ n: catName, e: emojiForName(catName), c: PALETTE[S.categories.length % PALETTE.length] }); cat = catName; } }
+    if (!cat) cat = guessCategory(note) || 'Other';
+    const credit = p.get('credit') === '1' || p.get('credit') === 'true';
+    const mParam = p.get('method'); const method = mParam && methods().includes(mParam) ? mParam : methods()[0];
+    S.expenses.push({ id: S.nextId++, amount, cat, note, credit, method, ts: Date.now(), viaShortcut: true });
+    S.settings.onboarded = true; save(); cleanUrl();
+    ui.tab = 'history'; pendingShortcutToast = true; return true;
+  }
+
+  function afterUnlock() { if (!S.settings.onboarded) { showOnboarding(); return; } hideOverlay(); if (pendingShortcutToast) { pendingShortcutToast = false; toast('✓ Added via Shortcut'); } }
   function boot() {
     postDueRecurring();
+    const added = handleDeepLink();
     render();
     if (S.settings.lockEnabled && S.settings.pin) { showLock(); return; }
-    if (!S.settings.onboarded) showOnboarding();
+    if (!S.settings.onboarded) { showOnboarding(); return; }
+    if (added && pendingShortcutToast) { pendingShortcutToast = false; toast('✓ Added via Shortcut'); }
   }
   boot();
 
