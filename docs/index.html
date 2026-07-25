@@ -134,6 +134,8 @@
     color: var(--text); font-size: 15px; padding: 12px 14px;
   }
   .noteinput::placeholder { color: var(--faint); }
+  .notehint { color: var(--accent); font-size: 12px; font-weight: 600; padding: 7px 4px 0; height: 12px; opacity: 0; transition: opacity .2s; }
+  .notehint.show { opacity: 1; }
 
   .keypad-wrap { margin-top: auto; padding: 10px 14px 0; }
   .credit-toggle {
@@ -326,6 +328,31 @@
   const CAT = {}; CATS.forEach(c => CAT[c.n] = c);
   const catOf = n => CAT[n] || { n: n || 'Other', e: '🎁', c: '#9CA3AF' };
 
+  // ---------------- category auto-detection ----------------
+  // Guesses the category from the note as you type (e.g. "KFC" -> Junk food,
+  // "Uber" -> Vehicles). Order matters: more specific categories are checked
+  // first so an ambiguous word lands on the better match.
+  const KEYWORDS = {
+    Fuel: ['petrol', 'diesel', 'fuel', 'cng', 'filling', 'fuel station', 'gas station', 'bunk', 'indian oil', 'bharat petroleum'],
+    Medicine: ['medicine', 'medicines', 'pharmacy', 'chemist', 'tablet', 'pills', 'doctor', 'hospital', 'clinic', 'medical', 'prescription', 'apollo', '1mg', 'netmeds', 'pharmeasy', 'syrup', 'injection', 'dose'],
+    'Junk food': ['kfc', 'mcdonald', 'mcd', 'burger', 'pizza', 'domino', 'zomato', 'swiggy', 'fries', 'coke', 'pepsi', 'cola', 'ice cream', 'icecream', 'chocolate', 'candy', 'snack', 'coffee', 'starbucks', 'cafe', 'chai', 'samosa', 'biryani', 'noodles', 'maggi', 'donut', 'cake', 'sweets', 'mithai', 'subway', 'dessert', 'fast food'],
+    Entertainment: ['movie', 'cinema', 'netflix', 'prime video', 'hotstar', 'spotify', 'youtube', 'game', 'gaming', 'concert', 'pvr', 'inox', 'bookmyshow', 'disney', 'ott', 'music', 'theatre', 'theater', 'subscription', 'party', 'club'],
+    Education: ['book', 'course', 'tuition', 'class', 'coaching', 'college', 'school', 'fees', 'fee ', 'udemy', 'coursera', 'exam', 'stationery', 'notebook', 'university', 'semester', 'library'],
+    Vehicles: ['uber', 'ola', 'taxi', 'cab', 'rickshaw', 'auto ', 'metro', 'bus', 'train', 'ticket', 'parking', 'toll', 'rapido', 'car ', 'bike', 'service', 'tyre', 'repair', 'flight', 'indigo', 'airport', 'travel'],
+    Rent: ['rent', 'pg ', 'hostel', 'lease', 'landlord', 'maintenance', 'deposit'],
+    Shopping: ['amazon', 'flipkart', 'myntra', 'clothes', 'shirt', 'shoes', 'dress', 'mall', 'shopping', 'ajio', 'meesho', 'gadget', 'laptop', 'headphone', 'watch', 'bag', 'jeans', 'jacket', 'cosmetics', 'makeup', 'nykaa', 'electronics', 'store'],
+    Health: ['gym', 'fitness', 'protein', 'yoga', 'salad', 'fruit', 'vegetable', 'veggies', 'workout', 'supplement', 'organic', 'juice', 'smoothie', 'spa', 'massage', 'grocery', 'groceries', 'vegetables'],
+  };
+  const GUESS_ORDER = ['Fuel', 'Medicine', 'Junk food', 'Entertainment', 'Education', 'Vehicles', 'Rent', 'Shopping', 'Health'];
+  function guessCategory(text) {
+    const t = String(text || '').toLowerCase();
+    if (!t.trim()) return null;
+    for (const cat of GUESS_ORDER) {
+      for (const w of KEYWORDS[cat]) if (t.includes(w)) return cat;
+    }
+    return null;
+  }
+
   // ---------------- state / storage ----------------
   const KEY = 'expenseTracker.v1';
   function defaultState() { return { expenses: [], settings: { budget: 15000 }, nextId: 1 }; }
@@ -396,7 +423,7 @@
   const nav = document.getElementById('nav');
   const overlay = document.getElementById('overlay');
   const toastEl = document.getElementById('toast');
-  const ui = { tab: 'tap', entry: '', cat: null, credit: false, note: '', filter: 'today', period: 'month' };
+  const ui = { tab: 'tap', entry: '', cat: null, catManual: false, credit: false, note: '', filter: 'today', period: 'month' };
 
   let toastT;
   function toast(msg, credit) {
@@ -431,6 +458,7 @@
       <div class="chips" id="chips">${CATS.map(c => chip(c, ui.cat)).join('')}</div>
       <div class="noterow">
         <input class="noteinput" id="noteInput" maxlength="60" placeholder="＋  Add note (e.g. KFC)" value="${esc(ui.note)}">
+        <div class="notehint" id="noteHint"></div>
       </div>
       <div class="keypad-wrap">
         <div class="credit-toggle ${ui.credit ? 'on' : ''}" data-act="credit">
@@ -480,7 +508,7 @@
     });
     save();
     const wasCredit = ui.credit;
-    ui.entry = ''; ui.cat = null; ui.credit = false; ui.note = '';
+    ui.entry = ''; ui.cat = null; ui.catManual = false; ui.credit = false; ui.note = '';
     render();
     toast(wasCredit ? '✓ Credit saved' : '✓ Expense saved', wasCredit);
     vibrate(18);
@@ -714,7 +742,7 @@
     if (act === 'key') tapKey(el.dataset.k);
     else if (act === 'back') tapBack();
     else if (act === 'save') tapSave();
-    else if (act === 'cat') { ui.cat = ui.cat === el.dataset.n ? null : el.dataset.n; syncChips('chips'); updateTap(); vibrate(6); }
+    else if (act === 'cat') { ui.cat = ui.cat === el.dataset.n ? null : el.dataset.n; ui.catManual = true; setNoteHint(''); syncChips('chips'); updateTap(); vibrate(6); }
     else if (act === 'credit') { ui.credit = !ui.credit; el.classList.toggle('on', ui.credit); updateTap(); }
     else if (act === 'filter') { ui.filter = el.dataset.f; render(); }
     else if (act === 'cyclefilter') { const order = ['today', 'week', 'month', 'all']; ui.filter = order[(order.indexOf(ui.filter) + 1) % order.length]; render(); }
@@ -722,7 +750,24 @@
     else if (act === 'budget') openBudget();
     else if (act === 'period') { ui.period = el.dataset.p; render(); }
   });
-  screen.addEventListener('input', e => { if (e.target.id === 'noteInput') ui.note = e.target.value; });
+  screen.addEventListener('input', e => {
+    if (e.target.id !== 'noteInput') return;
+    ui.note = e.target.value;
+    if (ui.catManual) return;
+    const g = guessCategory(ui.note);
+    if (g && g !== ui.cat) {
+      ui.cat = g; syncChips('chips'); updateTap();
+      const sel = document.querySelector('#chips .chip.sel');
+      if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      setNoteHint('✨ Auto-set to ' + g + ' — tap a chip to change');
+    } else if (!g && !ui.cat) {
+      setNoteHint('');
+    }
+  });
+  function setNoteHint(text) {
+    const h = document.getElementById('noteHint'); if (!h) return;
+    h.textContent = text || ''; h.classList.toggle('show', !!text);
+  }
 
   overlay.addEventListener('click', e => {
     if (!e.target.closest('[data-stop]')) { closeSheet(); return; }
