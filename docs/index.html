@@ -24,8 +24,9 @@
     --text: #FFFFFF;
     --dim: #A1A1A1;
     --faint: #6B6B6B;
-    --accent: #FFD60A;
-    --accent-dim: #4a4210;
+    --accent: #0A84FF;
+    --accent-dim: rgba(10,132,255,.22);
+    --on-accent: #FFFFFF;
     --credit: #32D74B;
     --danger: #FF453A;
     --track: #1C1C1C;
@@ -70,9 +71,9 @@
   .nav button.active { color: var(--accent); }
   .nav .tapbtn .ring { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--surface-alt); transition: background .18s, box-shadow .18s; margin-top: -2px; }
   .nav .tapbtn svg { width: 26px; height: 26px; }
-  .nav .tapbtn.active .ring { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-dim), 0 8px 20px -6px rgba(255,214,10,.5); }
+  .nav .tapbtn.active .ring { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-dim), 0 8px 20px -6px rgba(10,132,255,.5); }
   .nav .tapbtn.active { color: var(--accent); }
-  .nav .tapbtn.active .ring svg { stroke: #000; }
+  .nav .tapbtn.active .ring svg { stroke: var(--on-accent); }
 
   /* generic */
   .h-title { font-size: 30px; font-weight: 800; letter-spacing: -.02em; margin: 0; }
@@ -90,21 +91,46 @@
   .empty .s { font-size: 14px; margin-top: 4px; }
   .sec { color: var(--dim); font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; margin: 26px 2px 12px; display: flex; justify-content: space-between; align-items: center; }
 
-  /* TAP */
-  .tap { flex: 1; display: flex; flex-direction: column; }
-  .tap-top { padding: calc(env(safe-area-inset-top) + 14px) 18px 0; text-align: center; }
-  .tap-top .q { color: var(--dim); font-size: 15px; font-weight: 600; }
-  .amount { display: flex; align-items: center; justify-content: center; gap: 4px; margin: 6px 0 2px; }
-  .amount .cur { font-size: 32px; font-weight: 700; color: var(--dim); }
-  .amount .val { font-size: 54px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; line-height: 1; }
-  .amount.credit .val, .amount.credit .cur { color: var(--credit); }
-  .amount.zero .val, .amount.zero .cur { color: var(--faint); }
+  /* TAP — stepped native-dialog flow */
+  .flow { flex: 1; display: flex; flex-direction: column; }
+  .flow-body { padding: calc(env(safe-area-inset-top) + 22px) 20px 0; }
+  .flow-body.scroll { flex: 1; overflow-y: auto; scrollbar-width: none; }
+  .flow-body.scroll::-webkit-scrollbar { display: none; }
+  .stepdots { display: flex; gap: 6px; justify-content: center; margin-bottom: 20px; }
+  .stepdots i { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: .25s; }
+  .stepdots i.on { background: var(--accent); width: 20px; }
+  .flow-title { font-size: 25px; font-weight: 800; text-align: center; letter-spacing: -.02em; margin: 0 0 20px; text-wrap: balance; }
+  .amount-field { background: var(--surface-alt); border-radius: 16px; padding: 22px 18px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .amount-field .cur { font-size: 28px; font-weight: 700; color: var(--dim); }
+  .amount-field .val { font-size: 46px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1; }
+  .amount-field.zero .val, .amount-field.zero .cur { color: var(--faint); }
+  .amount-field.credit .val, .amount-field.credit .cur { color: var(--credit); }
+  .flow-bottom { margin-top: auto; padding: 12px 14px 4px; }
+  .flow-actions { display: flex; gap: 10px; margin-top: 12px; }
+  .pill { flex: 1; padding: 15px; border-radius: 14px; border: none; font-size: 16px; font-weight: 800; cursor: pointer; transition: opacity .18s, transform .08s; }
+  .pill:active { transform: scale(.99); }
+  .pill.ghost { background: var(--surface-alt); color: var(--text); }
+  .pill.blue { background: var(--accent); color: var(--on-accent); }
+  .pill.blue:disabled { opacity: .4; cursor: default; }
+  .cat-list { display: flex; flex-direction: column; background: var(--surface-alt); border-radius: 16px; overflow: hidden; }
+  .cat-item { display: flex; align-items: center; gap: 14px; padding: 15px 16px; background: none; border: none; border-bottom: 1px solid var(--border); color: var(--text); font-size: 17px; font-weight: 600; cursor: pointer; text-align: left; width: 100%; }
+  .cat-item:last-child { border-bottom: none; }
+  .cat-item:active { background: var(--elev); }
+  .cat-item .ci { font-size: 22px; width: 26px; text-align: center; flex: none; }
+  .cat-item .cn { flex: 1; min-width: 0; }
+  .cat-item.sel { color: var(--accent); }
+  .cat-item .chk { color: var(--accent); font-weight: 800; font-size: 18px; }
+  .flow-input { width: 100%; background: var(--surface-alt); border: none; border-radius: 16px; color: var(--text); font-size: 18px; padding: 18px; }
+  .flow-input::placeholder { color: var(--faint); }
+  .flow-recap { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--dim); font-size: 14px; margin-top: 18px; }
+  .flow-recap b { color: var(--text); font-weight: 700; }
+  .flow-recap .em { font-size: 18px; }
 
   .chips { display: flex; gap: 9px; overflow-x: auto; padding: 6px 18px 2px; scrollbar-width: none; scroll-snap-type: x proximity; }
   .chips::-webkit-scrollbar { display: none; }
   .chip { flex: none; scroll-snap-align: start; display: flex; align-items: center; gap: 7px; background: var(--surface); border: 1.5px solid var(--border); color: var(--dim); padding: 9px 15px; border-radius: 999px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: border-color .16s, color .16s, background .16s; }
   .chip .e { font-size: 17px; }
-  .chip.sel { border-color: var(--accent); color: var(--text); background: var(--surface-alt); box-shadow: 0 0 0 3px var(--accent-dim), 0 0 14px -2px rgba(255,214,10,.35); }
+  .chip.sel { border-color: var(--accent); color: var(--text); background: var(--surface-alt); box-shadow: 0 0 0 3px var(--accent-dim), 0 0 14px -2px rgba(10,132,255,.45); }
 
   .noterow { padding: 10px 18px 0; display: flex; gap: 8px; align-items: center; }
   .noteinput { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-size: 15px; padding: 12px 14px; }
@@ -138,7 +164,7 @@
   .key.fn { color: var(--dim); }
   .key svg { width: 26px; height: 26px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-  .save-btn { width: 100%; margin-top: 10px; padding: 16px; border-radius: 16px; border: none; background: var(--accent); color: #000; font-size: 17px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity .18s, transform .08s; }
+  .save-btn { width: 100%; margin-top: 10px; padding: 16px; border-radius: 16px; border: none; background: var(--accent); color: var(--on-accent); font-size: 17px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity .18s, transform .08s; }
   .save-btn:active { transform: scale(.99); }
   .save-btn.credit { background: var(--credit); color: #04220c; }
   .save-btn:disabled { opacity: .3; cursor: default; }
@@ -150,7 +176,7 @@
   .searchbox input::placeholder { color: var(--faint); }
   .filters { display: flex; gap: 8px; margin-top: 14px; }
   .filter { flex: 1; border: 1px solid var(--border); background: var(--surface); color: var(--dim); padding: 9px 4px; border-radius: 999px; font-size: 13px; font-weight: 700; cursor: pointer; transition: .16s; }
-  .filter.sel { background: var(--accent); border-color: var(--accent); color: #000; }
+  .filter.sel { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
   .daygroup { margin-top: 22px; }
   .dayhead { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; padding: 0 2px; }
   .dayhead .d { color: var(--dim); font-size: 12px; font-weight: 800; letter-spacing: .07em; }
@@ -180,7 +206,7 @@
   /* ANALYTICS */
   .seg { display: flex; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 4px; margin-top: 16px; }
   .seg button { flex: 1; border: none; background: none; color: var(--dim); font-size: 13px; font-weight: 700; padding: 8px 4px; border-radius: 9px; cursor: pointer; transition: .16s; }
-  .seg button.sel { background: var(--accent); color: #000; }
+  .seg button.sel { background: var(--accent); color: var(--on-accent); }
   .bigstat { text-align: center; margin: 22px 0 6px; }
   .bigstat .l { color: var(--dim); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
   .bigstat .v { font-size: 44px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; margin-top: 4px; }
@@ -199,7 +225,7 @@
   .chart { display: flex; align-items: flex-end; gap: 7px; height: 130px; padding: 0 2px; }
   .chart .col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
   .chart .col .b { width: 68%; min-width: 6px; border-radius: 7px 7px 3px 3px; background: var(--accent); transition: height .4s cubic-bezier(.4,0,.2,1); }
-  .chart .col .b.dim { background: #33300f; }
+  .chart .col .b.dim { background: #10365e; }
   .chartx { display: flex; gap: 7px; margin-top: 8px; }
   .chartx span { flex: 1; text-align: center; color: var(--faint); font-size: 11px; font-weight: 600; }
   .heat { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
@@ -242,7 +268,7 @@
   .sheet-actions { display: flex; gap: 10px; margin-top: 24px; }
   .btn { flex: 1; padding: 15px; border-radius: 14px; border: none; font-size: 16px; font-weight: 800; cursor: pointer; }
   .btn:active { transform: scale(.99); }
-  .btn-save { background: var(--accent); color: #000; }
+  .btn-save { background: var(--accent); color: var(--on-accent); }
   .btn-save:disabled { opacity: .4; }
   .btn-ghost { background: var(--surface-alt); color: var(--text); border: 1px solid var(--border); }
   .btn-del { background: transparent; border: 1px solid var(--danger); color: var(--danger); flex: none; width: 56px; display: flex; align-items: center; justify-content: center; }
@@ -299,7 +325,7 @@
   .ob-feat .ft .d { color: var(--dim); font-size: 13px; margin-top: 1px; }
 
   /* toast + undo */
-  .toast { position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 92px); transform: translateX(-50%) translateY(14px); background: var(--accent); color: #000; font-weight: 800; font-size: 14px; padding: 11px 20px; border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 70; box-shadow: 0 10px 30px -8px rgba(255,214,10,.4); }
+  .toast { position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 92px); transform: translateX(-50%) translateY(14px); background: var(--accent); color: var(--on-accent); font-weight: 800; font-size: 14px; padding: 11px 20px; border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 70; box-shadow: 0 10px 30px -8px rgba(10,132,255,.45); }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .toast.credit { background: var(--credit); color: #04220c; }
   .undobar { position: absolute; left: 16px; right: 16px; bottom: calc(env(safe-area-inset-bottom) + 90px); background: var(--elev); border: 1px solid var(--border); border-radius: 14px; padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; opacity: 0; transform: translateY(14px); pointer-events: none; transition: opacity .25s, transform .25s; z-index: 70; box-shadow: 0 14px 40px -12px #000; }
@@ -481,7 +507,7 @@
   const undotext = document.getElementById('undotext');
   const fileImport = document.getElementById('fileImport');
   const fileReceipt = document.getElementById('fileReceipt');
-  const ui = { tab: 'tap', entry: '', cat: null, catManual: false, credit: false, note: '', method: methods()[0], receipt: null, filter: 'today', search: '', searchOpen: false, period: 'month' };
+  const ui = { tab: 'tap', step: 1, entry: '', cat: null, credit: false, note: '', method: methods()[0], receipt: null, filter: 'today', search: '', searchOpen: false, period: 'month' };
 
   let toastT; function toast(msg, credit) { toastEl.textContent = msg; toastEl.classList.toggle('credit', !!credit); toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 1400); }
   const vibrate = ms => { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) {} } };
@@ -502,60 +528,94 @@
   function recentNotes() { const seen = new Set(); const out = []; const sorted = [...S.expenses].sort((a, b) => b.ts - a.ts); for (const e of sorted) { const n = (e.note || '').trim(); if (n && !seen.has(n.toLowerCase())) { seen.add(n.toLowerCase()); out.push(n); } if (out.length >= 5) break; } return out; }
   function frequentAmounts() { const cnt = {}; for (const e of debits(S.expenses)) cnt[e.amount] = (cnt[e.amount] || 0) + 1; const arr = Object.keys(cnt).map(Number).sort((a, b) => cnt[b] - cnt[a]); const top = arr.slice(0, 4); return top.length ? top : [100, 200, 500]; }
 
+  // Three-step flow modelled on the iOS Shortcuts dialogs:
+  //   1 amount → 2 choose a category → 3 add a note (+ credit / method / receipt)
+  function dots(step) { return `<div class="stepdots">${[1, 2, 3].map(i => `<i class="${i <= step ? 'on' : ''}"></i>`).join('')}</div>`; }
   function renderTap() {
     if (ui.method == null || !methods().includes(ui.method)) ui.method = methods()[0];
-    const notes = recentNotes();
+    if (!ui.step) ui.step = 1;
+    if (ui.step === 2) return renderTapCat();
+    if (ui.step === 3) return renderTapNote();
+    return renderTapAmount();
+  }
+  function renderTapAmount() {
     const amts = frequentAmounts();
-    return `<div class="tap">
-      <div class="tap-top">
-        <div class="q">How much?</div>
-        <div class="amount" id="amt"><span class="cur">${esc(cur())}</span><span class="val">0</span></div>
+    return `<div class="flow">
+      <div class="flow-body">
+        ${dots(1)}
+        <div class="flow-title">How much did you spend?</div>
+        <div class="amount-field zero" id="amt"><span class="cur">${esc(cur())}</span><span class="val">0</span></div>
+        <div class="quickrow" style="justify-content:center;padding:14px 0 0">${amts.map(a => `<button class="qchip amt" data-act="qamt" data-a="${a}">${esc(cur())}${fmtNum(a)}</button>`).join('')}</div>
       </div>
-      <div class="chips" id="chips">${catChips(ui.cat, 'cat')}</div>
-      <div class="noterow">
-        <input class="noteinput" id="noteInput" maxlength="60" placeholder="＋  Add note (e.g. KFC)" value="${esc(ui.note)}">
-        <button class="clip ${ui.receipt ? 'has' : ''}" data-act="receipt" aria-label="Attach receipt">${ui.receipt ? `<img src="${ui.receipt}" alt="">` : `<svg viewBox="0 0 24 24"><path d="M21.4 11.05 12.25 20.2a5 5 0 0 1-7.07-7.07l9.2-9.19a3 3 0 0 1 4.24 4.24l-9.2 9.19a1 1 0 0 1-1.41-1.41l8.48-8.49"/></svg>`}</button>
-      </div>
-      <div class="notehint" id="noteHint"></div>
-      ${(notes.length || amts.length) ? `<div class="quickrow">
-        ${amts.map(a => `<button class="qchip amt" data-act="qamt" data-a="${a}">${esc(cur())}${fmtNum(a)}</button>`).join('')}
-        ${notes.map(n => `<button class="qchip" data-act="qnote" data-n="${esc(n)}">${esc(n)}</button>`).join('')}
-      </div>` : ''}
-      <div class="keypad-wrap">
-        ${methods().length > 1 ? `<div class="method-row" id="methods">${methodChips(ui.method, 'method')}</div>` : ''}
-        <div class="credit-toggle ${ui.credit ? 'on' : ''}" data-act="credit"><span>Credit</span><span class="sw"><i></i></span></div>
+      <div class="flow-bottom">
         <div class="keypad">
           ${[1,2,3,4,5,6,7,8,9].map(k => `<button class="key" data-act="key" data-k="${k}">${k}</button>`).join('')}
           <button class="key fn" data-act="key" data-k=".">.</button>
           <button class="key" data-act="key" data-k="0">0</button>
           <button class="key fn" data-act="back" aria-label="Delete"><svg viewBox="0 0 24 24"><path d="M20 5H8.5a2 2 0 0 0-1.5.7L2.5 11a1.4 1.4 0 0 0 0 2l4.5 5.3a2 2 0 0 0 1.5.7H20a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="M17 9l-6 6M11 9l6 6"/></svg></button>
         </div>
-        <button class="save-btn" id="saveBtn" data-act="save">Save expense</button>
+        <div class="flow-actions">
+          <button class="pill ghost" data-act="flowcancel">Cancel</button>
+          <button class="pill blue" id="nextBtn" data-act="flownext">Next</button>
+        </div>
       </div>
     </div>`;
   }
+  function renderTapCat() {
+    return `<div class="flow">
+      <div class="flow-body scroll">
+        ${dots(2)}
+        <div class="flow-title">Choose a category</div>
+        <div class="cat-list">${getCats().map(c => `<button class="cat-item ${c.n === ui.cat ? 'sel' : ''}" data-act="pickcat" data-n="${esc(c.n)}"><span class="ci">${c.e}</span><span class="cn">${esc(c.n)}</span>${c.n === ui.cat ? '<span class="chk">✓</span>' : ''}</button>`).join('')}</div>
+        <div style="height:12px"></div>
+      </div>
+      <div class="flow-bottom"><div class="flow-actions"><button class="pill ghost" data-act="flowback">Back</button></div></div>
+    </div>`;
+  }
+  function renderTapNote() {
+    const c = catOf(ui.cat); const notes = recentNotes();
+    return `<div class="flow">
+      <div class="flow-body scroll">
+        ${dots(3)}
+        <div class="flow-title">Add a note <span style="color:var(--faint);font-weight:600">(optional)</span></div>
+        <input class="flow-input" id="noteInput" maxlength="60" placeholder="Note" value="${esc(ui.note)}">
+        ${notes.length ? `<div class="quickrow" style="padding:12px 0 0">${notes.map(n => `<button class="qchip" data-act="qnote" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>` : ''}
+        <div class="flow-recap"><span class="em">${c.e}</span><b>${esc(c.n)}</b> · <b>${ui.credit ? '+' : ''}${rupee(parseFloat(ui.entry) || 0)}</b></div>
+        <div style="margin-top:18px" class="method-row">${methods().length > 1 ? methodChips(ui.method, 'method') : ''}</div>
+        <div class="credit-toggle ${ui.credit ? 'on' : ''}" data-act="credit" style="margin:14px auto 0"><span>Credit (money received)</span><span class="sw"><i></i></span></div>
+        <div style="display:flex;justify-content:center;margin-top:14px">
+          <button class="clip ${ui.receipt ? 'has' : ''}" data-act="receipt" aria-label="Attach receipt" style="width:auto;padding:9px 16px;gap:8px;border-radius:999px;font-size:13px;font-weight:700;color:${ui.receipt ? 'var(--accent)' : 'var(--dim)'}">${ui.receipt ? '📎 Receipt attached' : '📎 Attach receipt'}</button>
+        </div>
+      </div>
+      <div class="flow-bottom"><div class="flow-actions">
+        <button class="pill ghost" data-act="flowback">Back</button>
+        <button class="pill blue" data-act="flowdone">Done</button>
+      </div></div>
+    </div>`;
+  }
   function updateTap() {
-    const amt = document.getElementById('amt'), btn = document.getElementById('saveBtn'); if (!amt || !btn) return;
+    if (ui.step !== 1) return;
+    const amt = document.getElementById('amt'), btn = document.getElementById('nextBtn'); if (!amt) return;
     const v = parseFloat(ui.entry) || 0;
     amt.querySelector('.val').textContent = fmtEntry(ui.entry);
     amt.classList.toggle('credit', ui.credit); amt.classList.toggle('zero', v <= 0);
-    btn.classList.toggle('credit', ui.credit); btn.disabled = !(v > 0 && ui.cat);
-    btn.textContent = ui.credit ? 'Save credit' : 'Save expense';
+    if (btn) btn.disabled = !(v > 0);
   }
   function tapKey(k) {
     if (k === '.') { if (!ui.entry.includes('.')) ui.entry = (ui.entry || '0') + '.'; }
     else { if (ui.entry.includes('.')) { if (ui.entry.split('.')[1].length >= 2) return; } else if (ui.entry.replace('.', '').length >= 9) return; if (ui.entry === '0') ui.entry = ''; ui.entry += k; }
     updateTap();
   }
+  function resetDraft() { ui.entry = ''; ui.cat = null; ui.credit = false; ui.note = ''; ui.receipt = null; ui.step = 1; }
   function tapSave() {
-    const v = parseFloat(ui.entry) || 0; if (!(v > 0) || !ui.cat) return;
+    const v = parseFloat(ui.entry) || 0; if (!(v > 0) || !ui.cat) { toast('Add an amount & category'); return; }
     const noteEl = document.getElementById('noteInput');
     const exp = { id: S.nextId++, amount: v, cat: ui.cat, note: (noteEl ? noteEl.value : ui.note).trim(), credit: !!ui.credit, method: ui.method || methods()[0], ts: Date.now() };
     if (ui.receipt) exp.receipt = ui.receipt;
     S.expenses.push(exp);
     if (!save()) { S.expenses.pop(); S.nextId--; toast('Storage full — remove a receipt'); return; }
     const wasCredit = ui.credit;
-    ui.entry = ''; ui.cat = null; ui.catManual = false; ui.credit = false; ui.note = ''; ui.receipt = null;
+    resetDraft();
     render(); toast(wasCredit ? '✓ Credit saved' : '✓ Expense saved', wasCredit); vibrate(18);
   }
 
@@ -651,7 +711,7 @@
     const daySpend = {}; for (const e of debits(S.expenses)) if (monthKey(e.ts) === thisMk) daySpend[new Date(e.ts).getDate()] = (daySpend[new Date(e.ts).getDate()] || 0) + Number(e.amount);
     const hmMax = Math.max(1, ...Object.values(daySpend));
     let cells = ''; for (let i = 0; i < firstWd; i++) cells += `<div class="cell blank"></div>`;
-    for (let dd = 1; dd <= hmDays; dd++) { const v = daySpend[dd] || 0; const intensity = v > 0 ? 0.22 + (v / hmMax) * 0.78 : 0; const bg = v > 0 ? `rgba(255,214,10,${intensity.toFixed(2)})` : 'var(--track)'; const isToday = dd === now.getDate(); const col = intensity > 0.55 ? '#000' : 'var(--faint)'; cells += `<div class="cell ${isToday ? 'today' : ''}" style="background:${bg};color:${col}">${dd}</div>`; }
+    for (let dd = 1; dd <= hmDays; dd++) { const v = daySpend[dd] || 0; const intensity = v > 0 ? 0.22 + (v / hmMax) * 0.78 : 0; const bg = v > 0 ? `rgba(10,132,255,${intensity.toFixed(2)})` : 'var(--track)'; const isToday = dd === now.getDate(); const col = intensity > 0.5 ? '#fff' : 'var(--faint)'; cells += `<div class="cell ${isToday ? 'today' : ''}" style="background:${bg};color:${col}">${dd}</div>`; }
 
     return `<div class="pad">
       <div class="row-between"><div><h1 class="h-title">Analytics</h1><p class="h-sub">Where your money goes</p></div>
@@ -664,7 +724,7 @@
       ${insights.length ? `<div class="sec">Insights</div><div class="card">${insights.map(i => `<div class="insight"><span class="ic">${i.ic}</span><span class="tx">${i.t}<div class="m">${i.m}</div></span></div>`).join('')}</div>` : ''}
       <div class="sec">Last 7 days</div><div class="card"><div class="chart">${days.map((x, i) => `<div class="col"><div class="b ${i === days.length - 1 ? '' : 'dim'}" style="height:${Math.max(4, (x.v / dMax) * 108)}px" title="${rupee(x.v)}"></div></div>`).join('')}</div><div class="chartx">${days.map(x => `<span>${x.l}</span>`).join('')}</div></div>
       <div class="sec">Last 6 months</div><div class="card"><div class="chart">${mons.map((x, i) => `<div class="col"><div class="b ${i === mons.length - 1 ? '' : 'dim'}" style="height:${Math.max(4, (x.v / monMax) * 108)}px" title="${rupee(x.v)}"></div></div>`).join('')}</div><div class="chartx">${mons.map(x => `<span>${x.l}</span>`).join('')}</div></div>
-      <div class="sec">${MOF[hmM]} heatmap</div><div class="card"><div class="heat">${WDS.map(w => `<div class="hd">${w[0]}</div>`).join('')}${cells}</div><div class="heatleg">Less <i style="background:var(--track)"></i><i style="background:rgba(255,214,10,.4)"></i><i style="background:rgba(255,214,10,.7)"></i><i style="background:rgba(255,214,10,1)"></i> More</div></div>
+      <div class="sec">${MOF[hmM]} heatmap</div><div class="card"><div class="heat">${WDS.map(w => `<div class="hd">${w[0]}</div>`).join('')}${cells}</div><div class="heatleg">Less <i style="background:var(--track)"></i><i style="background:rgba(10,132,255,.4)"></i><i style="background:rgba(10,132,255,.7)"></i><i style="background:rgba(10,132,255,1)"></i> More</div></div>
       <div class="sec">By category</div>
       ${catsArr.length === 0 ? `<div class="card"><div class="empty" style="padding:24px 8px"><div class="em">📊</div><div class="s" style="margin-top:8px">No spending ${label}.</div></div></div>`
         : `<div class="card">${catsArr.map(c => { const cc = catOf(c.n); const cb = (p === 'month') ? (Number(S.settings.catBudgets[c.n]) || 0) : 0; const cover = cb > 0 && c.v > cb;
@@ -927,13 +987,16 @@
     const el = e.target.closest('[data-act]'); if (!el) return; const act = el.dataset.act;
     if (act === 'key') tapKey(el.dataset.k);
     else if (act === 'back') { ui.entry = ui.entry.slice(0, -1); updateTap(); vibrate(8); }
-    else if (act === 'save') tapSave();
-    else if (act === 'cat') { ui.cat = ui.cat === el.dataset.n ? null : el.dataset.n; ui.catManual = true; setNoteHint(''); syncChips('chips', ui.cat, 'cat'); updateTap(); vibrate(6); }
-    else if (act === 'credit') { ui.credit = !ui.credit; el.classList.toggle('on', ui.credit); updateTap(); }
-    else if (act === 'method') { ui.method = el.dataset.m; syncChips('methods', ui.method, 'method', 'm'); }
+    else if (act === 'flownext') { if ((parseFloat(ui.entry) || 0) > 0) { ui.step = 2; render(); vibrate(6); } }
+    else if (act === 'flowback') { if (ui.step === 3) { ui.note = (document.getElementById('noteInput') || {}).value || ui.note; } ui.step = Math.max(1, ui.step - 1); render(); }
+    else if (act === 'flowcancel') { resetDraft(); render(); }
+    else if (act === 'pickcat') { ui.cat = el.dataset.n; ui.step = 3; render(); vibrate(6); }
+    else if (act === 'flowdone') tapSave();
+    else if (act === 'credit') { ui.note = (document.getElementById('noteInput') || {}).value || ui.note; ui.credit = !ui.credit; render(); }
+    else if (act === 'method') { ui.note = (document.getElementById('noteInput') || {}).value || ui.note; ui.method = el.dataset.m; render(); }
     else if (act === 'qamt') { ui.entry = String(el.dataset.a); updateTap(); vibrate(6); }
-    else if (act === 'qnote') { ui.note = el.dataset.n; const inp = document.getElementById('noteInput'); if (inp) inp.value = ui.note; if (!ui.catManual) { const g = guessCategory(ui.note); if (g) { ui.cat = g; syncChips('chips', ui.cat, 'cat'); updateTap(); setNoteHint('✨ Auto-set to ' + g); } } }
-    else if (act === 'receipt') { receiptTarget = 'tap'; fileReceipt.click(); }
+    else if (act === 'qnote') { ui.note = el.dataset.n; const inp = document.getElementById('noteInput'); if (inp) inp.value = ui.note; }
+    else if (act === 'receipt') { ui.note = (document.getElementById('noteInput') || {}).value || ui.note; receiptTarget = 'tap'; fileReceipt.click(); }
     else if (act === 'togglesearch') { ui.searchOpen = !ui.searchOpen; if (!ui.searchOpen) ui.search = ''; render(); const inp = document.getElementById('searchInput'); if (inp && ui.searchOpen) inp.focus(); }
     else if (act === 'filter') { ui.filter = el.dataset.f; render(); }
     else if (act === 'edit') openEdit(Number(el.dataset.id));
@@ -942,14 +1005,9 @@
   });
   screen.addEventListener('input', e => {
     if (e.target.id === 'searchInput') { ui.search = e.target.value; renderHistoryList(); return; }
-    if (e.target.id !== 'noteInput') return;
-    ui.note = e.target.value; if (ui.catManual) return;
-    const g = guessCategory(ui.note);
-    if (g && g !== ui.cat) { ui.cat = g; syncChips('chips', ui.cat, 'cat'); updateTap(); const sel = document.querySelector('#chips .chip.sel'); if (sel) sel.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); setNoteHint('✨ Auto-set to ' + g + ' — tap a chip to change'); }
-    else if (!g && !ui.cat) setNoteHint('');
+    if (e.target.id === 'noteInput') ui.note = e.target.value;
   });
   function renderHistoryList() { /* light re-render of list only, keep search focus */ const inner = screen.querySelector('.screen-inner'); if (!inner) { render(); return; } const scroll = screen.scrollTop; render(); const inp = document.getElementById('searchInput'); if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); } screen.scrollTop = scroll; }
-  function setNoteHint(t) { const h = document.getElementById('noteHint'); if (!h) return; h.textContent = t || ''; h.classList.toggle('show', !!t); }
   function syncChips(id, sel, act, dataAttr) { const box = document.getElementById(id); if (!box) return; const key = dataAttr || 'n'; [...box.children].forEach(c => c.classList.toggle('sel', c.dataset[key] === sel)); }
 
   overlay.addEventListener('click', e => {
