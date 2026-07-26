@@ -48,3 +48,18 @@ locally on the device; nothing is uploaded.
 Open `docs/index.html` in any browser, or host the `docs/` folder (it is
 GitHub-Pages ready). On a phone, use *Add to Home Screen* to install it as a
 standalone app that works offline.
+
+## Also in this repo: Reward Habits
+
+A second, independent PWA lives in `docs/habits/` and deploys alongside Spend:
+
+| App | Path | What it is |
+|-----|------|------------|
+| Spend | `/` | Expense tracker (this README) |
+| Reward Habits | `/habits/` | Daily habit tracker that turns consistency into a monthly money reward (₹10,000–₹20,000, per-day accrual) |
+
+The two are fully separate — own storage, own icon, own offline cache. Each
+service worker only clears caches under its own name prefix (`spend-` /
+`reward-habits-`), so installing or updating one never wipes the other's
+offline copy. Reward Habits' React Native source lives on the
+`claude/habit-tracker-react-native-5jlu2a` branch.
