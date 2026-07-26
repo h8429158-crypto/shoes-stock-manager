@@ -26,11 +26,12 @@
   :root[data-theme="light"]{--bg:#EEF1F5;--surface:#fff;--surfaceAlt:#EDF1F5;--border:#DDE3EA;--track:#E3E8EE;--text:#0C1219;--dim:#5A6472;--faint:#98A2B0;--primary:#E8480F;--primaryDark:#B8380B;--accent:#E0850C;--glow:rgba(232,72,15,.12);--shadow:0 12px 28px -16px rgba(20,30,45,.28);--soft:0 3px 12px rgba(20,30,45,.1);}
   @media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#EEF1F5;--surface:#fff;--surfaceAlt:#EDF1F5;--border:#DDE3EA;--track:#E3E8EE;--text:#0C1219;--dim:#5A6472;--faint:#98A2B0;--primary:#E8480F;--primaryDark:#B8380B;--accent:#E0850C;--glow:rgba(232,72,15,.12);--shadow:0 12px 28px -16px rgba(20,30,45,.28);--soft:0 3px 12px rgba(20,30,45,.1);}}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%}
+  html,body{height:100%;height:-webkit-fill-available}
   /* Lock the page as a fixed, non-scrolling shell so mobile browsers never
      auto-hide their toolbars (which caused the top overlap + bottom gap).
-     Only .content scrolls, internally. */
-  body{margin:0;background:var(--bg);color:var(--text);overflow:hidden;position:fixed;top:0;left:0;right:0;bottom:0;width:100%}
+     Only .content scrolls, internally. -webkit-fill-available makes iOS use
+     the true available height. */
+  body{margin:0;background:var(--bg);color:var(--text);overflow:hidden;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:-webkit-fill-available}
   button{font-family:inherit}
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
@@ -153,7 +154,7 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand"><span class="logo"><svg viewBox="0 0 24 24"><path d="M20.5 6 19 4.5 16.5 7 15 5.5 13.5 7 17 10.5 18.5 9 20 10.5 21.5 9zM7 13.5 5.5 12 4 13.5 2.5 12 4 10.5 5.5 12 3.5 14 7 17.5 8.5 16 10 17.5 11.5 16z"/></svg></span> IRONLOG</div>
+    <div class="brand"><span class="logo"><svg viewBox="0 0 24 24"><path d="M20.5 6 19 4.5 16.5 7 15 5.5 13.5 7 17 10.5 18.5 9 20 10.5 21.5 9zM7 13.5 5.5 12 4 13.5 2.5 12 4 10.5 5.5 12 3.5 14 7 17.5 8.5 16 10 17.5 11.5 16z"/></svg></span> IRONLOG <span style="font-size:10px;color:var(--faint);font-weight:800;align-self:flex-start;margin-top:2px">v7</span></div>
     <button class="iconbtn" onclick="toggleTheme()">◐</button>
   </header>
   <div class="content">
