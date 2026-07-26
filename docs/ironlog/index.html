@@ -31,7 +31,7 @@
   button{font-family:inherit}
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-  .app{position:relative;height:100dvh;max-width:var(--maxw);margin:0 auto;display:flex;flex-direction:column;overflow-x:hidden;
+  .app{position:fixed;inset:0;max-width:var(--maxw);margin:0 auto;display:flex;flex-direction:column;overflow-x:hidden;
     background:radial-gradient(130% 60% at 50% -8%, var(--glow), transparent 60%), var(--bg);box-shadow:0 0 80px rgba(0,0,0,.4)}
 
   .topbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 18px 8px}
@@ -128,6 +128,22 @@
   .toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--text);color:var(--bg);padding:12px 18px;border-radius:999px;font-weight:800;font-size:14px;opacity:0;transition:.25s;z-index:200;pointer-events:none}
   .toast.on{opacity:1;transform:translateX(-50%)}
   .empty{text-align:center;color:var(--dim);padding:30px 10px;font-size:15px;line-height:1.5}
+
+  /* week goal bar */
+  .weekcard{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:14px;box-shadow:var(--soft)}
+  .weekcard .prog{margin-top:10px}
+
+  /* onboarding / start page */
+  .onboard{position:fixed;inset:0;z-index:300;display:none;flex-direction:column;justify-content:center;padding:30px 26px;overflow-y:auto;
+    background:radial-gradient(130% 55% at 50% -6%, var(--glow), transparent 60%), var(--bg)}
+  .onboard.on{display:flex}
+  .ob{width:100%;max-width:420px;margin:0 auto}
+  .ob-logo{width:66px;height:66px;border-radius:19px;background:var(--grad);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 12px 26px -6px var(--glow)}
+  .ob-logo svg{width:36px;height:36px;fill:#fff}
+  .onboard h1{font-size:30px;font-weight:900;letter-spacing:-.02em;margin:0}
+  .onboard .lead{color:var(--dim);font-size:15px;margin:6px 0 20px;font-weight:600;line-height:1.4}
+  .oblabel{display:block;font-size:11.5px;font-weight:800;letter-spacing:.06em;color:var(--dim);text-transform:uppercase;margin:18px 2px 8px}
+  .ob-note{color:var(--faint);font-size:12.5px;text-align:center;margin-top:16px;line-height:1.5}
 </style>
 
 </head>
@@ -140,8 +156,9 @@
   <div class="content">
     <!-- MY SPLIT -->
     <section class="view active" data-view="split">
-      <div class="between"><h1>My Split</h1><button class="plus" onclick="addDay()"><svg class="ico" viewBox="0 0 24 24"><path d="M11 5v6H5v2h6v6h2v-6h6v-2h-6V5z"/></svg></button></div>
-      <div class="sub">Your workout days — tap to edit, or Start to log</div>
+      <div class="between"><h1 id="splitH1">My Split</h1><button class="plus" onclick="addDay()"><svg class="ico" viewBox="0 0 24 24"><path d="M11 5v6H5v2h6v6h2v-6h6v-2h-6V5z"/></svg></button></div>
+      <div class="sub" id="splitSub">Your workout days — tap to edit, or Start to log</div>
+      <div id="weekBar"></div>
       <div id="dayList"></div>
       <button class="btn" style="margin-top:14px" onclick="addDay()"><svg class="ico" viewBox="0 0 24 24"><path d="M11 5v6H5v2h6v6h2v-6h6v-2h-6V5z"/></svg> Add workout day</button>
     </section>
@@ -206,6 +223,26 @@
 
   <!-- ADD EXERCISE + SHEET -->
   <div class="sheetwrap" id="sheetwrap"><div class="bd" onclick="closeSheet()"></div><div class="sheet"><div class="grab"></div><div id="sheetpanel"></div></div></div>
+
+  <!-- ONBOARDING / START PAGE -->
+  <div class="onboard" id="onboard">
+    <div class="ob">
+      <div class="ob-logo"><svg viewBox="0 0 100 100"><g fill="#fff"><rect x="24" y="45" width="52" height="10" rx="3.5"/><rect x="16" y="33" width="12" height="34" rx="5"/><rect x="72" y="33" width="12" height="34" rx="5"/><rect x="7" y="39" width="10" height="22" rx="4"/><rect x="83" y="39" width="10" height="22" rx="4"/></g></svg></div>
+      <h1>Welcome to IRONLOG</h1>
+      <div class="lead">A few quick details so we can personalise your training and calories.</div>
+      <label class="oblabel">Your name</label>
+      <input class="field" id="obName" placeholder="e.g. Alex" autocomplete="name">
+      <label class="oblabel">Body weight (kg)</label>
+      <input class="field" id="obWt" inputmode="decimal" placeholder="75">
+      <label class="oblabel">Weekly goal</label>
+      <div class="qty" style="justify-content:space-between;padding:10px 14px">
+        <span class="muted" style="font-weight:700">Workouts per week</span>
+        <div class="stepper"><button class="qtybtn" onclick="obGoal(-1)">−</button><span class="big" id="obGoalV" style="font-size:22px;min-width:34px;text-align:center">4</span><button class="qtybtn" onclick="obGoal(1)">+</button></div>
+      </div>
+      <button class="btn lg" style="margin-top:24px" onclick="finishOnboard()">Start training</button>
+      <div class="ob-note">Saved on this device — no account, works offline.</div>
+    </div>
+  </div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -245,6 +282,8 @@ let DB;try{DB=JSON.parse(localStorage.getItem('gymSimple1'))}catch(e){}
 if(!DB||!DB.days)DB=seed();
 if(!DB.calories)DB.calories=[];
 if(DB.bodyKg==null)DB.bodyKg=75;
+if(DB.onboarded===undefined)DB.onboarded=false;
+if(!DB.profile)DB.profile=null;
 function save(){try{localStorage.setItem('gymSimple1',JSON.stringify(DB))}catch(e){}}
 
 /* ---- helpers ---- */
@@ -252,6 +291,27 @@ let toastT;function toast(m){const t=document.getElementById('toast');t.textCont
 function buzz(){if(navigator.vibrate)navigator.vibrate(10);}
 const fmtDay=iso=>new Date(iso).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
 function lastSets(name){for(const h of DB.history){const e=h.entries.find(x=>x.name===name);if(e)return e.sets;}return null;}
+function startOfWeek(){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d;}
+const firstName=()=>DB.profile&&DB.profile.name?DB.profile.name.trim().split(' ')[0]:'';
+
+/* ---- onboarding / start page ---- */
+let obGoalN=4;
+function obGoal(d){obGoalN=Math.max(1,Math.min(14,obGoalN+d));document.getElementById('obGoalV').textContent=obGoalN;}
+function showOnboard(){
+  document.getElementById('obName').value=(DB.profile&&DB.profile.name)||'';
+  document.getElementById('obWt').value=DB.bodyKg||'';
+  obGoalN=(DB.profile&&DB.profile.goal)||4;document.getElementById('obGoalV').textContent=obGoalN;
+  document.getElementById('onboard').classList.add('on');
+}
+function finishOnboard(){
+  const name=document.getElementById('obName').value.trim();
+  if(!name){toast('Please enter your name');return;}
+  const wt=parseFloat(document.getElementById('obWt').value.replace(',','.'));
+  if(wt>0)DB.bodyKg=wt;
+  DB.profile={name:name,goal:obGoalN};DB.onboarded=true;save();
+  document.getElementById('onboard').classList.remove('on');
+  renderDays();buzz();toast('Welcome, '+name.split(' ')[0]+' 👋');
+}
 
 /* ---- sheet ---- */
 const panel=()=>document.getElementById('sheetpanel');
@@ -265,6 +325,17 @@ function show(v){document.querySelectorAll('.view').forEach(s=>s.classList.toggl
 
 /* ---- MY SPLIT list ---- */
 function renderDays(){
+  // greeting + weekly goal
+  const fn=firstName();
+  document.getElementById('splitH1').textContent=fn?('Hi, '+fn):'My Split';
+  document.getElementById('splitSub').textContent=fn?'Your workout days — tap to edit, or Start to log':'Your workout days — tap to edit, or Start to log';
+  const goal=(DB.profile&&DB.profile.goal)||0;
+  const wb=document.getElementById('weekBar');
+  if(goal>0){
+    const sw=startOfWeek(); const done=DB.history.filter(h=>new Date(h.date)>=sw).length;
+    const pct=Math.min(100,Math.round(done/goal*100));
+    wb.innerHTML=`<div class="weekcard"><div class="between"><span class="muted" style="font-size:12px;font-weight:800">THIS WEEK</span><span style="font-weight:800;font-size:13px">${done} / ${goal} workouts</span></div><div class="prog"><i style="width:${pct}%"></i></div></div>`;
+  } else { wb.innerHTML=''; }
   const box=document.getElementById('dayList');box.innerHTML='';
   if(!DB.days.length){box.innerHTML='<div class="card"><div class="empty">No workout days yet.<br>Tap ＋ to add your first.</div></div>';return;}
   DB.days.forEach(d=>{
@@ -497,6 +568,7 @@ const root=document.documentElement;
 const isDark=()=>{const a=root.getAttribute('data-theme');return a?a==='dark':matchMedia('(prefers-color-scheme:dark)').matches;};
 function toggleTheme(){root.setAttribute('data-theme',isDark()?'light':'dark');}
 renderDays();
+if(!DB.onboarded) showOnboard();
 </script>
 
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){});});}</script>
