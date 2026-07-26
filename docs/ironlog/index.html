@@ -31,10 +31,10 @@
   button{font-family:inherit}
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-  .app{position:fixed;inset:0;max-width:var(--maxw);margin:0 auto;display:flex;flex-direction:column;overflow-x:hidden;
+  .app{position:fixed;top:0;left:0;right:0;height:100dvh;max-width:var(--maxw);margin:0 auto;display:flex;flex-direction:column;overflow-x:hidden;
     background:radial-gradient(130% 60% at 50% -8%, var(--glow), transparent 60%), var(--bg);box-shadow:0 0 80px rgba(0,0,0,.4)}
 
-  .topbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 18px 8px}
+  .topbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top) + 12px) 18px 8px}
   .brand{display:flex;align-items:center;gap:9px;font-weight:900;font-size:16px;letter-spacing:.02em}
   .brand .logo{width:32px;height:32px;border-radius:10px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px var(--glow)}
   .brand .logo svg{width:19px;height:19px;fill:#fff}
@@ -567,6 +567,18 @@ function renderCalLog(){
 const root=document.documentElement;
 const isDark=()=>{const a=root.getAttribute('data-theme');return a?a==='dark':matchMedia('(prefers-color-scheme:dark)').matches;};
 function toggleTheme(){root.setAttribute('data-theme',isDark()?'light':'dark');}
+
+/* size the app shell to the *actual* visible height so it always fills the
+   screen exactly — no gap under the tab bar on iOS browser or standalone. */
+function fitApp(){
+  const h=(window.visualViewport&&window.visualViewport.height)||window.innerHeight;
+  document.querySelector('.app').style.height=h+'px';
+}
+fitApp();
+window.addEventListener('resize',fitApp);
+window.addEventListener('orientationchange',()=>setTimeout(fitApp,150));
+if(window.visualViewport){window.visualViewport.addEventListener('resize',fitApp);window.visualViewport.addEventListener('scroll',fitApp);}
+
 renderDays();
 if(!DB.onboarded) showOnboard();
 </script>
