@@ -1,9 +1,9 @@
-/* Minimal offline service worker for the Spend expense tracker PWA.
+/* Minimal offline service worker for the Reward Habits PWA.
    Network-first so updates arrive when online, with a cache fallback so the app
    keeps working with no connection. The app itself is a single self-contained
    file, so caching the shell + icons is enough. */
-const CACHE_PREFIX = 'spend-';
-const CACHE = CACHE_PREFIX + 'v6';
+const CACHE_PREFIX = 'reward-habits-';
+const CACHE = CACHE_PREFIX + 'v8';
 const ASSETS = [
   './',
   './index.html',
@@ -20,9 +20,9 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('activate', (e) => {
-  // Only clear THIS app's older caches. A second PWA is hosted under /habits/
-  // on the same origin, and deleting every cache here would wipe its offline
-  // copy, so each app must stay inside its own cache namespace.
+  // Only clear THIS app's older caches. Another PWA is hosted at the origin
+  // root, and deleting every cache here would wipe its offline copy (and vice
+  // versa), so each app must stay inside its own cache namespace.
   e.waitUntil(
     caches
       .keys()
