@@ -1,104 +1,69 @@
-# Gym Performance Tracker
+# Spend — Expense Tracker
 
-A dark, high-contrast, offline-first personal training log for iOS and Android.
-Design a weekly split, log every set as you lift, and watch your strength climb.
-No login, no backend — everything lives on-device.
-
-Built with **Expo (SDK 52) + React Native + TypeScript**.
-
----
+A fast, offline-first mobile expense tracker with a clean dark theme (pure black
+background, white text, yellow accent). Built as a single self-contained,
+installable PWA so it runs on any phone straight from the browser — no build step,
+no server, no dependencies. All data lives on your device in `localStorage`.
 
 ## Features
 
-### 🏠 Home (Dashboard)
-- Today's scheduled day from your active split with a big **Start Workout** button.
-- Current day streak, workouts this week vs. your split target, and total weekly volume.
-- Recent PRs feed (est. 1RM records).
-- Quick body-weight entry.
+Three tabs in a bottom navigation bar:
 
-### 🏋️ Workout — Split Builder + Active Logging
-- **Split Builder:** 7-day (Mon–Sun) view. Each day is a Rest Day or a named training
-  day. Add exercises from a searchable library grouped by muscle, plus custom exercises.
-  Set per-exercise targets (sets, rep range, optional weight). Reorder, swipe-to-delete,
-  edit inline. Save multiple splits and switch the active one.
-- **Active Workout** (the core screen): auto-loads today's exercises, one card at a time
-  (swipe or tap the pills to move). Set-by-set rows with **big steppers** (2.5 for weight,
-  1 for reps) *and* a numeric keypad on tap. Last session's numbers show as greyed
-  placeholders. Add/remove sets on the fly; **long-press a set to copy it down**. A
-  **circular rest timer** auto-starts when you check off a set — it keeps running with the
-  screen off and fires a **local notification** (with haptic + sound) when it ends. The
-  screen **stays awake** during a workout. Finish saves date, duration, total volume and notes.
+- **Tap** (home) — the record screen. A big live amount display, a custom
+  numeric keypad, a horizontal row of emoji category chips (selected chip glows
+  yellow), an *add note* field with **automatic category detection** (type
+  "KFC" and it picks Junk food), quick-amount and recent-note chips, a payment
+  method selector, a receipt-photo attach, a *Credit* toggle for money received,
+  and a Save button that stores the entry and resets the screen.
+- **History** — expenses grouped by date with per-day totals, filter pills
+  (Today / This Week / This Month / All), full-text **search**, and a sticky
+  bottom bar showing the month's spend against your budget. Tap any row to edit
+  or delete it (with **undo**).
+- **Analytics** — spend for the selected period, budget progress, insights
+  (vs. last month, projected month-end, biggest expense), a 7-day trend, a
+  6-month comparison, a monthly **spend heatmap**, and breakdowns by category
+  (with per-category budgets) and by payment method.
 
-### 📅 History
-- Workouts listed by date; tap to expand every logged set.
-- Calendar **heatmap** of training days (shaded by volume).
-- Swipe to delete (with confirmation).
+Categories: 🛍️ Shopping · 🎬 Entertainment · 🍎 Health · 🍕 Junk food ·
+🚗 Vehicles · ⛽ Fuel · 🏠 Rent · 💊 Medicine · 📚 Education · 🎁 Other —
+all editable, and you can add your own.
 
-### 📈 Progress
-- Per-exercise line chart of **estimated 1RM** and **top-set weight** over time
-  (Epley: `1RM = weight × (1 + reps / 30)`).
-- PR tracking per exercise: heaviest weight, best set volume, best est. 1RM.
-- A **celebratory haptic + banner** the moment you beat a PR mid-workout.
-- Weekly **muscle-group volume** bar chart and a **body-weight** chart.
+### Settings & data
 
-### ⚙️ Settings
-- **kg / lb** toggle — weights are stored canonically in kg and converted everywhere.
-- Rest-timer default, sound on/off, haptics on/off, barbell weight.
-- **Export** all data as JSON (share sheet) and **import** it back.
-- Dark mode by default with a light-mode toggle.
+Reachable from the gear icon on the History or Analytics tab:
 
-### Extras
-- **Plate calculator** — enter a target barbell weight, see the plates per side
-  (editable 20 kg / 15 kg / 45 lb bars, colour-coded).
-- **Warm-up suggestions** ramped from your working weight.
-- **Progressive-overload nudge** — if you hit the top of the rep range on every set last
-  session, it suggests +2.5 kg.
-- Seeded with realistic sample data (two splits, ~4 weeks of history, body-weight trend)
-  so charts and history aren't empty on first launch.
-- Confirmation before any delete.
+- **Budgets** — monthly total plus optional per-category limits.
+- **Categories** — add / rename / recolor / re-emoji.
+- **Payment methods** — Cash / UPI / Card and any you add.
+- **Recurring expenses** — auto-posted each month (rent, subscriptions…).
+- **Currency** — pick the symbol used throughout.
+- **App lock** — optional 4-digit PIN on open.
+- **Backup** — export/restore JSON, export CSV, or reset.
 
----
+A first-run onboarding sets your currency and budget. Everything is stored
+locally on the device; nothing is uploaded.
 
-## Running it
+## Run it
 
-```bash
-npm install
-npx expo start        # then press i / a, or scan the QR with Expo Go
-```
+Open `docs/index.html` in any browser, or host the `docs/` folder (it is
+GitHub-Pages ready). On a phone, use *Add to Home Screen* to install it as a
+standalone app that works offline.
 
-- `npm run ios` / `npm run android` — open directly on a simulator/emulator.
-- `npm run typecheck` — TypeScript, no emit.
+## Also in this repo
 
-> Rest-timer notifications and background delivery require a development build or a
-> physical device; some notification behaviour is limited inside Expo Go.
+Two more independent PWAs deploy alongside Spend, each under its own path:
 
----
+| App | Path | What it is |
+|-----|------|------------|
+| Spend | `/` | Expense tracker (this README) |
+| Reward Habits | `/habits/` | Daily habit tracker that turns consistency into a monthly money reward (₹10,000–₹20,000, per-day accrual) |
+| IRONLOG | `/ironlog/` | Gym tracker — build a split, log your lifts, see a progress graph, and get calories burned from the weight you lift |
 
-## Architecture
+The apps are fully separate — own storage, own icon, own offline cache. Each
+service worker only clears caches under its own name prefix (`spend-` /
+`reward-habits-` / `ironlog-`), so installing or updating one never wipes the
+others' offline copy.
 
-```
-App.tsx                     Root: gesture handler, safe-area, hydration gate, seeding
-index.ts                    registerRootComponent
-src/
-  types/                    Domain model (all weights stored in kg)
-  theme/                    Dark & light palettes, spacing/radius scale, useTheme()
-  data/                     Built-in exercise library + sample-data generators
-  store/useStore.ts         Zustand store persisted to AsyncStorage + pure selectors
-  utils/                    units, calc (1RM/volume/plates/warmup/overload),
-                            date, stats, feedback (haptics), notifications
-  hooks/useRestTimer.ts     Absolute-timestamp countdown + scheduled notification
-  components/               Reusable UI, Stepper, charts (react-native-svg), rest ring
-  navigation/               Root stack (tabs + modals) + workout stack
-  screens/                  Home, Split list/editor/day, Active workout, Exercise picker,
-                            History, Progress, Settings, Plate calculator
-```
-
-**State & persistence.** A single Zustand store holds settings, splits, custom exercises,
-finished sessions, the in-progress session and body-weight entries. It is persisted to
-`AsyncStorage`; the in-progress workout is persisted too, so a session survives an app
-restart. Sample data is seeded once, after rehydration, only when storage is empty.
-
-**Units.** Everything is stored in kilograms and converted at the display/entry boundary,
-so the kg⇄lb toggle is lossless.
-
-Offline-first by design: there is no network code anywhere in the app.
+React Native / Expo sources live on their own branches: Reward Habits on
+`claude/habit-tracker-react-native-5jlu2a`, and IRONLOG's Expo + TypeScript app
+(`App.tsx`, `src/**`) on `claude/gym-performance-tracker-wccftp`.

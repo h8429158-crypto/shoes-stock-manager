@@ -5,7 +5,9 @@ self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  // Only clear our own old caches (ironlog-*) so we never wipe the sibling
+  // apps' offline copies (spend-*, reward-habits-*).
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('ironlog-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
