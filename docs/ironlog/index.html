@@ -27,11 +27,14 @@
   @media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#EEF1F5;--surface:#fff;--surfaceAlt:#EDF1F5;--border:#DDE3EA;--track:#E3E8EE;--text:#0C1219;--dim:#5A6472;--faint:#98A2B0;--primary:#E8480F;--primaryDark:#B8380B;--accent:#E0850C;--glow:rgba(232,72,15,.12);--shadow:0 12px 28px -16px rgba(20,30,45,.28);--soft:0 3px 12px rgba(20,30,45,.1);}}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
-  body{margin:0;background:var(--bg);color:var(--text);overflow:hidden}
+  /* Lock the page as a fixed, non-scrolling shell so mobile browsers never
+     auto-hide their toolbars (which caused the top overlap + bottom gap).
+     Only .content scrolls, internally. */
+  body{margin:0;background:var(--bg);color:var(--text);overflow:hidden;position:fixed;top:0;left:0;right:0;bottom:0;width:100%}
   button{font-family:inherit}
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-  .app{position:fixed;top:0;left:0;right:0;height:100dvh;max-width:var(--maxw);margin:0 auto;display:flex;flex-direction:column;overflow-x:hidden;
+  .app{position:relative;height:100%;max-width:var(--maxw);margin:0 auto;display:flex;flex-direction:column;overflow-x:hidden;
     background:radial-gradient(130% 60% at 50% -8%, var(--glow), transparent 60%), var(--bg);box-shadow:0 0 80px rgba(0,0,0,.4)}
 
   .topbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top) + 12px) 18px 8px}
@@ -567,18 +570,6 @@ function renderCalLog(){
 const root=document.documentElement;
 const isDark=()=>{const a=root.getAttribute('data-theme');return a?a==='dark':matchMedia('(prefers-color-scheme:dark)').matches;};
 function toggleTheme(){root.setAttribute('data-theme',isDark()?'light':'dark');}
-
-/* size the app shell to the *actual* visible height so it always fills the
-   screen exactly — no gap under the tab bar on iOS browser or standalone. */
-function fitApp(){
-  const h=(window.visualViewport&&window.visualViewport.height)||window.innerHeight;
-  document.querySelector('.app').style.height=h+'px';
-}
-fitApp();
-window.addEventListener('resize',fitApp);
-window.addEventListener('orientationchange',()=>setTimeout(fitApp,150));
-if(window.visualViewport){window.visualViewport.addEventListener('resize',fitApp);window.visualViewport.addEventListener('scroll',fitApp);}
-
 renderDays();
 if(!DB.onboarded) showOnboard();
 </script>
