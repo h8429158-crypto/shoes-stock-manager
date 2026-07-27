@@ -296,6 +296,15 @@
   .swatch.sel { border-color: var(--text); box-shadow: 0 0 0 2px var(--bg) inset; }
   .addbtn { width: 100%; padding: 13px; border-radius: 12px; border: 1px dashed var(--border); background: none; color: var(--accent); font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 6px; }
   .receipt-thumb { width: 100%; max-height: 220px; object-fit: contain; border-radius: 12px; border: 1px solid var(--border); margin-top: 8px; background: #000; cursor: pointer; }
+  /* read-only expense detail view */
+  .view-hero { text-align: center; margin: 6px 0 20px; }
+  .view-circ { width: 66px; height: 66px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto; }
+  .view-amt { font-size: 36px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; margin-top: 12px; }
+  .view-cat { color: var(--dim); font-size: 15px; margin-top: 2px; }
+  .viewrow { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 2px; border-bottom: 1px solid var(--border); font-size: 15px; }
+  .viewrow span { color: var(--dim); flex: none; }
+  .viewrow b { font-weight: 600; text-align: right; min-width: 0; word-break: break-word; }
+  .lockline { display: flex; align-items: center; gap: 8px; justify-content: center; color: var(--faint); font-size: 13px; margin-top: 18px; text-align: center; line-height: 1.4; }
 
   /* lock */
   .lock { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 0 32px calc(env(safe-area-inset-bottom) + 20px); text-align: center; }
@@ -677,7 +686,7 @@
   function expRow(e) {
     const c = catOf(e.cat);
     const sub = [e.note || '', (e.method && e.method !== 'Cash' ? e.method : (e.note ? '' : 'No note'))].filter(Boolean).join(' · ');
-    return `<button class="exp" data-act="edit" data-id="${e.id}">
+    return `<button class="exp" data-act="view" data-id="${e.id}">
       <span class="circ" style="background:${c.c}22;color:${c.c}">${c.e}${e.recurringId ? `<span class="rec">🔁</span>` : e.viaShortcut ? `<span class="rec">⚡</span>` : ''}${e.receipt ? `<span class="rec">📎</span>` : ''}</span>
       <span class="mid"><span class="cn">${esc(c.n)}</span><span class="nt">${esc(sub)}</span></span>
       <span class="right"><span class="amt ${e.credit ? 'credit' : ''}">${e.credit ? '+' : '−'}${rupee(e.amount)}</span><span class="tm">${fmtTime(e.ts)}</span></span>
@@ -758,36 +767,29 @@
   }
 
   // ================= EDIT SHEET =================
-  let editState = null;
-  function openEdit(id) { const e = S.expenses.find(x => x.id === id); if (!e) return; editState = { id: e.id, amount: e.amount, cat: e.cat, note: e.note || '', credit: !!e.credit, method: e.method || methods()[0], receipt: e.receipt || null }; renderSheet(); }
-  function renderSheet() {
-    const es = editState;
+  let viewState = null;
+  // Saved expenses are permanent: tapping a row opens a read-only detail
+  // view — no editing, no deleting (the only global reset is Settings →
+  // Reset all data, or restoring a backup).
+  function openView(id) { const e = S.expenses.find(x => x.id === id); if (!e) return; viewState = e; renderView(); }
+  function fmtFullDate(ts) { const d = new Date(ts); return `${MOF[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()} · ${fmtTime(ts)}`; }
+  function renderView() {
+    const e = viewState; const c = catOf(e.cat);
+    const row = (label, val) => `<div class="viewrow"><span>${label}</span><b>${val}</b></div>`;
     showSheet(`<div class="grabber"></div>
-      <div class="sheet-head"><h3>Edit ${es.credit ? 'credit' : 'expense'}</h3></div>
-      <p class="sub">Update the details or delete this entry.</p>
-      <div class="field-lbl">Amount</div><input class="input" id="editAmount" type="text" inputmode="decimal" value="${es.amount}">
-      <div class="field-lbl">Category</div><div class="chips-wrap" id="editChips">${catChips(es.cat, 'ecat')}</div>
-      <div class="field-lbl">Note</div><input class="input" id="editNote" maxlength="60" placeholder="Add note" value="${esc(es.note)}">
-      ${methods().length > 1 ? `<div class="field-lbl">Payment method</div><div class="chips-wrap" id="editMethods">${methodChips(es.method, 'emethod')}</div>` : ''}
-      <div class="field-lbl">Type</div><div class="credit-toggle inline ${es.credit ? 'on' : ''}" data-act="ecredit"><span>Mark as credit (money received)</span><span class="sw"><i></i></span></div>
-      <div class="field-lbl">Receipt</div>
-      ${es.receipt ? `<img class="receipt-thumb" src="${es.receipt}" data-act="viewreceipt" alt="Receipt"><div class="sheet-actions" style="margin-top:8px"><button class="btn btn-ghost" data-act="ereceipt">Replace</button><button class="btn btn-ghost" data-act="ereceiptdel" style="color:var(--danger)">Remove</button></div>`
-        : `<button class="btn btn-ghost" style="width:100%" data-act="ereceipt">📎 Attach receipt photo</button>`}
-      <div class="sheet-actions"><button class="btn btn-del" data-act="editdelete" aria-label="Delete"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M6 6l1 14a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-14"/></svg></button><button class="btn btn-save" data-act="editsave">Save changes</button></div>`);
-  }
-  function editSave() {
-    const amt = parseFloat(document.getElementById('editAmount').value) || 0; if (!(amt > 0)) { toast('Enter an amount'); return; }
-    const e = S.expenses.find(x => x.id === editState.id); if (!e) return hideOverlay();
-    e.amount = amt; e.cat = editState.cat; e.credit = editState.credit; e.method = editState.method; e.note = document.getElementById('editNote').value.trim();
-    if (editState.receipt) e.receipt = editState.receipt; else delete e.receipt;
-    if (!save()) { toast('Storage full — remove a receipt'); return; }
-    hideOverlay(); render(); toast('✓ Updated');
-  }
-  function editDelete() {
-    const e = S.expenses.find(x => x.id === editState.id); if (!e) return;
-    S.expenses = S.expenses.filter(x => x.id !== editState.id); save();
-    showUndo('Expense deleted', e);
-    hideOverlay(); render(); vibrate(18);
+      <div class="view-hero">
+        <div class="view-circ" style="background:${c.c}22;color:${c.c}">${c.e}</div>
+        <div class="view-amt" style="color:${e.credit ? 'var(--credit)' : 'var(--text)'}">${e.credit ? '+' : '−'}${rupee(e.amount)}</div>
+        <div class="view-cat">${esc(c.n)}</div>
+      </div>
+      ${row('Note', e.note ? esc(e.note) : '—')}
+      ${row('Type', e.credit ? 'Credit · money received' : 'Expense · money spent')}
+      ${row('Payment', esc(e.method || '—'))}
+      ${row('Date', fmtFullDate(e.ts))}
+      ${e.recurringId ? row('Source', '🔁 Recurring') : e.viaShortcut ? row('Source', '⚡ Back Tap shortcut') : ''}
+      ${e.receipt ? `<div class="field-lbl">Receipt</div><img class="receipt-thumb" src="${e.receipt}" data-act="viewreceipt" alt="Receipt">` : ''}
+      <div class="lockline">🔒 Saved entries are locked — they can't be edited or deleted.</div>
+      <div class="sheet-actions"><button class="btn btn-save" data-act="closeview">Done</button></div>`);
   }
 
   // ================= UNDO =================
@@ -939,7 +941,7 @@
   // ---------------- overlay display ----------------
   function showSheet(html) { overlay.className = 'overlay show'; overlay.innerHTML = `<div class="sheet" data-stop>${html}</div>`; }
   function showFull(html) { overlay.className = 'overlay show full-mode'; overlay.innerHTML = `<div style="width:100%;height:100%;display:flex;flex-direction:column" data-stop data-nofull>${html}</div>`; }
-  function hideOverlay() { overlay.className = 'overlay'; overlay.innerHTML = ''; ov = null; editState = null; }
+  function hideOverlay() { overlay.className = 'overlay'; overlay.innerHTML = ''; ov = null; viewState = null; }
 
   // ================= LOCK =================
   let lockEntry = '', lockCb = null;
@@ -999,7 +1001,7 @@
   }
   fileReceipt.addEventListener('change', async e => {
     const file = e.target.files && e.target.files[0]; e.target.value = ''; if (!file) return;
-    try { const data = await compressImage(file); if (receiptTarget === 'tap') { ui.receipt = data; render(); } else if (receiptTarget === 'edit' && editState) { editState.receipt = data; renderSheet(); } toast('✓ Receipt added'); } catch (err) { toast('Could not read image'); }
+    try { const data = await compressImage(file); ui.receipt = data; render(); toast('✓ Receipt added'); } catch (err) { toast('Could not read image'); }
   });
 
   // ================= events =================
@@ -1022,7 +1024,7 @@
     else if (act === 'receipt') { ui.note = (document.getElementById('noteInput') || {}).value || ui.note; receiptTarget = 'tap'; fileReceipt.click(); }
     else if (act === 'togglesearch') { ui.searchOpen = !ui.searchOpen; if (!ui.searchOpen) ui.search = ''; render(); const inp = document.getElementById('searchInput'); if (inp && ui.searchOpen) inp.focus(); }
     else if (act === 'filter') { ui.filter = el.dataset.f; render(); }
-    else if (act === 'edit') openEdit(Number(el.dataset.id));
+    else if (act === 'view') openView(Number(el.dataset.id));
     else if (act === 'settings') openSettings();
     else if (act === 'period') { ui.period = el.dataset.p; render(); }
   });
@@ -1039,15 +1041,9 @@
     const el = e.target.closest('[data-act]'); if (!el) return; const act = el.dataset.act; const v = el.dataset;
 
     // edit sheet
-    if (act === 'ecat') { editState.cat = editState.cat === v.n ? null : v.n; syncChips('editChips', editState.cat, 'ecat'); return; }
-    if (act === 'emethod') { editState.method = v.m; syncChips('editMethods', editState.method, 'emethod', 'm'); return; }
-    if (act === 'ecredit') { editState.credit = !editState.credit; el.classList.toggle('on', editState.credit); return; }
-    if (act === 'editsave') return editSave();
-    if (act === 'editdelete') return editDelete();
-    if (act === 'ereceipt') { receiptTarget = 'edit'; fileReceipt.click(); return; }
-    if (act === 'ereceiptdel') { editState.receipt = null; renderSheet(); return; }
-    if (act === 'viewreceipt') { showReceiptViewer(editState.receipt); return; }
-    if (act === 'closeviewer') { renderSheet(); return; }
+    if (act === 'closeview') return hideOverlay();
+    if (act === 'viewreceipt') { showReceiptViewer(viewState.receipt); return; }
+    if (act === 'closeviewer') { renderView(); return; }
 
     // settings nav
     if (act === 'ovnav') { ov.view = v.v; if (v.v === 'cats') {} renderOverlay(); return; }
