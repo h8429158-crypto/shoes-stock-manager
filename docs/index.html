@@ -333,6 +333,29 @@
   .undobar .ut { font-size: 14px; font-weight: 600; }
   .undobar .ub { background: none; border: none; color: var(--accent); font-size: 14px; font-weight: 800; cursor: pointer; padding: 4px 8px; }
 
+  /* ---------- press feedback + tap ripple ---------- */
+  /* Give every tappable element a springy press-in, and keep their existing
+     colour transitions. Large primary buttons already have their own subtler
+     :active, so they're left as-is. */
+  .nav button, .chip, .cat-item, .filter, .seg button, .mchip, .qchip,
+  .setrow, .listitem, .iconbtn, .swatch, .clip, .credit-toggle, .act, .addbtn, .ub {
+    transition-property: transform, background, border-color, color, box-shadow, opacity;
+    transition-duration: .13s; transition-timing-function: cubic-bezier(.4,0,.2,1);
+  }
+  .nav button:active, .chip:active, .cat-item:active, .filter:active, .seg button:active,
+  .mchip:active, .qchip:active, .setrow:active, .listitem:active, .iconbtn:active,
+  .swatch:active, .clip:active, .credit-toggle:active, .act:active, .addbtn:active { transform: scale(.93); }
+  .nav .tapbtn:active { transform: none; }
+  .nav .tapbtn:active .ring { transform: scale(.9); }
+
+  .tap-ripple {
+    position: fixed; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,.5), rgba(255,255,255,0) 70%);
+    pointer-events: none; z-index: 300; transform: scale(0); opacity: .9;
+    animation: tapRipple .5s ease-out forwards;
+  }
+  @keyframes tapRipple { 0% { transform: scale(1); opacity: .85; } 100% { transform: scale(9); opacity: 0; } }
+
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
@@ -1128,6 +1151,23 @@
     S.expenses.push({ id: S.nextId++, amount, cat, note, credit, method, ts: Date.now(), viaShortcut: true });
     S.settings.onboarded = true; save(); cleanUrl();
     ui.tab = 'history'; pendingShortcutToast = true; return true;
+  }
+
+  // ---------------- tap ripple ----------------
+  // A soft expanding circle at the finger on every tappable element, for a
+  // more physical feel. Purely decorative and pointer-events:none, so it never
+  // interferes with the actual button handlers.
+  const RIPPLE_SEL = 'button, .chip, .cat-item, .exp, .setrow, .listitem, .filter, .seg button, .mchip, .qchip, .swatch, .pill, .key, .lockkey, .iconbtn, .clip, .credit-toggle, .act, .addbtn, .receipt-thumb, [data-act], [data-tab]';
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduceMotion) {
+    document.addEventListener('pointerdown', e => {
+      const t = e.target.closest(RIPPLE_SEL); if (!t) return;
+      const r = document.createElement('span'); r.className = 'tap-ripple';
+      r.style.left = e.clientX + 'px'; r.style.top = e.clientY + 'px';
+      document.body.appendChild(r);
+      r.addEventListener('animationend', () => r.remove());
+      setTimeout(() => r.remove(), 700);
+    }, { passive: true });
   }
 
   function afterUnlock() { if (!S.settings.onboarded) { showOnboarding(); return; } hideOverlay(); if (pendingShortcutToast) { pendingShortcutToast = false; toast('✓ Added via Shortcut'); } }
