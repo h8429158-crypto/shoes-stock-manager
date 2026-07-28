@@ -1,5 +1,5 @@
 /* IRONLOG service worker — network-first for the app, cache fallback offline */
-const CACHE = 'ironlog-v8';
+const CACHE = 'ironlog-v9';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));

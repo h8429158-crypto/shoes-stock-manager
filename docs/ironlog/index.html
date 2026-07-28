@@ -89,17 +89,22 @@
   .overlay{position:fixed;inset:0;max-width:var(--maxw);margin:0 auto;background:var(--bg);z-index:60;display:none;flex-direction:column}
   .overlay.on{display:flex;animation:up .3s cubic-bezier(.2,.8,.2,1)}
   @keyframes up{from{transform:translateY(100%)}to{transform:none}}
-  .otop{padding:20px 18px 8px;flex:0 0 auto;border-bottom:1px solid var(--border)}
-  .oscroll{flex:1;overflow-y:auto;padding:16px 18px 40px;scrollbar-width:none}
+  .otop{padding:calc(env(safe-area-inset-top) + 14px) 18px 10px;flex:0 0 auto;border-bottom:1px solid var(--border)}
+  .oscroll{flex:1;overflow-y:auto;padding:14px 18px 70px;scrollbar-width:none}
   .oscroll::-webkit-scrollbar{display:none}
-  .exhead{font-size:22px;font-weight:900;margin:22px 0 4px}
-  .setline{display:flex;align-items:center;gap:8px;margin-top:10px}
-  .setno{width:26px;font-size:16px;font-weight:900;color:var(--dim);text-align:center}
-  .qty{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:6px}
-  .qtybtn{width:36px;height:44px;border-radius:9px;background:var(--surfaceAlt);border:0;color:var(--text);font-size:22px;cursor:pointer}
-  .qtyin{width:64px;text-align:center;font-size:26px;font-weight:900;font-variant-numeric:tabular-nums;background:transparent;border:0;color:var(--text)}
+  .exblock{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:16px 15px;margin-top:14px;box-shadow:var(--soft)}
+  .exhead{font-size:20px;font-weight:900;margin:0;letter-spacing:-.02em}
+  .colhead{display:flex;align-items:center;gap:10px;margin:14px 0 2px}
+  .colhead .setno{visibility:hidden}
+  .colhead .lbl{flex:1;text-align:center}
+  .setline{display:flex;align-items:center;gap:10px;padding:5px 0}
+  .setno{width:20px;font-size:15px;font-weight:800;color:var(--dim);text-align:center;flex:0 0 auto}
+  .qty{flex:1;min-width:0;display:flex;align-items:center;gap:3px;background:var(--surfaceAlt);border:1.5px solid var(--border);border-radius:14px;padding:4px;height:52px}
+  .qtybtn{width:40px;height:42px;border-radius:11px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:22px;font-weight:600;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+  .qtybtn:active{transform:scale(.9)}
+  .qtyin{flex:1;min-width:0;width:100%;text-align:center;font-size:21px;font-weight:900;font-variant-numeric:tabular-nums;background:transparent;border:0;color:var(--text);padding:0}
   .qtyin::-webkit-outer-spin-button,.qtyin::-webkit-inner-spin-button{-webkit-appearance:none}
-  .unit{font-size:11px;font-weight:800;color:var(--faint);text-align:center;margin-top:2px}
+  .unit{font-size:11px;font-weight:800;color:var(--faint);letter-spacing:.04em}
 
   /* lifts */
   .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
@@ -111,10 +116,11 @@
   .exchip{background:var(--surfaceAlt);color:var(--dim);border-radius:9px;padding:6px 11px;font-size:12.5px;font-weight:700;white-space:nowrap}
   .prog{height:6px;border-radius:4px;background:var(--track);overflow:hidden;margin-top:12px}
   .prog>i{display:block;height:100%;background:var(--grad);border-radius:4px;transition:width .3s}
-  .setchk{width:32px;height:32px;border-radius:10px;background:var(--surfaceAlt);color:var(--faint);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
-  .setchk svg{width:18px;height:18px;fill:currentColor}
-  .setline.done .setchk{background:var(--success);color:#fff}
-  .setline.done .qty{border-color:color-mix(in srgb,var(--success) 55%,var(--border))}
+  .setchk{width:42px;height:42px;border-radius:50%;background:var(--surfaceAlt);border:1.5px solid var(--border);color:var(--faint);display:flex;align-items:center;justify-content:center;flex:0 0 auto;cursor:pointer;transition:transform .12s}
+  .setchk:active{transform:scale(.9)}
+  .setchk svg{width:20px;height:20px;fill:currentColor}
+  .setline.done .setchk{background:var(--success);border-color:var(--success);color:#fff}
+  .setline.done .qty{border-color:var(--success);background:color-mix(in srgb,var(--success) 10%,var(--surfaceAlt))}
 
   /* sheet + search */
   .sheetwrap{position:fixed;inset:0;z-index:120;display:none}
@@ -400,7 +406,7 @@ function openLog(day){
 function tickLog(){const s=Math.floor((Date.now()-logStart)/1000);document.getElementById('logTime').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
 function logProgress(){
   const all=LOG.ex.reduce((a,e)=>a+e.sets.length,0);
-  const done=LOG.ex.reduce((a,e)=>a+e.sets.filter(s=>s.r>0).length,0);
+  const done=LOG.ex.reduce((a,e)=>a+e.sets.filter(s=>s.done||s.r>0).length,0);
   const bar=document.getElementById('logProg');
   if(bar){bar.querySelector('i').style.width=(all?done/all*100:0)+'%';bar.previousElementSibling.querySelector('[data-cnt]').textContent=done+' of '+all+' sets done';}
 }
@@ -408,25 +414,27 @@ function renderLog(){
   const box=document.getElementById('logBody');box.innerHTML='';
   box.insertAdjacentHTML('beforeend',`<div class="between"><div class="muted" style="font-size:12.5px;font-weight:800" data-cnt></div><div class="muted" style="font-size:12.5px;font-weight:800">${esc(LOG.name)}</div></div><div class="prog" id="logProg"><i style="width:0%"></i></div>`);
   LOG.ex.forEach((ex,ei)=>{
-    const wrap=document.createElement('div');
+    const wrap=document.createElement('div');wrap.className='exblock';
     const lastTxt=ex.last?`Last time · ${ex.last.map(s=>fmt(s.w)+'×'+s.r).join(', ')}`:'First time — set your numbers';
-    wrap.innerHTML=`<div class="exhead">${esc(ex.name)}</div><div class="muted" style="font-size:12.5px">${lastTxt}</div>
-      <div class="row" style="margin-top:10px;gap:8px"><div class="setno"></div><div style="flex:1;text-align:center" class="unit">WEIGHT (kg)</div><div style="flex:1;text-align:center" class="unit">REPS</div><div style="width:32px"></div></div>
+    wrap.innerHTML=`<div class="exhead">${esc(ex.name)}</div><div class="muted" style="font-size:12.5px;margin-top:3px">${lastTxt}</div>
+      <div class="colhead"><div class="setno"></div><div class="lbl unit">WEIGHT (kg)</div><div class="lbl unit">REPS</div><div style="width:42px;flex:0 0 auto"></div></div>
       <div data-sets></div>
-      <button class="btn sec sm" data-add style="margin-top:10px;width:100%">+ Add set</button>`;
+      <button class="btn sec sm" data-add style="margin-top:12px;width:100%">+ Add set</button>`;
     const setsBox=wrap.querySelector('[data-sets]');
+    const isDone=s=>s.done||s.r>0;
     ex.sets.forEach((s,si)=>{
-      const row=document.createElement('div');row.className='setline'+(s.r>0?' done':'');
+      const row=document.createElement('div');row.className='setline'+(isDone(s)?' done':'');
       row.innerHTML=`<div class="setno">${si+1}</div>
         <div class="qty"><button class="qtybtn" data-a="w-">−</button><input class="qtyin" inputmode="decimal" data-w value="${s.w?fmt(s.w):''}" placeholder="0"><button class="qtybtn" data-a="w+">+</button></div>
         <div class="qty"><button class="qtybtn" data-a="r-">−</button><input class="qtyin" inputmode="numeric" data-r value="${s.r||''}" placeholder="0"><button class="qtybtn" data-a="r+">+</button></div>
-        <div class="setchk"><svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></div>`;
+        <button class="setchk" data-chk aria-label="mark set done"><svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></button>`;
       row.querySelector('[data-a="w-"]').onclick=()=>{s.w=Math.max(0,s.w-2.5);renderLog();buzz();};
       row.querySelector('[data-a="w+"]').onclick=()=>{s.w+=2.5;renderLog();buzz();};
       row.querySelector('[data-a="r-"]').onclick=()=>{s.r=Math.max(0,s.r-1);renderLog();buzz();};
       row.querySelector('[data-a="r+"]').onclick=()=>{s.r+=1;renderLog();buzz();};
       row.querySelector('[data-w]').oninput=e=>{s.w=parseFloat(e.target.value.replace(',','.'))||0;};
-      row.querySelector('[data-r]').oninput=e=>{s.r=parseInt(e.target.value)||0;row.classList.toggle('done',s.r>0);logProgress();};
+      row.querySelector('[data-r]').oninput=e=>{s.r=parseInt(e.target.value)||0;row.classList.toggle('done',isDone(s));logProgress();};
+      row.querySelector('[data-chk]').onclick=()=>{s.done=!row.classList.contains('done');row.classList.toggle('done',s.done||s.r>0);logProgress();buzz();};
       setsBox.appendChild(row);
     });
     wrap.querySelector('[data-add]').onclick=()=>{const l=ex.sets[ex.sets.length-1];ex.sets.push({w:l?l.w:0,r:l?l.r:0});renderLog();};
