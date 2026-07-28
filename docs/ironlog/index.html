@@ -152,7 +152,7 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand"><span class="logo"><svg viewBox="0 0 24 24"><path d="M20.5 6 19 4.5 16.5 7 15 5.5 13.5 7 17 10.5 18.5 9 20 10.5 21.5 9zM7 13.5 5.5 12 4 13.5 2.5 12 4 10.5 5.5 12 3.5 14 7 17.5 8.5 16 10 17.5 11.5 16z"/></svg></span> IRONLOG <span style="font-size:10px;color:var(--faint);font-weight:800;align-self:flex-start;margin-top:2px">v10</span></div>
+    <div class="brand"><span class="logo"><svg viewBox="0 0 24 24"><path d="M20.5 6 19 4.5 16.5 7 15 5.5 13.5 7 17 10.5 18.5 9 20 10.5 21.5 9zM7 13.5 5.5 12 4 13.5 2.5 12 4 10.5 5.5 12 3.5 14 7 17.5 8.5 16 10 17.5 11.5 16z"/></svg></span> IRONLOG <span style="font-size:10px;color:var(--faint);font-weight:800;align-self:flex-start;margin-top:2px">v1</span></div>
     <button class="iconbtn" onclick="toggleTheme()">◐</button>
   </header>
   <div class="content">
@@ -361,17 +361,27 @@ function renderEditEx(){
   });
 }
 /* add-exercise sheet */
-function openAdd(){renderAdd('');panel().dataset.mode='add';openSheet();setTimeout(()=>{const s=panel().querySelector('#ls');if(s)s.focus();},250);}
-function renderAdd(q){
+function openAdd(){
+  // Build the sheet ONCE. Typing only refreshes the results list (#lslist),
+  // never the input itself, so focus/keyboard stay put.
+  panel().innerHTML=`<h3>Add exercise</h3>
+    <input class="field" id="ls" placeholder="Search or type a new one…" autocomplete="off" autocorrect="off" autocapitalize="words"/>
+    <div id="lslist" style="margin-top:12px"></div>`;
+  const inp=panel().querySelector('#ls');
+  inp.addEventListener('input',()=>renderAddList(inp.value));
+  renderAddList('');
+  openSheet();
+  setTimeout(()=>inp.focus(),250);
+}
+function renderAddList(q){
+  const box=panel().querySelector('#lslist');if(!box)return;
   const ql=q.trim().toLowerCase();
   const inLib=LIB.filter(n=>!ql||n.toLowerCase().includes(ql));
   const showCreate=q.trim()&&!LIB.some(n=>n.toLowerCase()===ql);
-  panel().innerHTML=`<h3>Add exercise</h3>
-    <input class="field" id="ls" placeholder="Search or type a new one…" value="${esc(q)}" oninput="renderAdd(this.value)"/>
-    <div style="margin-top:12px">${inLib.map(n=>`<div class="libitem" data-n="${esc(n)}"><span>${esc(n)}</span><svg class="ico" style="color:var(--primary)" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z"/></svg></div>`).join('')}
-    ${showCreate?`<div class="libitem" data-n="${esc(q.trim())}" style="background:var(--primary);color:#fff">Create “${esc(q.trim())}”</div>`:''}
-    ${!inLib.length&&!showCreate?'<div class="empty">Type a name to add it</div>':''}</div>`;
-  panel().querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{curDay().ex.push(b.dataset.n);save();closeSheet();renderEditEx();toast('Added');buzz();});
+  box.innerHTML=`${inLib.map(n=>`<div class="libitem" data-n="${esc(n)}"><span>${esc(n)}</span><svg class="ico" style="color:var(--primary)" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z"/></svg></div>`).join('')}
+    ${showCreate?`<div class="libitem" data-n="${esc(q.trim())}" style="background:var(--grad);color:#fff">Create “${esc(q.trim())}”</div>`:''}
+    ${!inLib.length&&!showCreate?'<div class="empty">Type a name to add it</div>':''}`;
+  box.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{curDay().ex.push(b.dataset.n);save();closeSheet();renderEditEx();toast('Added');buzz();});
 }
 
 /* ---- LOG (do the workout) ---- */
