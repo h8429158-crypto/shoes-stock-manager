@@ -43,8 +43,10 @@
 
   .content{flex:1;overflow-y:auto;padding:6px 18px 26px;scrollbar-width:none}
   .content::-webkit-scrollbar{display:none}
-  .view{display:none}.view.active{display:block;animation:fade .25s ease}
-  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .view{display:none}.view.active{display:block}
+  /* iOS-style push transitions */
+  @keyframes slidefwd{from{opacity:.4;transform:translateX(28px)}to{opacity:1;transform:none}}
+  @keyframes slideback{from{opacity:.4;transform:translateX(-28px)}to{opacity:1;transform:none}}
 
   h1{font-size:33px;font-weight:900;letter-spacing:-.03em;margin:4px 0 2px}
   .sub{color:var(--dim);font-size:14px;font-weight:600;margin-bottom:16px}
@@ -150,7 +152,7 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand"><span class="logo"><svg viewBox="0 0 24 24"><path d="M20.5 6 19 4.5 16.5 7 15 5.5 13.5 7 17 10.5 18.5 9 20 10.5 21.5 9zM7 13.5 5.5 12 4 13.5 2.5 12 4 10.5 5.5 12 3.5 14 7 17.5 8.5 16 10 17.5 11.5 16z"/></svg></span> IRONLOG <span style="font-size:10px;color:var(--faint);font-weight:800;align-self:flex-start;margin-top:2px">v9</span></div>
+    <div class="brand"><span class="logo"><svg viewBox="0 0 24 24"><path d="M20.5 6 19 4.5 16.5 7 15 5.5 13.5 7 17 10.5 18.5 9 20 10.5 21.5 9zM7 13.5 5.5 12 4 13.5 2.5 12 4 10.5 5.5 12 3.5 14 7 17.5 8.5 16 10 17.5 11.5 16z"/></svg></span> IRONLOG <span style="font-size:10px;color:var(--faint);font-weight:800;align-self:flex-start;margin-top:2px">v10</span></div>
     <button class="iconbtn" onclick="toggleTheme()">◐</button>
   </header>
   <div class="content">
@@ -165,7 +167,7 @@
 
     <!-- EDITOR -->
     <section class="view" data-view="editor">
-      <button class="btn ghost sm" style="width:auto;padding:0 16px" onclick="show('split')">‹ My Split</button>
+      <button class="btn ghost sm" style="width:auto;padding:0 16px" onclick="show('split','back')">‹ My Split</button>
       <input class="field" id="dayName" style="font-size:26px;font-weight:900;height:auto;padding:14px 0;background:transparent;border-color:transparent" oninput="renameDay(this.value)"/>
       <div class="card" id="editEx" style="padding:6px 16px"></div>
       <button class="btn sec" style="margin-top:12px" onclick="openAdd()"><svg class="ico" viewBox="0 0 24 24"><path d="M11 5v6H5v2h6v6h2v-6h6v-2h-6V5z"/></svg> Add exercise</button>
@@ -260,24 +262,8 @@ const LIB=['Bench Press','Incline Bench Press','Dumbbell Press','Chest Fly','Pus
   'Plank','Hanging Leg Raise','Cable Crunch','Ab Wheel'];
 
 /* ---- data ---- */
-function seed(){
-  const today=new Date();const iso=ago=>{const d=new Date(today);d.setDate(d.getDate()-ago);d.setHours(18,0,0,0);return d.toISOString();};
-  return {
-    days:[
-      {id:uid('d_'),name:'Push Day',ex:['Bench Press','Overhead Press','Triceps Pushdown']},
-      {id:uid('d_'),name:'Pull Day',ex:['Deadlift','Barbell Row','Barbell Curl']},
-      {id:uid('d_'),name:'Leg Day',ex:['Squat','Romanian Deadlift','Leg Press']},
-    ],
-    history:[
-      {id:uid('h_'),date:iso(2),dayName:'Push Day',entries:[{name:'Bench Press',sets:[{w:82.5,r:8},{w:82.5,r:8},{w:85,r:6}]},{name:'Overhead Press',sets:[{w:47.5,r:8},{w:47.5,r:7}]}]},
-      {id:uid('h_'),date:iso(5),dayName:'Leg Day',entries:[{name:'Squat',sets:[{w:110,r:6},{w:110,r:6},{w:112.5,r:5}]}]},
-      {id:uid('h_'),date:iso(6),dayName:'Pull Day',entries:[{name:'Deadlift',sets:[{w:145,r:5},{w:145,r:4}]}]},
-      {id:uid('h_'),date:iso(9),dayName:'Push Day',entries:[{name:'Bench Press',sets:[{w:80,r:8},{w:80,r:8},{w:82.5,r:7}]}]},
-      {id:uid('h_'),date:iso(13),dayName:'Leg Day',entries:[{name:'Squat',sets:[{w:107.5,r:6},{w:107.5,r:6}]}]},
-      {id:uid('h_'),date:iso(16),dayName:'Push Day',entries:[{name:'Bench Press',sets:[{w:80,r:7},{w:80,r:7}]}]},
-    ]
-  };
-}
+// Fresh installs start completely empty — you add your own days & exercises.
+function seed(){ return { days:[], history:[] }; }
 let DB;try{DB=JSON.parse(localStorage.getItem('gymSimple1'))}catch(e){}
 if(!DB||!DB.days)DB=seed();
 if(!DB.calories)DB.calories=[];
@@ -285,6 +271,9 @@ if(DB.bodyKg==null)DB.bodyKg=75;
 if(DB.onboarded===undefined)DB.onboarded=false;
 if(!DB.profile)DB.profile=null;
 function save(){try{localStorage.setItem('gymSimple1',JSON.stringify(DB))}catch(e){}}
+// One-time cleanup: remove the old sample days/history so you start clean,
+// while keeping your profile. Runs once, then never touches your own data.
+if(!DB.starter2){ DB.days=[]; DB.history=[]; DB.calories=[]; DB.starter2=true; save(); }
 
 /* ---- helpers ---- */
 let toastT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),1600);}
@@ -321,7 +310,7 @@ function promptSheet(title,val,ph,cb){panel().innerHTML=`<h3>${esc(title)}</h3><
 function confirmSheet(title,msg,label,cb){panel().innerHTML=`<h3>${esc(title)}</h3><p class="muted" style="margin:0 0 16px;font-size:14px">${esc(msg)}</p><button class="btn" style="background:var(--danger)" id="ok">${esc(label)}</button><button class="btn ghost" style="margin-top:10px" onclick="closeSheet()">Cancel</button>`;panel().querySelector('#ok').onclick=()=>{closeSheet();cb();};openSheet();}
 
 /* ---- nav ---- */
-function show(v){document.querySelectorAll('.view').forEach(s=>s.classList.toggle('active',s.dataset.view===v));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===v));document.querySelector('.content').scrollTop=0;if(v==='split')renderDays();if(v==='lifts')renderLifts();if(v==='progress')renderProgress();if(v==='calories')renderCalories();}
+function show(v,dir){document.querySelectorAll('.view').forEach(s=>s.classList.toggle('active',s.dataset.view===v));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===v));document.querySelector('.content').scrollTop=0;const el=document.querySelector('.view.active');if(el){el.style.animation='none';void el.offsetWidth;el.style.animation=(dir==='back'?'slideback':'slidefwd')+' .34s cubic-bezier(.32,.72,0,1)';}if(v==='split')renderDays();if(v==='lifts')renderLifts();if(v==='progress')renderProgress();if(v==='calories')renderCalories();}
 
 /* ---- MY SPLIT list ---- */
 function renderDays(){
